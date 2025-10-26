@@ -1,0 +1,51 @@
+[
+  {
+    "id": "1",
+    "title": "Rose Gold Delicate Necklace",
+    "description": "Elegant rose gold necklace with delicate chain, perfect for any occasion. Handcrafted with premium materials.",
+    "price": 89.99,
+    "category": "jewelry",
+    "image": "necklace1.jpg"
+  },
+  {
+    "id": "2",
+    "title": "Silk Scarf with Floral Pattern",
+    "description": "Luxurious silk scarf featuring elegant rose and floral patterns. Adds sophistication to any outfit.",
+    "price": 65.00,
+    "category": "accessories",
+    "image": "scarf1.jpg"
+  },
+  {
+    "id": "3",
+    "title": "Rose Quartz Crystal Ring",
+    "description": "Handcrafted sterling silver ring adorned with a beautiful rose quartz gemstone.",
+    "price": 75.50,
+    "category": "jewelry",
+    "image": "ring1.jpg"
+  },
+  {
+    "id": "4",
+    "title": "Leather Crossbody Bag",
+    "description": "Chic leather crossbody bag in rose blush color. Perfect size for essentials with elegant gold hardware.",
+    "price": 125.00,
+    "category": "bags",
+    "image": "bag1.jpg"
+  },
+  {
+    "id": "5",
+    "title": "Pearl Stud Earrings",
+    "description": "Classic pearl stud earrings in rose gold setting. Timeless elegance for everyday wear.",
+    "price": 45.00,
+    "category": "jewelry",
+    "image": "earrings1.jpg"
+  },
+  {
+    "id": "6",
+    "title": "Cashmere Wrap",
+    "description": "Ultra-soft cashmere wrap in blush pink. Perfect for adding warmth and style to any ensemble.",
+    "price": 95.00,
+    "category": "accessories",
+    "image": "wrap1.jpg"
+  }
+]
+
