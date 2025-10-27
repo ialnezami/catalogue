@@ -4,7 +4,7 @@ import { useCart } from '@/contexts/CartContext';
 import { ShoppingBag, Trash2, Share2, Plus, Minus } from 'lucide-react';
 
 export default function Cart() {
-  const { cartItems, removeFromCart, updateQuantity, getTotalPrice } = useCart();
+  const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
   const [copied, setCopied] = useState(false);
 
   const exportToJson = () => {
