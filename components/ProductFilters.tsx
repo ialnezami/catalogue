@@ -57,7 +57,7 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
             size={20}
             style={{
               position: 'absolute',
-              left: '12px',
+              right: '12px',
               top: '50%',
               transform: 'translateY(-50%)',
               color: '#9ca3af',
@@ -65,7 +65,7 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
           />
           <input
             type="text"
-            placeholder="Search products..."
+            placeholder="ابحث عن المنتجات..."
             onChange={(e) => handleSearch(e.target.value)}
             style={{
               width: '100%',

@@ -195,19 +195,19 @@ export default function Cart() {
               border: '1px solid #374151',
             }}
           >
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#ffffff' }}>Order Summary</h2>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#ffffff' }}>ملخص الطلب</h2>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>Subtotal</span>
+                <span style={{ color: '#d1d5db' }}>المجموع الفرعي</span>
                 <span style={{ color: '#ffffff' }}>${getTotalPrice().toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>Tax</span>
+                <span style={{ color: '#d1d5db' }}>الضريبة</span>
                 <span style={{ color: '#ffffff' }}>$0.00</span>
               </div>
               <div style={{ borderTop: '1px solid #374151', margin: '1rem 0', paddingTop: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>Total</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>الإجمالي</span>
                   <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
                     ${getTotalPrice().toFixed(2)}
                   </span>
@@ -233,7 +233,7 @@ export default function Cart() {
                 }}
               >
                 <Share2 size={18} />
-                {copied ? 'Copied!' : 'Copy JSON'}
+                {copied ? 'تم النسخ!' : 'نسخ JSON'}
               </button>
               <button
                 onClick={shareOnWhatsApp}
@@ -253,7 +253,7 @@ export default function Cart() {
                 }}
               >
                 <Share2 size={18} />
-                Share on WhatsApp
+                مشاركة على واتساب
               </button>
             </div>
           </div>
