@@ -52,7 +52,34 @@ export default function Cart() {
 
   return (
     <Layout>
-      <h1 style={{ fontSize: '2.5rem', marginBottom: '2rem', color: '#ec4899' }}>Shopping Cart</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1 style={{ fontSize: '2.5rem', color: '#ec4899', margin: 0 }}>سلة المشتريات</h1>
+        <button
+          onClick={clearCart}
+          style={{
+            backgroundColor: '#ef4444',
+            color: '#ffffff',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            border: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            cursor: 'pointer',
+            transition: 'background-color 0.3s',
+            fontSize: '1rem',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#dc2626';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = '#ef4444';
+          }}
+        >
+          <Trash2 size={20} />
+          مسح السلة
+        </button>
+      </div>
       
       <div
         style={{
