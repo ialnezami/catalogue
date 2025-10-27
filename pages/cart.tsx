@@ -41,9 +41,9 @@ export default function Cart() {
           }}
         >
           <ShoppingBag size={80} color="#9ca3af" style={{ margin: '0 auto 2rem' }} />
-          <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#ffffff' }}>Your cart is empty</h2>
+          <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#ffffff' }}>سلة المشتريات فارغة</h2>
           <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
-            Start adding some beautiful products to your cart!
+            ابدأي بإضافة المنتجات الجميلة إلى السلة!
           </p>
         </div>
       </Layout>
