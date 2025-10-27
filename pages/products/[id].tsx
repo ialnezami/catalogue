@@ -142,7 +142,7 @@ export default function ProductDetail() {
               }}
             >
               <ShoppingCart size={24} />
-              Add to Cart
+              إضافة للسلة
             </button>
           </div>
 
@@ -155,12 +155,12 @@ export default function ProductDetail() {
               border: '1px solid #374151',
             }}
           >
-            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#ffffff' }}>Product Details</h3>
+            <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', color: '#ffffff' }}>تفاصيل المنتج</h3>
             <div style={{ color: '#d1d5db', lineHeight: '2' }}>
-              <p>Premium quality materials</p>
-              <p>Free shipping on orders over $100</p>
-              <p>30-day return policy</p>
-              <p>Secure payment options</p>
+              <p>مواد عالية الجودة</p>
+              <p>الشحن مجاني للطلبات أكثر من $100</p>
+              <p>سياسة إرجاع لمدة 30 يوم</p>
+              <p>خيارات دفع آمنة</p>
             </div>
           </div>
         </div>
