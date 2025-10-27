@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
-import { ShoppingCart, Scan, Search, Plus, Minus, Trash2, X } from 'lucide-react';
+import { ShoppingCart, Scan, Search, Plus, Minus, Trash2, X, Camera } from 'lucide-react';
 import { Product } from '@/types';
+import { Html5QrcodeScanner } from 'html5-qrcode';
 
 interface POSItem {
   product: Product;
@@ -19,7 +20,9 @@ export default function POS() {
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [change, setChange] = useState(0);
   const [cartVisible, setCartVisible] = useState(true);
+  const [scannerVisible, setScannerVisible] = useState(false);
   const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
 
   useEffect(() => {
     loadProducts();
@@ -178,6 +181,46 @@ export default function POS() {
     setChange(amount - getTotal());
   };
 
+  const startScanner = () => {
+    setScannerVisible(true);
+    setTimeout(() => {
+      const html5QrcodeScanner = new Html5QrcodeScanner(
+        'barcode-scanner',
+        {
+          fps: 10,
+          qrbox: { width: 250, height: 250 },
+          aspectRatio: 1.0,
+          supportedScanTypes: [1, 2] // 1 = QR_CODE, 2 = BARCODE
+        },
+        /* verbose= */ false
+      );
+
+      html5QrcodeScanner.render(
+        onScanSuccess,
+        onScanError
+      );
+
+      scannerRef.current = html5QrcodeScanner;
+    }, 100);
+  };
+
+  const stopScanner = () => {
+    if (scannerRef.current) {
+      scannerRef.current.clear();
+      scannerRef.current = null;
+    }
+    setScannerVisible(false);
+  };
+
+  const onScanSuccess = (decodedText: string) => {
+    handleBarcodeScan(decodedText);
+    stopScanner();
+  };
+
+  const onScanError = (errorMessage: string) => {
+    // Ignore scan errors
+  };
+
   return (
     <Layout>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -205,28 +248,49 @@ export default function POS() {
               <Scan size={24} />
               Barcode Scanner
             </h2>
-            <input
-              ref={barcodeInputRef}
-              type="text"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                if (e.target.value.length > 8) {
-                  handleBarcodeScan(e.target.value);
-                }
-              }}
-              placeholder="Scan barcode or type to search..."
-              autoFocus
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                backgroundColor: '#2a2a2a',
-                border: '2px solid #3b82f6',
-                borderRadius: '8px',
-                color: '#ffffff',
-                fontSize: '1rem',
-              }}
-            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <input
+                ref={barcodeInputRef}
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  if (e.target.value.length > 8) {
+                    handleBarcodeScan(e.target.value);
+                  }
+                }}
+                placeholder="Type barcode or press camera to scan..."
+                autoFocus
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  backgroundColor: '#2a2a2a',
+                  border: '2px solid #3b82f6',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  fontSize: '1rem',
+                }}
+              />
+              <button
+                onClick={startScanner}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  fontWeight: 'bold',
+                }}
+              >
+                <Camera size={20} />
+                Camera
+              </button>
+            </div>
           </div>
 
           <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
@@ -472,6 +536,70 @@ export default function POS() {
           </div>
         )}
       </div>
+
+      {scannerVisible && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '12px',
+              border: '1px solid #374151',
+              maxWidth: '500px',
+              width: '90%',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Camera size={24} />
+                Barcode Scanner
+              </h2>
+              <button
+                onClick={stopScanner}
+                style={{
+                  backgroundColor: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '0.5rem 1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  fontSize: '1rem',
+                }}
+              >
+                <X size={20} />
+                Close
+              </button>
+            </div>
+            <div
+              id="barcode-scanner"
+              style={{
+                marginBottom: '1rem',
+                borderRadius: '8px',
+                overflow: 'hidden',
+              }}
+            />
+            <p style={{ color: '#9ca3af', textAlign: 'center', fontSize: '0.875rem' }}>
+              Position barcode within the camera view
+            </p>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
