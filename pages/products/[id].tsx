@@ -11,8 +11,8 @@ export default function ProductDetail() {
   const router = useRouter();
   const { id } = router.query;
   const [product, setProduct] = useState<Product | null>(null);
-  const { addToCart } = useCart();
   const [linkCopied, setLinkCopied] = useState(false);
+  const { addToCart } = useCart();
 
   useEffect(() => {
     if (id) {
@@ -26,6 +26,17 @@ export default function ProductDetail() {
   const handleAddToCart = () => {
     if (product) {
       addToCart(product);
+    }
+  };
+
+  const copyProductLink = async () => {
+    const productUrl = window.location.href;
+    try {
+      await navigator.clipboard.writeText(productUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
     }
   };
 
@@ -144,6 +155,38 @@ export default function ProductDetail() {
             >
               <ShoppingCart size={24} />
               إضافة للسلة
+            </button>
+            <button
+              onClick={copyProductLink}
+              style={{
+                padding: '1rem 2rem',
+                backgroundColor: linkCopied ? '#10b981' : '#2a2a2a',
+                color: '#ffffff',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                fontSize: '1.125rem',
+                fontWeight: 'bold',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.75rem',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                whiteSpace: 'nowrap',
+              }}
+              onMouseEnter={(e) => {
+                if (!linkCopied) {
+                  e.currentTarget.style.backgroundColor = '#374151';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!linkCopied) {
+                  e.currentTarget.style.backgroundColor = '#2a2a2a';
+                }
+              }}
+            >
+              <LinkIcon size={24} />
+              {linkCopied ? 'تم النسخ!' : 'نسخ رابط المنتج'}
             </button>
           </div>
 
