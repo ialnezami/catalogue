@@ -69,7 +69,7 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
             onChange={(e) => handleSearch(e.target.value)}
             style={{
               width: '100%',
-              padding: '0.75rem 1rem 0.75rem 2.75rem',
+              padding: '0.75rem 2.75rem 0.75rem 1rem',
               backgroundColor: '#0a0a0a',
               border: '1px solid #374151',
               borderRadius: '8px',
