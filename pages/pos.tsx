@@ -189,8 +189,7 @@ export default function POS() {
         {
           fps: 10,
           qrbox: { width: 250, height: 250 },
-          aspectRatio: 1.0,
-          supportedScanTypes: [1, 2] // 1 = QR_CODE, 2 = BARCODE
+          aspectRatio: 1.0
         },
         /* verbose= */ false
       );
