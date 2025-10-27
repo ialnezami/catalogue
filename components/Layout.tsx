@@ -75,6 +75,22 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </Link>
             <Link
+              href="/pos"
+              style={{
+                color: '#10b981',
+                fontSize: '0.875rem',
+                transition: 'opacity 0.3s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.7';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              POS
+            </Link>
+            <Link
               href="/admin/products"
               style={{
                 color: '#ec4899',

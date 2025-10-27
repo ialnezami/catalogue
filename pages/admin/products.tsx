@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Plus, Edit2, Trash2, LogOut } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText } from 'lucide-react';
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
 
@@ -118,13 +118,49 @@ export default function AdminProducts() {
         <h1 style={{ fontSize: '2.5rem', color: '#ec4899' }}>Admin - Products</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button
+            onClick={() => router.push('/pos')}
+            style={{
+              backgroundColor: '#3b82f6',
+              color: '#ffffff',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1rem',
+            }}
+          >
+            <ShoppingCart size={20} />
+            POS
+          </button>
+          <button
+            onClick={() => router.push('/admin/orders')}
+            style={{
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1rem',
+            }}
+          >
+            <FileText size={20} />
+            Orders
+          </button>
+          <button
             onClick={() => {
       setEditingProduct(null);
       setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
       setShowForm(true);
             }}
             style={{
-              backgroundColor: '#10b981',
+              backgroundColor: '#ec4899',
               color: '#ffffff',
               padding: '0.75rem 1.5rem',
               borderRadius: '8px',
