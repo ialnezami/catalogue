@@ -74,6 +74,22 @@ export default function Layout({ children }: LayoutProps) {
                 </span>
               )}
             </Link>
+            <Link
+              href="/admin/products"
+              style={{
+                color: '#ec4899',
+                fontSize: '0.875rem',
+                transition: 'opacity 0.3s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.opacity = '0.7';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              Admin
+            </Link>
           </nav>
         </div>
       </header>

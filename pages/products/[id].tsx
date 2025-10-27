@@ -2,7 +2,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import { useCart } from '@/contexts/CartContext';
-import productsData from '@/data/products.json';
 import { Product } from '@/types';
 import { ShoppingCart, ArrowLeft, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -13,13 +12,28 @@ export default function ProductDetail() {
   const [product, setProduct] = useState<Product | null>(null);
   const [linkCopied, setLinkCopied] = useState(false);
   const { addToCart } = useCart();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
-      const foundProduct = productsData.find((p) => p.id === id);
-      if (foundProduct) {
-        setProduct(foundProduct as Product);
-      }
+      const loadProduct = async () => {
+        try {
+          setLoading(true);
+          const response = await fetch(`/api/products/${id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setProduct({
+              ...data,
+              id: data._id?.toString() || data.id,
+            });
+          }
+        } catch (error) {
+          console.error('Error loading product:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadProduct();
     }
   }, [id]);
 
@@ -40,7 +54,7 @@ export default function ProductDetail() {
     }
   };
 
-  if (!product) {
+  if (loading || !product) {
     return (
       <Layout>
         <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>

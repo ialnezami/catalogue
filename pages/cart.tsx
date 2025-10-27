@@ -6,27 +6,42 @@ import { ShoppingBag, Trash2, Share2, Plus, Minus } from 'lucide-react';
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
   const [copied, setCopied] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [showNameModal, setShowNameModal] = useState(false);
 
-  const exportToJson = () => {
+  const exportToJson = (name: string) => {
     const cartData = {
-      items: cartItems,
+      customerName: name,
+      items: cartItems.map(item => ({
+        title: item.product.title,
+        price: item.product.price,
+        quantity: item.quantity,
+        subtotal: item.product.price * item.quantity
+      })),
       total: getTotalPrice(),
-      timestamp: new Date().toISOString(),
     };
     return JSON.stringify(cartData, null, 2);
   };
 
   const copyToClipboard = () => {
-    const jsonData = exportToJson();
+    if (!customerName) {
+      setShowNameModal(true);
+      return;
+    }
+    const jsonData = exportToJson(customerName);
     navigator.clipboard.writeText(jsonData);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const shareOnWhatsApp = () => {
-    const jsonData = exportToJson();
+    if (!customerName) {
+      setShowNameModal(true);
+      return;
+    }
+    const jsonData = exportToJson(customerName);
     const whatsappMessage = encodeURIComponent(
-      `🛍️ Shopping Cart\n\n${jsonData}\n\nTotal: $${getTotalPrice().toFixed(2)}`
+      `🛍️ Shopping Cart - ${customerName}\n\n${jsonData}\n\nTotal: $${getTotalPrice().toFixed(2)}`
     );
     window.open(`https://wa.me/?text=${whatsappMessage}`, '_blank');
   };
@@ -259,6 +274,92 @@ export default function Cart() {
           </div>
         </div>
       </div>
+
+      {showNameModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '12px',
+              border: '1px solid #374151',
+              maxWidth: '400px',
+              width: '90%',
+            }}
+          >
+            <h3 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '1rem' }}>Enter Customer Name</h3>
+            <p style={{ color: '#9ca3af', marginBottom: '1.5rem' }}>
+              Please enter the customer name to share the cart.
+            </p>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Customer Name"
+              autoFocus
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                backgroundColor: '#2a2a2a',
+                border: '1px solid #374151',
+                borderRadius: '8px',
+                color: '#ffffff',
+                fontSize: '1rem',
+                marginBottom: '1.5rem',
+              }}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={() => setShowNameModal(false)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  backgroundColor: '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (customerName.trim()) {
+                    setShowNameModal(false);
+                    copyToClipboard();
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  backgroundColor: '#ec4899',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+              >
+                Continue
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

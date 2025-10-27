@@ -2,10 +2,6 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
-// Option 1: Use Google Sheets
-import { fetchProductsFromGoogleSheets } from '@/lib/googleSheets';
-// Option 2: Load from JSON (commented out - now using Google Sheets)
-// import productsData from '@/data/products.json';
 import { Product } from '@/types';
 
 export default function Home() {
@@ -14,13 +10,18 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Option 1: Load from Google Sheets (Active)
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const data = await fetchProductsFromGoogleSheets();
-        setProducts(data);
-        setFilteredProducts(data);
+        const response = await fetch('/api/products');
+        const data = await response.json();
+        // Convert MongoDB _id to id for Product type
+        const formattedData = data.map((item: any) => ({
+          ...item,
+          id: item._id?.toString() || item.id,
+        }));
+        setProducts(formattedData);
+        setFilteredProducts(formattedData);
       } catch (error) {
         console.error('Error loading products:', error);
       } finally {
@@ -28,10 +29,6 @@ export default function Home() {
       }
     };
     loadProducts();
-
-    // Option 2: Load from JSON (Commented out - now using Google Sheets)
-    // setProducts(productsData as Product[]);
-    // setFilteredProducts(productsData as Product[]);
   }, []);
 
   const handleFilter = (filtered: Product[]) => {
@@ -42,7 +39,7 @@ export default function Home() {
     return (
       <Layout>
         <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>جاري تحميل المنتجات من Google Sheets...</p>
+          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>جاري تحميل المنتجات...</p>
         </div>
       </Layout>
     );
