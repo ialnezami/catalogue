@@ -40,6 +40,8 @@ The application uses a simple file-based data storage approach:
 - **Theme**: Dark mode with elegant rose color accents (#ec4899)
 - **Target Audience**: Women's accessories and jewelry
 - **Style**: Modern, feminine, and sophisticated
+- **Language**: Arabic (RTL support)
+- **Features**: Clear cart button, WhatsApp sharing, JSON export
 
 ## Getting Started
 
@@ -68,7 +70,44 @@ npm install
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+4. Open [http://localhost:3000](http://localhost:3000) in your browser (or the port shown in terminal)
+
+## Deployment
+
+### Vercel Deployment
+
+This project is configured for easy deployment on Vercel:
+
+1. **Push to GitHub** (if not already done):
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin <your-github-repo-url>
+git push -u origin main
+```
+
+2. **Deploy on Vercel**:
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Vercel will automatically detect Next.js
+   - Click "Deploy"
+
+3. **Environment Variables** (if needed):
+   - Add any environment variables in Vercel project settings
+
+4. **After Deployment**:
+   - Your app will be live at `https://your-project.vercel.app`
+   - Automatic deployments on every push to main branch
+   - Preview deployments for pull requests
+
+### Build for Production
+
+```bash
+npm run build
+npm start
+```
 
 ## Project Structure
 
