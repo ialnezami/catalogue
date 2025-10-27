@@ -2,21 +2,51 @@ import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
-import productsData from '@/data/products.json';
+// Option 1: Use Google Sheets
+import { fetchProductsFromGoogleSheets } from '@/lib/googleSheets';
+// Option 2: Load from JSON (commented out - now using Google Sheets)
+// import productsData from '@/data/products.json';
 import { Product } from '@/types';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    setProducts(productsData as Product[]);
-    setFilteredProducts(productsData as Product[]);
+    // Option 1: Load from Google Sheets (Active)
+    const loadProducts = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProductsFromGoogleSheets();
+        setProducts(data);
+        setFilteredProducts(data);
+      } catch (error) {
+        console.error('Error loading products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadProducts();
+
+    // Option 2: Load from JSON (Commented out - now using Google Sheets)
+    // setProducts(productsData as Product[]);
+    // setFilteredProducts(productsData as Product[]);
   }, []);
 
   const handleFilter = (filtered: Product[]) => {
     setFilteredProducts(filtered);
   };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
+          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>جاري تحميل المنتجات من Google Sheets...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
