@@ -49,12 +49,18 @@ export default function ProductCard({ product }: ProductCardProps) {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundImage: `url(/images/${product.image})`,
+            backgroundImage: product.image.startsWith('http') ? `url(${product.image})` : `url(/images/${product.image})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
           }}
         >
-          {product.image && <img src={`/images/${product.image}`} alt={product.title} style={{ maxWidth: '100%', maxHeight: '100%' }} />}
+          {product.image && (
+            <img 
+              src={product.image.startsWith('http') ? product.image : `/images/${product.image}`} 
+              alt={product.title} 
+              style={{ maxWidth: '100%', maxHeight: '100%' }} 
+            />
+          )}
         </div>
         <div style={{ padding: '1.5rem', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{ color: '#ec4899', fontSize: '0.875rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>

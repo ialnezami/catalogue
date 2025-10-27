@@ -4,7 +4,7 @@ import Layout from '@/components/Layout';
 import { useCart } from '@/contexts/CartContext';
 import productsData from '@/data/products.json';
 import { Product } from '@/types';
-import { ShoppingCart, ArrowLeft } from 'lucide-react';
+import { ShoppingCart, ArrowLeft, Link as LinkIcon } from 'lucide-react';
 import Link from 'next/link';
 
 export default function ProductDetail() {
@@ -12,6 +12,7 @@ export default function ProductDetail() {
   const { id } = router.query;
   const [product, setProduct] = useState<Product | null>(null);
   const { addToCart } = useCart();
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -81,13 +82,13 @@ export default function ProductDetail() {
               width: '100%',
               aspectRatio: '1',
               backgroundColor: '#2a2a2a',
-              backgroundImage: `url(/images/${product.image})`,
+              backgroundImage: product.image.startsWith('http') ? `url(${product.image})` : `url(/images/${product.image})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
             }}
           >
             <img
-              src={`/images/${product.image}`}
+              src={product.image.startsWith('http') ? product.image : `/images/${product.image}`}
               alt={product.title}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />

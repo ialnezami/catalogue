@@ -111,7 +111,7 @@ export default function Cart() {
                 }}
               >
                 <img
-                  src={`/images/${item.product.image}`}
+                  src={item.product.image.startsWith('http') ? item.product.image : `/images/${item.product.image}`}
                   alt={item.product.title}
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
                 />
