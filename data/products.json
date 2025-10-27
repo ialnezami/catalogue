@@ -5,7 +5,7 @@
     "description": "Elegant rose gold necklace with delicate chain, perfect for any occasion. Handcrafted with premium materials.",
     "price": 89.99,
     "category": "jewelry",
-    "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop"
+    "image": "https://res.cloudinary.com/deizdqdif/image/upload/v1761540433/samples/ecommerce/analog-classic.jpg"
   },
   {
     "id": "2",
@@ -13,7 +13,7 @@
     "description": "Luxurious silk scarf featuring elegant rose and floral patterns. Adds sophistication to any outfit.",
     "price": 65.00,
     "category": "accessories",
-    "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop"
+    "image": "https://res.cloudinary.com/deizdqdif/image/upload/v1761540433/samples/ecommerce/analog-classic.jpg"
   },
   {
     "id": "3",
@@ -21,7 +21,7 @@
     "description": "Handcrafted sterling silver ring adorned with a beautiful rose quartz gemstone.",
     "price": 75.50,
     "category": "jewelry",
-    "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop"
+    "image": "https://res.cloudinary.com/deizdqdif/image/upload/v1761540433/samples/ecommerce/analog-classic.jpg"
   },
   {
     "id": "4",
@@ -29,7 +29,7 @@
     "description": "Chic leather crossbody bag in rose blush color. Perfect size for essentials with elegant gold hardware.",
     "price": 125.00,
     "category": "bags",
-    "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop"
+    "image": "https://res.cloudinary.com/deizdqdif/image/upload/v1761540433/samples/ecommerce/analog-classic.jpg"
   },
   {
     "id": "5",
@@ -37,7 +37,7 @@
     "description": "Classic pearl stud earrings in rose gold setting. Timeless elegance for everyday wear.",
     "price": 45.00,
     "category": "jewelry",
-    "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop"
+    "image": "https://res.cloudinary.com/deizdqdif/image/upload/v1761540433/samples/ecommerce/analog-classic.jpg"
   },
   {
     "id": "6",
@@ -45,7 +45,7 @@
     "description": "Ultra-soft cashmere wrap in blush pink. Perfect for adding warmth and style to any ensemble.",
     "price": 95.00,
     "category": "accessories",
-    "image": "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=800&h=800&fit=crop"
+    "image": "https://res.cloudinary.com/deizdqdif/image/upload/v1761540433/samples/ecommerce/analog-classic.jpg"
   }
 ]
 
