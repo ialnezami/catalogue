@@ -32,7 +32,7 @@ export default function Layout({ children }: LayoutProps) {
           }}
         >
           <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
-            Rose Collection
+            مجموعة روز
           </Link>
           <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
             <Link
@@ -48,7 +48,7 @@ export default function Layout({ children }: LayoutProps) {
                 e.currentTarget.style.color = '#ffffff';
               }}
             >
-              Products
+              المنتجات
             </Link>
             <Link href="/cart" style={{ position: 'relative' }}>
               <ShoppingBag size={24} color="#ec4899" />

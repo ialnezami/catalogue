@@ -91,7 +91,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               }}
             >
               <ShoppingCart size={18} />
-              Add
+              إضافة للسلة
             </button>
           </div>
         </div>

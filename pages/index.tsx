@@ -22,10 +22,10 @@ export default function Home() {
     <Layout>
       <div style={{ marginBottom: '3rem' }}>
         <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: '#ec4899', fontWeight: 'bold' }}>
-          Discover Our Collection
+          اكتشفي مجموعتنا
         </h1>
         <p style={{ fontSize: '1.25rem', color: '#d1d5db' }}>
-          Elegant pieces for the modern woman
+          قطع أنيقة للمرأة العصرية
         </p>
       </div>
 
@@ -45,7 +45,7 @@ export default function Home() {
 
       {filteredProducts.length === 0 && (
         <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>No products found matching your criteria.</p>
+          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>لم يتم العثور على منتجات تطابق معايير البحث.</p>
         </div>
       )}
     </Layout>
