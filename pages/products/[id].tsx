@@ -58,7 +58,7 @@ export default function ProductDetail() {
         }}
       >
         <ArrowLeft size={20} />
-        Back to Products
+        العودة للمنتجات
       </Link>
 
       <div
