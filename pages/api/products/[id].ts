@@ -19,9 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { title, description, price, category, image } = req.body;
+      const { title, description, price, category, image, barcode, buyPrice, qty, note } = req.body;
       
-      const updateData = {
+      const updateData: any = {
         title,
         description,
         price: parseFloat(price),
@@ -29,6 +29,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         image,
         updatedAt: new Date(),
       };
+
+      // Add optional fields if provided
+      if (barcode) {
+        updateData.barcode = barcode;
+      } else {
+        updateData.barcode = undefined;
+      }
+      
+      if (buyPrice) {
+        updateData.buyPrice = parseFloat(buyPrice);
+      } else {
+        updateData.buyPrice = undefined;
+      }
+      
+      if (qty !== undefined && qty !== '') {
+        updateData.qty = parseInt(qty);
+      } else {
+        updateData.qty = undefined;
+      }
+      
+      if (note) {
+        updateData.note = note;
+      } else {
+        updateData.note = undefined;
+      }
 
       const result = await collection.updateOne(
         { _id: new ObjectId(id as string) },

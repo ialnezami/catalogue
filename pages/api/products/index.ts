@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { title, description, price, category, image } = req.body;
+      const { title, description, price, category, image, barcode, buyPrice, qty, note } = req.body;
       
       const newProduct = {
         title,
@@ -22,6 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         price: parseFloat(price),
         category,
         image,
+        barcode: barcode || undefined,
+        buyPrice: buyPrice ? parseFloat(buyPrice) : undefined,
+        qty: qty ? parseInt(qty) : undefined,
+        note: note || undefined,
         createdAt: new Date(),
       };
 

@@ -15,6 +15,10 @@ export default function AdminProducts() {
     price: '',
     category: '',
     image: '',
+    barcode: '',
+    buyPrice: '',
+    qty: '',
+    note: '',
   });
   const router = useRouter();
 
@@ -59,7 +63,7 @@ export default function AdminProducts() {
       
       setShowForm(false);
       setEditingProduct(null);
-      setFormData({ title: '', description: '', price: '', category: '', image: '' });
+      setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
       loadProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -74,6 +78,10 @@ export default function AdminProducts() {
       price: product.price.toString(),
       category: product.category,
       image: product.image,
+      barcode: product.barcode || '',
+      buyPrice: product.buyPrice?.toString() || '',
+      qty: product.qty?.toString() || '',
+      note: product.note || '',
     });
     setShowForm(true);
   };
@@ -111,9 +119,9 @@ export default function AdminProducts() {
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             onClick={() => {
-              setEditingProduct(null);
-              setFormData({ title: '', description: '', price: '', category: '', image: '' });
-              setShowForm(true);
+      setEditingProduct(null);
+      setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+      setShowForm(true);
             }}
             style={{
               backgroundColor: '#10b981',
@@ -200,7 +208,7 @@ export default function AdminProducts() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Price</label>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Selling Price</label>
                 <input
                   type="number"
                   step="0.01"
@@ -211,15 +219,58 @@ export default function AdminProducts() {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Image URL</label>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Buy Price (Admin Only)</label>
                 <input
-                  type="text"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  required
+                  type="number"
+                  step="0.01"
+                  value={formData.buyPrice}
+                  onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
                   style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
+                  placeholder="Cost price"
                 />
               </div>
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Image URL</label>
+              <input
+                type="text"
+                value={formData.image}
+                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                required
+                style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
+              />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+              <div>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Barcode (Admin Only)</label>
+                <input
+                  type="text"
+                  value={formData.barcode}
+                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
+                  placeholder="Product barcode"
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Quantity (Admin Only)</label>
+                <input
+                  type="number"
+                  value={formData.qty}
+                  onChange={(e) => setFormData({ ...formData, qty: e.target.value })}
+                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
+                  placeholder="Stock quantity"
+                />
+              </div>
+            </div>
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Internal Notes (Admin Only)</label>
+              <textarea
+                value={formData.note}
+                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                rows={2}
+                style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff', resize: 'vertical' }}
+                placeholder="Private notes about this product"
+              />
             </div>
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
@@ -241,7 +292,7 @@ export default function AdminProducts() {
                 onClick={() => {
                   setShowForm(false);
                   setEditingProduct(null);
-                  setFormData({ title: '', description: '', price: '', category: '', image: '' });
+                  setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
                 }}
                 style={{
                   backgroundColor: '#374151',
@@ -278,9 +329,43 @@ export default function AdminProducts() {
             />
             <h3 style={{ fontSize: '1.25rem', color: '#ffffff', marginBottom: '0.5rem' }}>{product.title}</h3>
             <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{product.category}</p>
-            <p style={{ color: '#ec4899', fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-              ${product.price}
-            </p>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <p style={{ color: '#ec4899', fontSize: '1.5rem', fontWeight: 'bold', display: 'inline' }}>
+                ${product.price}
+              </p>
+              {product.buyPrice && (
+                <p style={{ color: '#9ca3af', fontSize: '0.875rem', display: 'inline', marginLeft: '0.5rem' }}>
+                  (Cost: ${product.buyPrice})
+                </p>
+              )}
+            </div>
+            {product.barcode && (
+              <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                Barcode: <strong style={{ color: '#9ca3af' }}>{product.barcode}</strong>
+              </p>
+            )}
+            {product.buyPrice && (
+              <p style={{ color: '#10b981', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                Profit: ${(product.price - product.buyPrice).toFixed(2)}
+              </p>
+            )}
+            {product.qty !== undefined && (
+              <p style={{ 
+                color: product.qty > 0 ? '#10b981' : '#ef4444', 
+                fontSize: '0.875rem', 
+                marginBottom: '0.5rem',
+                fontWeight: 'bold'
+              }}>
+                Stock: {product.qty > 0 ? `${product.qty} available` : 'Out of Stock'}
+              </p>
+            )}
+            {product.note && (
+              <div style={{ backgroundColor: '#2a2a2a', padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', borderLeft: '3px solid #3b82f6' }}>
+                <p style={{ color: '#9ca3af', fontSize: '0.875rem', fontStyle: 'italic' }}>
+                  <strong>Note:</strong> {product.note}
+                </p>
+              </div>
+            )}
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button
                 onClick={() => handleEdit(product)}

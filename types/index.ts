@@ -5,6 +5,10 @@ export interface Product {
   price: number;
   category: string;
   image: string;
+  barcode?: string;   // Admin only - product barcode
+  buyPrice?: number;  // Admin only - cost price
+  note?: string;       // Admin only - internal notes
+  qty?: number;       // Admin only - stock quantity
 }
 
 export interface CartItem {
