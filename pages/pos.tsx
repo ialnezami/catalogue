@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import {
   Scan, Search, Plus, Minus, Trash2, Percent, Printer,
-  Camera, DollarSign, ShoppingBag, Zap, CheckCircle
+  Camera, DollarSign, ShoppingBag, Zap, CheckCircle, LogOut
 } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useCartStore } from '@/stores/cartStore';
