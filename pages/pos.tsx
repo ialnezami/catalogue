@@ -18,6 +18,9 @@ export default function POSNew() {
   const [scannerVisible, setScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(true);
   const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [showCustomerModal, setShowCustomerModal] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [pendingPrint, setPendingPrint] = useState(false);
   const [discountType, setDiscountType] = useState<'fixed' | 'percent'>('fixed');
   const [discountValue, setDiscountValue] = useState(0);
   const [exchangeRate, setExchangeRate] = useState(15000);
@@ -217,68 +220,124 @@ export default function POSNew() {
   };
 
   const generateReceipt = () => {
-    const receiptHTML = `
+    const total = getTotal();
+    const subtotal = getSubtotal();
+    const billHtml = `
       <!DOCTYPE html>
       <html>
         <head>
-          <meta charset="UTF-8">
-          <title>Receipt</title>
+          <meta charset="utf-8">
+          <title>Receipt - POS</title>
           <style>
-            @media print {
-              @page { margin: 0; size: 80mm auto; }
-              body { margin: 0; padding: 10mm; }
-            }
             body {
               font-family: Arial, sans-serif;
               padding: 20px;
-              max-width: 300px;
+              max-width: 600px;
               margin: 0 auto;
             }
             .header {
               text-align: center;
+              border-bottom: 2px solid #ec4899;
+              padding-bottom: 20px;
               margin-bottom: 20px;
-              border-bottom: 2px solid #000;
-              padding-bottom: 10px;
+            }
+            .header h1 {
+              color: #ec4899;
+              margin: 0;
+            }
+            .customer-info {
+              margin-bottom: 20px;
+            }
+            .items {
+              margin-bottom: 20px;
             }
             .item {
               display: flex;
               justify-content: space-between;
-              margin-bottom: 10px;
-              border-bottom: 1px dotted #000;
-              padding-bottom: 5px;
+              padding: 10px 0;
+              border-bottom: 1px solid #eee;
             }
-            .total {
+            .item-title {
               font-weight: bold;
-              font-size: 1.2em;
-              margin-top: 15px;
-              text-align: center;
-              border-top: 2px solid #000;
-              padding-top: 10px;
             }
-            .date {
-              text-align: center;
+            .item-details {
               font-size: 0.9em;
+              color: #666;
+            }
+            .totals {
+              border-top: 2px solid #ec4899;
+              padding-top: 10px;
               margin-top: 20px;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 5px 0;
+            }
+            .grand-total {
+              font-size: 1.2em;
+              font-weight: bold;
+              color: #ec4899;
+            }
+            @media print {
+              body { margin: 0; padding: 10px; }
+              button { display: none; }
             }
           </style>
         </head>
         <body>
           <div class="header">
-            <h2>مجموعة روز</h2>
-            <p>Rose Collection</p>
+            <h1>رسالة الفاتورة</h1>
           </div>
-          ${items.map(item => `
-            <div class="item">
-              <span>${item.name} x${item.quantity}</span>
-              <span>${Math.round(item.price * exchangeRate).toLocaleString('ar-EG')} ل.س</span>
+          
+          <div class="customer-info">
+            <strong>العملية:</strong> بيع POS<br>
+            <strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}
+          </div>
+          
+          <div class="items">
+            <h3>المنتجات:</h3>
+            ${items.map(item => `
+              <div class="item">
+                <div>
+                  <div class="item-title">${item.name}</div>
+                  <div class="item-details">
+                    ${formatPrice(item.price, exchangeRate, displayCurrency)} × ${item.quantity}
+                  </div>
+                </div>
+                <div>
+                  ${formatPrice(item.subtotal, exchangeRate, displayCurrency)}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="totals">
+            <div class="total-row">
+              <span>المجموع الفرعي:</span>
+              <span>${formatPrice(subtotal, exchangeRate, displayCurrency)}</span>
             </div>
-          `).join('')}
-          <div class="total">
-            <div>Total: ${Math.round(getTotal() * exchangeRate).toLocaleString('ar-EG')} ل.س</div>
-            <div style="font-size: 0.8em; margin-top: 5px;">(${getTotal().toFixed(2)} USD)</div>
+            ${discount > 0 ? `
+            <div class="total-row">
+              <span>الخصم:</span>
+              <span>-${formatPrice(discount, exchangeRate, displayCurrency)}</span>
+            </div>
+            ` : ''}
+            ${tax > 0 ? `
+            <div class="total-row">
+              <span>الضريبة:</span>
+              <span>${formatPrice(tax, exchangeRate, displayCurrency)}</span>
+            </div>
+            ` : ''}
+            <div class="total-row grand-total">
+              <span>الإجمالي:</span>
+              <span>${formatPrice(total, exchangeRate, displayCurrency)}</span>
+            </div>
           </div>
-          <div class="date">
-            Date: ${new Date().toLocaleString('ar-EG')}
+          
+          <div style="text-align: center; margin-top: 30px; color: #666; font-size: 0.9em;">
+            <p>شكراً لكم لاختياركم منتجاتنا!</p>
+            <p>Thank you for choosing our products!</p>
           </div>
         </body>
       </html>
@@ -287,11 +346,12 @@ export default function POSNew() {
     // Create a new window for printing
     const printWindow = window.open('', '_blank');
     if (printWindow) {
-      printWindow.document.write(receiptHTML);
+      printWindow.document.write(billHtml);
       printWindow.document.close();
-      printWindow.onload = () => {
+      
+      setTimeout(() => {
         printWindow.print();
-      };
+      }, 500);
     }
   };
 
