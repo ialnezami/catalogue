@@ -82,7 +82,7 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </Link>
             <Link
-              href="/pos"
+              href="/admin/products"
               className="nav-link"
               style={{
                 color: 'var(--text-primary)',
@@ -107,7 +107,7 @@ export default function Layout({ children }: LayoutProps) {
                 e.currentTarget.style.color = 'var(--text-primary)';
               }}
             >
-              POS
+              Admin
             </Link>
           </nav>
         </div>
