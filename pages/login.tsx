@@ -29,7 +29,14 @@ export default function Login() {
       });
 
       if (response.ok) {
-        router.push('/admin/products');
+        const data = await response.json();
+        
+        // Redirect based on role
+        if (data.role === 'super_admin') {
+          router.push('/super-admin');
+        } else {
+          router.push('/admin/products');
+        }
       } else {
         setError('Invalid credentials');
       }
@@ -55,7 +62,7 @@ export default function Login() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <LogIn size={48} color="#ec4899" style={{ margin: '0 auto 1rem' }} />
           <h1 style={{ fontSize: '2rem', color: '#ffffff', marginBottom: '0.5rem' }}>Admin Login</h1>
-          <p style={{ color: '#9ca3af' }}>Enter your credentials to access the admin panel</p>
+          <p style={{ color: '#9ca3af' }}>Super Admin or Platform Admin Access</p>
         </div>
 
         {error && (

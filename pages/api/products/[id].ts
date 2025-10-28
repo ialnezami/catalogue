@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { getPlatformFromRequest, withPlatformFilter } from '@/lib/platform';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -9,9 +10,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const collection = db.collection('products');
 
     const { id } = req.query;
+    const platform = getPlatformFromRequest(req);
 
     if (req.method === 'GET') {
-      const product = await collection.findOne({ _id: new ObjectId(id as string) });
+      const product = await collection.findOne(withPlatformFilter(platform, { _id: new ObjectId(id as string) }));
       if (!product) {
         return res.status(404).json({ message: 'Product not found' });
       }
@@ -62,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const result = await collection.updateOne(
-        { _id: new ObjectId(id as string) },
+        withPlatformFilter(platform, { _id: new ObjectId(id as string) }),
         { $set: updateData }
       );
 
@@ -74,7 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'DELETE') {
-      const result = await collection.deleteOne({ _id: new ObjectId(id as string) });
+      const result = await collection.deleteOne(withPlatformFilter(platform, { _id: new ObjectId(id as string) }));
       
       if (result.deletedCount === 0) {
         return res.status(404).json({ message: 'Product not found' });
