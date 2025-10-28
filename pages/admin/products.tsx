@@ -186,8 +186,15 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
   return (
     <Layout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.5rem', color: '#ec4899' }}>Admin - Products</h1>
+      <div className="admin-header" style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        marginBottom: '2rem',
+        flexWrap: 'wrap',
+        gap: '1rem'
+      }}>
+        <h1 style={{ fontSize: '2.5rem', color: '#000000', fontWeight: '700', letterSpacing: '-0.03em' }}>Products Management</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             onClick={() => router.push('/pos')}
@@ -529,100 +536,213 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
+      <div 
+        className="responsive-grid"
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
+          gap: '1.5rem' 
+        }}
+      >
         {products.map((product) => (
           <div
             key={product.id}
+            className="product-card"
             style={{
-              backgroundColor: '#1a1a1a',
-              padding: '1.5rem',
-              borderRadius: '12px',
-              border: '1px solid #374151',
+              backgroundColor: '#ffffff',
+              border: 'none',
+              borderRadius: '0',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+              overflow: 'hidden',
+              transition: 'all 0.3s ease',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+              e.currentTarget.style.transform = 'translateY(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+              e.currentTarget.style.transform = 'translateY(0)';
             }}
           >
-            <img
-              src={product.image.startsWith('http') ? product.image : `/images/${product.image}`}
-              alt={product.title}
-              style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '8px', marginBottom: '1rem' }}
-            />
-            <h3 style={{ fontSize: '1.25rem', color: '#ffffff', marginBottom: '0.5rem' }}>{product.title}</h3>
-            <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>{product.category}</p>
-            <div style={{ marginBottom: '0.5rem' }}>
-              <p style={{ color: '#ec4899', fontSize: '1.5rem', fontWeight: 'bold', display: 'inline' }}>
-                ${product.price}
-              </p>
-              {product.buyPrice && (
-                <p style={{ color: '#9ca3af', fontSize: '0.875rem', display: 'inline', marginLeft: '0.5rem' }}>
-                  (Cost: ${product.buyPrice})
-                </p>
-              )}
+            <div style={{ 
+              width: '100%', 
+              aspectRatio: '1', 
+              backgroundColor: '#fafafa',
+              overflow: 'hidden',
+              position: 'relative'
+            }}>
+              <img
+                src={product.image.startsWith('http') ? product.image : `/images/${product.image}`}
+                alt={product.title}
+                style={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  objectFit: 'cover',
+                  transition: 'transform 0.3s ease'
+                }}
+              />
             </div>
-            {product.barcode && (
-              <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                Barcode: <strong style={{ color: '#9ca3af' }}>{product.barcode}</strong>
-              </p>
-            )}
-            {product.buyPrice && (
-              <p style={{ color: '#10b981', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                Profit: ${(product.price - product.buyPrice).toFixed(2)}
-              </p>
-            )}
-            {product.qty !== undefined && (
-              <p style={{ 
-                color: product.qty > 0 ? '#10b981' : '#ef4444', 
-                fontSize: '0.875rem', 
-                marginBottom: '0.5rem',
-                fontWeight: 'bold'
+            <div style={{ 
+              padding: '1.5rem 1.25rem',
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: '#ffffff'
+            }}>
+              <div style={{ 
+                color: 'var(--text-tertiary)', 
+                fontSize: '0.6875rem', 
+                fontWeight: '700', 
+                textTransform: 'uppercase', 
+                marginBottom: '0.75rem', 
+                letterSpacing: '0.1em' 
               }}>
-                Stock: {product.qty > 0 ? `${product.qty} available` : 'Out of Stock'}
-              </p>
-            )}
-            {product.note && (
-              <div style={{ backgroundColor: '#2a2a2a', padding: '0.75rem', borderRadius: '6px', marginBottom: '1rem', borderLeft: '3px solid #3b82f6' }}>
-                <p style={{ color: '#9ca3af', fontSize: '0.875rem', fontStyle: 'italic' }}>
-                  <strong>Note:</strong> {product.note}
+                {product.category}
+              </div>
+              <h3 style={{ 
+                fontSize: '1rem', 
+                fontWeight: '400', 
+                marginBottom: '0.5rem', 
+                color: '#000000', 
+                lineHeight: '1.5',
+                letterSpacing: '-0.01em' 
+              }}>
+                {product.title}
+              </h3>
+              <div style={{ marginBottom: '1rem' }}>
+                <p style={{ 
+                  fontSize: '1.125rem', 
+                  fontWeight: '600', 
+                  color: '#000000', 
+                  letterSpacing: '-0.03em',
+                  margin: 0
+                }}>
+                  ${product.price}
                 </p>
               </div>
-            )}
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button
-                onClick={() => handleEdit(product)}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#3b82f6',
-                  color: '#ffffff',
-                  padding: '0.5rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <Edit2 size={18} />
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(product.id)}
-                style={{
-                  flex: 1,
-                  backgroundColor: '#ef4444',
-                  color: '#ffffff',
-                  padding: '0.5rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                }}
-              >
-                <Trash2 size={18} />
-                Delete
-              </button>
+              
+              {/* Admin Info Section */}
+              <div style={{ 
+                marginTop: 'auto',
+                paddingTop: '1rem',
+                borderTop: '1px solid rgba(0, 0, 0, 0.08)',
+                fontSize: '0.75rem',
+                color: 'var(--text-secondary)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.375rem'
+              }}>
+                {product.barcode && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Barcode:</span>
+                    <strong>{product.barcode}</strong>
+                  </div>
+                )}
+                {product.buyPrice && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981' }}>
+                    <span>Profit:</span>
+                    <strong>${(product.price - product.buyPrice).toFixed(2)}</strong>
+                  </div>
+                )}
+                {product.qty !== undefined && (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between',
+                    color: product.qty > 0 ? '#10b981' : '#ef4444',
+                    fontWeight: 'bold'
+                  }}>
+                    <span>Stock:</span>
+                    <strong>{product.qty > 0 ? `${product.qty}` : 'Out of Stock'}</strong>
+                  </div>
+                )}
+                {product.note && (
+                  <div style={{ 
+                    marginTop: '0.5rem',
+                    padding: '0.5rem',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '4px',
+                    fontSize: '0.7rem',
+                    fontStyle: 'italic',
+                    color: '#666666'
+                  }}>
+                    📝 {product.note}
+                  </div>
+                )}
+              </div>
+              
+              <div style={{ 
+                display: 'flex', 
+                gap: '0.5rem',
+                marginTop: '1rem'
+              }}>
+                <button
+                  onClick={() => handleEdit(product)}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    color: '#000000',
+                    padding: '0.625rem 1rem',
+                    borderRadius: '0',
+                    border: '1px solid #000000',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.8125rem',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#000000';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#000000';
+                  }}
+                >
+                  <Edit2 size={16} />
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(product.id)}
+                  style={{
+                    flex: 1,
+                    background: 'transparent',
+                    color: '#ef4444',
+                    padding: '0.625rem 1rem',
+                    borderRadius: '0',
+                    border: '1px solid #ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.8125rem',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#ef4444';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#ef4444';
+                  }}
+                >
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </div>
             </div>
           </div>
         ))}

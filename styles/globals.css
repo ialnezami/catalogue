@@ -407,20 +407,38 @@ input, select {
     font-size: 0.875rem !important;
   }
 
-  /* Add smooth scroll behavior */
-  html {
-    scroll-behavior: smooth;
+  /* Admin products mobile adjustments */
+  .admin-header h1 {
+    font-size: 1.5rem !important;
   }
 
-  /* Highlight cart when scrolling to it */
-  .pos-cart-section {
-    scroll-margin-top: 1rem;
+  .admin-header > div {
+    width: 100% !important;
+    flex-wrap: wrap !important;
   }
 
-  .pos-cart-section:focus-within {
-    outline: 2px solid var(--accent-primary);
-    outline-offset: 4px;
-    border-radius: 12px;
+  .admin-header button {
+    flex: 1;
+    min-width: 100px;
+    font-size: 0.8125rem !important;
+    padding: 0.625rem 1rem !important;
   }
 }
+
+/* Add smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Highlight cart when scrolling to it */
+.pos-cart-section {
+  scroll-margin-top: 1rem;
+}
+
+.pos-cart-section:focus-within {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
 
