@@ -19,24 +19,20 @@ export default function ProductCard({ product }: ProductCardProps) {
   return (
     <Link href={`/products/${product.id}`}>
       <div
+        className="card"
         style={{
-          backgroundColor: '#1a1a1a',
-          borderRadius: '12px',
           overflow: 'hidden',
-          border: '1px solid #374151',
-          transition: 'all 0.3s ease',
           cursor: 'pointer',
           height: '100%',
           display: 'flex',
           flexDirection: 'column',
+          transition: 'all 0.2s ease',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = '#ec4899';
-          e.currentTarget.style.transform = 'translateY(-4px)';
-          e.currentTarget.style.boxShadow = '0 8px 16px rgba(236, 72, 153, 0.2)';
+          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.boxShadow = '0 4px 12px rgba(236, 72, 153, 0.15)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = '#374151';
           e.currentTarget.style.transform = 'translateY(0)';
           e.currentTarget.style.boxShadow = 'none';
         }}
@@ -44,14 +40,15 @@ export default function ProductCard({ product }: ProductCardProps) {
         <div
           style={{
             width: '100%',
-            height: '250px',
-            backgroundColor: '#2a2a2a',
+            aspectRatio: '1',
+            backgroundColor: 'var(--bg-elevated)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             backgroundImage: product.image.startsWith('http') ? `url(${product.image})` : `url(/images/${product.image})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
+            position: 'relative',
           }}
         >
           {product.image && (
@@ -62,42 +59,32 @@ export default function ProductCard({ product }: ProductCardProps) {
             />
           )}
         </div>
-        <div style={{ padding: '1.5rem', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ color: '#ec4899', fontSize: '0.875rem', textTransform: 'uppercase', marginBottom: '0.5rem' }}>
+        <div style={{ padding: '1.25rem', flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ color: 'var(--accent-primary)', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', marginBottom: '0.5rem', letterSpacing: '0.05em' }}>
             {product.category}
           </div>
-          <h3 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#ffffff' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '0.5rem', color: 'var(--text-primary)', lineHeight: '1.4' }}>
             {product.title}
           </h3>
-          <p style={{ color: '#d1d5db', fontSize: '0.875rem', marginBottom: '1rem', flexGrow: 1 }}>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '0.8125rem', marginBottom: '1rem', flexGrow: 1, lineHeight: '1.5', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {product.description}
           </p>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '0.75rem', borderTop: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--accent-primary)', letterSpacing: '-0.02em' }}>
               ${product.price.toFixed(2)}
             </span>
             <button
               onClick={handleAddToCart}
+              className="btn-primary"
               style={{
-                backgroundColor: '#ec4899',
-                color: '#ffffff',
                 padding: '0.5rem 1rem',
-                borderRadius: '8px',
-                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                transition: 'background-color 0.3s',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#db2777';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = '#ec4899';
+                fontSize: '0.875rem',
               }}
             >
-              <ShoppingCart size={18} />
-              إضافة للسلة
+              <ShoppingCart size={16} />
             </button>
           </div>
         </div>

@@ -30,12 +30,10 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
 
   return (
     <div
+      className="card"
       style={{
-        backgroundColor: '#1a1a1a',
-        padding: '1.5rem',
-        borderRadius: '12px',
+        padding: '1.25rem',
         marginBottom: '2rem',
-        border: '1px solid #374151',
       }}
     >
       <div
@@ -49,63 +47,39 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
         <div
           style={{
             flex: '1',
-            minWidth: '250px',
+            minWidth: '280px',
             position: 'relative',
           }}
         >
           <Search
-            size={20}
+            size={18}
             style={{
               position: 'absolute',
               right: '12px',
               top: '50%',
               transform: 'translateY(-50%)',
-              color: '#9ca3af',
+              color: 'var(--text-tertiary)',
             }}
           />
           <input
+            className="input"
             type="text"
             placeholder="ابحث عن المنتجات..."
             onChange={(e) => handleSearch(e.target.value)}
             style={{
-              width: '100%',
-              padding: '0.75rem 2.75rem 0.75rem 1rem',
-              backgroundColor: '#0a0a0a',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#ffffff',
-              fontSize: '1rem',
-              outline: 'none',
-              transition: 'border-color 0.3s',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = '#ec4899';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = '#374151';
+              padding: '0.75rem 2.5rem 0.75rem 1rem',
             }}
           />
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Filter size={20} color="#ec4899" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <Filter size={18} style={{ color: 'var(--accent-primary)' }} />
           <select
+            className="input"
             onChange={(e) => handleCategoryFilter(e.target.value)}
             style={{
-              padding: '0.75rem 1rem',
-              backgroundColor: '#0a0a0a',
-              border: '1px solid #374151',
-              borderRadius: '8px',
-              color: '#ffffff',
-              fontSize: '1rem',
-              outline: 'none',
+              width: 'auto',
+              minWidth: '180px',
               cursor: 'pointer',
-              transition: 'border-color 0.3s',
-            }}
-            onFocus={(e) => {
-              e.currentTarget.style.borderColor = '#ec4899';
-            }}
-            onBlur={(e) => {
-              e.currentTarget.style.borderColor = '#374151';
             }}
           >
             {categories.map((category) => (

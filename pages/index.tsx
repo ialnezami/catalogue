@@ -47,11 +47,22 @@ export default function Home() {
 
   return (
     <Layout>
-      <div style={{ marginBottom: '3rem' }}>
-        <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: '#ec4899', fontWeight: 'bold' }}>
+      <div style={{ marginBottom: '4rem' }}>
+        <h1 style={{ 
+          fontSize: '2.5rem', 
+          fontWeight: '700', 
+          color: 'var(--text-primary)', 
+          marginBottom: '0.75rem',
+          letterSpacing: '-0.03em',
+          lineHeight: '1.2'
+        }}>
           اكتشفي مجموعتنا
         </h1>
-        <p style={{ fontSize: '1.25rem', color: '#d1d5db' }}>
+        <p style={{ 
+          fontSize: '1rem', 
+          color: 'var(--text-secondary)',
+          letterSpacing: '-0.01em'
+        }}>
           قطع أنيقة للمرأة العصرية
         </p>
       </div>
@@ -61,8 +72,9 @@ export default function Home() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-          gap: '2rem',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+          gap: '1.5rem',
+          marginTop: '2rem',
         }}
       >
         {filteredProducts.map((product) => (
@@ -71,8 +83,16 @@ export default function Home() {
       </div>
 
       {filteredProducts.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>لم يتم العثور على منتجات تطابق معايير البحث.</p>
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '4rem 2rem',
+          background: 'var(--bg-card)',
+          borderRadius: 'var(--radius-lg)',
+          border: '1px solid var(--border-subtle)'
+        }}>
+          <p style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>
+            لم يتم العثور على منتجات تطابق معايير البحث.
+          </p>
         </div>
       )}
     </Layout>

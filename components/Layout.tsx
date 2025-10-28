@@ -14,9 +14,10 @@ export default function Layout({ children }: LayoutProps) {
     <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a' }}>
       <header
         style={{
-          backgroundColor: '#1a1a1a',
-          padding: '1rem 2rem',
-          borderBottom: '2px solid #ec4899',
+          background: 'rgba(26, 26, 26, 0.8)',
+          backdropFilter: 'blur(20px)',
+          padding: '1.25rem 2rem',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
           position: 'sticky',
           top: 0,
           zIndex: 100,
@@ -31,43 +32,45 @@ export default function Layout({ children }: LayoutProps) {
             alignItems: 'center',
           }}
         >
-          <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
+          <Link href="/" style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--accent-primary)', letterSpacing: '-0.02em' }}>
             مجموعة روز
           </Link>
           <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
             <Link
               href="/"
               style={{
-                color: '#ffffff',
-                transition: 'color 0.3s',
+                color: 'var(--text-secondary)',
+                fontSize: '0.9375rem',
+                fontWeight: '500',
+                transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#ec4899';
+                e.currentTarget.style.color = 'var(--text-primary)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#ffffff';
+                e.currentTarget.style.color = 'var(--text-secondary)';
               }}
             >
               المنتجات
             </Link>
-            <Link href="/cart" style={{ position: 'relative' }}>
-              <ShoppingBag size={24} color="#ec4899" />
+            <Link href="/cart" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <ShoppingBag size={20} style={{ color: 'var(--text-secondary)' }} />
               {getTotalItems() > 0 && (
                 <span
                   style={{
                     position: 'absolute',
-                    top: '-8px',
-                    right: '-8px',
-                    backgroundColor: '#ec4899',
+                    top: '-6px',
+                    right: '-6px',
+                    backgroundColor: 'var(--accent-primary)',
                     color: '#ffffff',
                     borderRadius: '50%',
-                    width: '20px',
-                    height: '20px',
+                    width: '18px',
+                    height: '18px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '0.75rem',
-                    fontWeight: 'bold',
+                    fontSize: '0.6875rem',
+                    fontWeight: '600',
                   }}
                 >
                   {getTotalItems()}
@@ -77,15 +80,21 @@ export default function Layout({ children }: LayoutProps) {
             <Link
               href="/pos"
               style={{
-                color: '#10b981',
-                fontSize: '0.875rem',
-                transition: 'opacity 0.3s',
+                color: 'var(--text-tertiary)',
+                fontSize: '0.8125rem',
+                fontWeight: '500',
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                background: 'rgba(255, 255, 255, 0.02)',
+                transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.7';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.color = 'var(--success)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+                e.currentTarget.style.color = 'var(--text-tertiary)';
               }}
             >
               POS
@@ -93,15 +102,21 @@ export default function Layout({ children }: LayoutProps) {
             <Link
               href="/admin/products"
               style={{
-                color: '#ec4899',
-                fontSize: '0.875rem',
-                transition: 'opacity 0.3s',
+                color: 'var(--text-tertiary)',
+                fontSize: '0.8125rem',
+                fontWeight: '500',
+                padding: '0.5rem 1rem',
+                borderRadius: '6px',
+                background: 'rgba(236, 72, 153, 0.05)',
+                transition: 'all 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.opacity = '0.7';
+                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.1)';
+                e.currentTarget.style.color = 'var(--accent-primary)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.opacity = '1';
+                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.05)';
+                e.currentTarget.style.color = 'var(--text-tertiary)';
               }}
             >
               Admin
