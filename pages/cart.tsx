@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useCart } from '@/contexts/CartContext';
-import { ShoppingBag, Trash2, Share2, Plus, Minus } from 'lucide-react';
+import { ShoppingBag, Trash2, Share2, Plus, Minus, Printer } from 'lucide-react';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
 
 export default function Cart() {
@@ -9,6 +9,7 @@ export default function Cart() {
   const [copied, setCopied] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [showNameModal, setShowNameModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'clipboard' | 'whatsapp' | 'print' | null>(null);
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
 
@@ -33,27 +34,185 @@ export default function Cart() {
     return JSON.stringify(cartData, null, 2);
   };
 
+  const executeAction = () => {
+    if (!customerName) return;
+    
+    switch (pendingAction) {
+      case 'clipboard':
+        const jsonData = exportToJson(customerName);
+        navigator.clipboard.writeText(jsonData);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+        break;
+      case 'whatsapp':
+        const whatsappJsonData = exportToJson(customerName);
+        const whatsappMessage = encodeURIComponent(
+          `🛍️ Shopping Cart - ${customerName}\n\n${whatsappJsonData}\n\nTotal: $${getTotalPrice().toFixed(2)}`
+        );
+        window.open(`https://wa.me/?text=${whatsappMessage}`, '_blank');
+        break;
+      case 'print':
+        const printWindow = window.open('', '_blank');
+        if (!printWindow) return;
+
+        const total = getTotalPrice();
+        const billHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Bill - ${customerName}</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+              max-width: 600px;
+              margin: 0 auto;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 2px solid #ec4899;
+              padding-bottom: 20px;
+              margin-bottom: 20px;
+            }
+            .header h1 {
+              color: #ec4899;
+              margin: 0;
+            }
+            .customer-info {
+              margin-bottom: 20px;
+            }
+            .items {
+              margin-bottom: 20px;
+            }
+            .item {
+              display: flex;
+              justify-content: space-between;
+              padding: 10px 0;
+              border-bottom: 1px solid #eee;
+            }
+            .item-title {
+              font-weight: bold;
+            }
+            .item-details {
+              font-size: 0.9em;
+              color: #666;
+            }
+            .totals {
+              border-top: 2px solid #ec4899;
+              padding-top: 10px;
+              margin-top: 20px;
+            }
+            .total-row {
+              display: flex;
+              justify-content: space-between;
+              margin: 5px 0;
+            }
+            .grand-total {
+              font-size: 1.2em;
+              font-weight: bold;
+              color: #ec4899;
+            }
+            @media print {
+              body { margin: 0; padding: 10px; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>سلة المشتريات</h1>
+          </div>
+          
+          <div class="customer-info">
+            <strong>العميل:</strong> ${customerName}<br>
+            <strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}
+          </div>
+          
+          <div class="items">
+            <h3>المنتجات:</h3>
+            ${cartItems.map(item => `
+              <div class="item">
+                <div>
+                  <div class="item-title">${item.product.title}</div>
+                  <div class="item-details">
+                    ${formatPrice(item.product.price, exchangeRate, displayCurrency)} × ${item.quantity}
+                  </div>
+                </div>
+                <div>
+                  ${formatPrice(item.product.price * item.quantity, exchangeRate, displayCurrency)}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="totals">
+            <div class="total-row">
+              <span>المجموع الفرعي:</span>
+              <span>${formatPrice(total, exchangeRate, displayCurrency)}</span>
+            </div>
+            <div class="total-row">
+              <span>الضريبة:</span>
+              <span>${formatPrice(0, exchangeRate, displayCurrency)}</span>
+            </div>
+            <div class="total-row grand-total">
+              <span>الإجمالي:</span>
+              <span>${formatPrice(total, exchangeRate, displayCurrency)}</span>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; color: #666; font-size: 0.9em;">
+            <p>شكراً لكم لاختياركم منتجاتنا!</p>
+            <p>Thank you for choosing our products!</p>
+          </div>
+        </body>
+      </html>
+    `;
+
+        printWindow.document.write(billHtml);
+        printWindow.document.close();
+        
+        setTimeout(() => {
+          printWindow.print();
+          // Clear cart after printing
+          setTimeout(() => {
+            clearCart();
+            printWindow.close();
+          }, 1000);
+        }, 500);
+        break;
+    }
+  };
+
   const copyToClipboard = () => {
     if (!customerName) {
+      setPendingAction('clipboard');
       setShowNameModal(true);
       return;
     }
-    const jsonData = exportToJson(customerName);
-    navigator.clipboard.writeText(jsonData);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setPendingAction('clipboard');
+    executeAction();
   };
 
   const shareOnWhatsApp = () => {
     if (!customerName) {
+      setPendingAction('whatsapp');
       setShowNameModal(true);
       return;
     }
-    const jsonData = exportToJson(customerName);
-    const whatsappMessage = encodeURIComponent(
-      `🛍️ Shopping Cart - ${customerName}\n\n${jsonData}\n\nTotal: $${getTotalPrice().toFixed(2)}`
-    );
-    window.open(`https://wa.me/?text=${whatsappMessage}`, '_blank');
+    setPendingAction('whatsapp');
+    executeAction();
+  };
+
+  const printBill = () => {
+    if (!customerName) {
+      setPendingAction('print');
+      setShowNameModal(true);
+      return;
+    }
+    
+    setPendingAction('print');
+    executeAction();
   };
 
   if (cartItems.length === 0) {
@@ -280,6 +439,26 @@ export default function Cart() {
                 <Share2 size={18} />
                 مشاركة على واتساب
               </button>
+              <button
+                onClick={printBill}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
+                  backgroundColor: '#3b82f6',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+              >
+                <Printer size={18} />
+                طباعة الفاتورة
+              </button>
             </div>
           </div>
         </div>
@@ -333,7 +512,10 @@ export default function Cart() {
             />
             <div style={{ display: 'flex', gap: '1rem' }}>
               <button
-                onClick={() => setShowNameModal(false)}
+                onClick={() => {
+                  setShowNameModal(false);
+                  setPendingAction(null);
+                }}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
@@ -350,7 +532,7 @@ export default function Cart() {
                 onClick={() => {
                   if (customerName.trim()) {
                     setShowNameModal(false);
-                    copyToClipboard();
+                    executeAction();
                   }
                 }}
                 style={{
