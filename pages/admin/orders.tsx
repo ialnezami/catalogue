@@ -17,6 +17,7 @@ interface Order {
   items: OrderItem[];
   subtotal: number;
   discount: number;
+  tax?: number;
   total: number;
   paymentAmount: number;
   change: number;
@@ -202,6 +203,7 @@ export default function AdminOrders() {
                 </div>
                 <div style={{ marginTop: '0.5rem', color: '#9ca3af' }}>
                   {order.items.length} item(s) • Discount: ${order.discount.toFixed(2)}
+                  {order.tax && order.tax > 0 && ` • Tax: $${order.tax.toFixed(2)}`}
                 </div>
               </div>
             ))}
@@ -293,6 +295,12 @@ export default function AdminOrders() {
                 <span style={{ color: '#d1d5db' }}>Discount:</span>
                 <span style={{ color: '#10b981' }}>-${selectedOrder.discount.toFixed(2)}</span>
               </div>
+              {selectedOrder.tax && selectedOrder.tax > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                  <span style={{ color: '#d1d5db' }}>Tax:</span>
+                  <span style={{ color: '#ffffff' }}>${selectedOrder.tax.toFixed(2)}</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ color: '#d1d5db' }}>Total:</span>
                 <span style={{ color: '#ec4899', fontWeight: 'bold', fontSize: '1.25rem' }}>${selectedOrder.total.toFixed(2)}</span>

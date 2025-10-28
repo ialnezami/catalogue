@@ -182,19 +182,22 @@ export default function POSNew() {
       return;
     }
 
+    const orderTotal = getTotal();
     const orderData = {
       items: items.map(item => ({
         productId: item._id,
         title: item.name,
         price: item.price,
         quantity: item.quantity,
-        discount: item.discount,
+        discount: item.discount || 0,
         subtotal: item.subtotal,
       })),
       subtotal: getSubtotal(),
-      discount,
-      tax,
-      total: getTotal(),
+      discount: discount || 0,
+      tax: tax || 0,
+      total: orderTotal,
+      paymentAmount: orderTotal,
+      change: 0,
       timestamp: new Date(),
     };
 
@@ -206,12 +209,17 @@ export default function POSNew() {
       });
 
       if (response.ok) {
+        console.log('Order saved successfully:', orderData);
         // Generate and print receipt
         generateReceipt();
-        alert('Order completed successfully!');
+        alert('Order completed and saved successfully!');
         clearCart();
         setDiscount(0);
         setTax(0);
+      } else {
+        const errorData = await response.json();
+        console.error('Error saving order:', errorData);
+        alert('Error saving order!');
       }
     } catch (error) {
       console.error('Error saving order:', error);
