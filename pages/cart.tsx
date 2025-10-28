@@ -1,13 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
 import { useCart } from '@/contexts/CartContext';
 import { ShoppingBag, Trash2, Share2, Plus, Minus } from 'lucide-react';
+import { getCurrencySettings, formatPrice } from '@/lib/currency';
 
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
   const [copied, setCopied] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [showNameModal, setShowNameModal] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState(15000);
+  const [displayCurrency, setDisplayCurrency] = useState('SP');
+
+  useEffect(() => {
+    getCurrencySettings().then(settings => {
+      setExchangeRate(settings.exchangeRate);
+      setDisplayCurrency(settings.displayCurrency);
+    });
+  }, []);
 
   const exportToJson = (name: string) => {
     const cartData = {
@@ -179,7 +189,7 @@ export default function Cart() {
                     </button>
                   </div>
                   <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ec4899' }}>
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    {formatPrice(item.product.price * item.quantity, exchangeRate, displayCurrency)}
                   </span>
                 </div>
               </div>
@@ -213,8 +223,8 @@ export default function Cart() {
             <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#ffffff' }}>ملخص الطلب</h2>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>المجموع الفرعي</span>
-                <span style={{ color: '#ffffff' }}>${getTotalPrice().toFixed(2)}</span>
+                  <span style={{ color: '#d1d5db' }}>المجموع الفرعي</span>
+                <span style={{ color: '#ffffff' }}>{formatPrice(getTotalPrice(), exchangeRate, displayCurrency)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ color: '#d1d5db' }}>الضريبة</span>
@@ -224,7 +234,7 @@ export default function Cart() {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>الإجمالي</span>
                   <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
-                    ${getTotalPrice().toFixed(2)}
+                    {formatPrice(getTotalPrice(), exchangeRate, displayCurrency)}
                   </span>
                 </div>
               </div>

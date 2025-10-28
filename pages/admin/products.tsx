@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X, Settings } from 'lucide-react';
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
 
@@ -224,6 +224,24 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
           >
             <FileText size={20} />
             Orders
+          </button>
+          <button
+            onClick={() => router.push('/admin/settings')}
+            style={{
+              backgroundColor: '#8b5cf6',
+              color: '#ffffff',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1rem',
+            }}
+          >
+            <Settings size={20} />
+            Settings
           </button>
           <button
             onClick={downloadTemplate}

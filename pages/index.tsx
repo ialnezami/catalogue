@@ -3,16 +3,26 @@ import Layout from '@/components/Layout';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
 import { Product } from '@/types';
+import { getCurrencySettings, formatPrice } from '@/lib/currency';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState(15000);
+  const [displayCurrency, setDisplayCurrency] = useState('SP');
 
   useEffect(() => {
-    const loadProducts = async () => {
+    const loadData = async () => {
       try {
         setLoading(true);
+        
+        // Load currency settings
+        const settings = await getCurrencySettings();
+        setExchangeRate(settings.exchangeRate);
+        setDisplayCurrency(settings.displayCurrency);
+        
+        // Load products
         const response = await fetch('/api/products');
         const data = await response.json();
         // Convert MongoDB _id to id for Product type
@@ -23,12 +33,12 @@ export default function Home() {
         setProducts(formattedData);
         setFilteredProducts(formattedData);
       } catch (error) {
-        console.error('Error loading products:', error);
+        console.error('Error loading data:', error);
       } finally {
         setLoading(false);
       }
     };
-    loadProducts();
+    loadData();
   }, []);
 
   const handleFilter = (filtered: Product[]) => {

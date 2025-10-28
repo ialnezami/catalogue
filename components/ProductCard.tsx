@@ -2,6 +2,8 @@ import { Product } from '@/types';
 import Link from 'next/link';
 import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { formatPrice, getCurrencySettings } from '@/lib/currency';
+import { useState, useEffect } from 'react';
 
 interface ProductCardProps {
   product: Product;
@@ -9,6 +11,15 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const [exchangeRate, setExchangeRate] = useState(15000);
+  const [displayCurrency, setDisplayCurrency] = useState('SP');
+
+  useEffect(() => {
+    getCurrencySettings().then(settings => {
+      setExchangeRate(settings.exchangeRate);
+      setDisplayCurrency(settings.displayCurrency);
+    });
+  }, []);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -111,7 +122,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               color: 'var(--text-primary)', 
               letterSpacing: '-0.03em' 
             }}>
-              ${product.price.toFixed(2)}
+              {formatPrice(product.price, exchangeRate, displayCurrency)}
             </span>
             <button
               onClick={handleAddToCart}
