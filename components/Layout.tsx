@@ -11,16 +11,16 @@ export default function Layout({ children }: LayoutProps) {
   const { getTotalItems } = useCart();
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
       <header
         style={{
-          background: 'rgba(26, 26, 26, 0.8)',
-          backdropFilter: 'blur(20px)',
-          padding: '1.25rem 2rem',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+          background: 'var(--bg-card)',
+          padding: '1.5rem 2rem',
+          borderBottom: '1px solid var(--border-subtle)',
           position: 'sticky',
           top: 0,
           zIndex: 100,
+          boxShadow: 'var(--shadow-sm)',
         }}
       >
         <div
@@ -32,20 +32,22 @@ export default function Layout({ children }: LayoutProps) {
             alignItems: 'center',
           }}
         >
-          <Link href="/" style={{ fontSize: '1.25rem', fontWeight: '600', color: 'var(--accent-primary)', letterSpacing: '-0.02em' }}>
+          <Link href="/" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
             مجموعة روز
           </Link>
-          <nav style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
+          <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <Link
               href="/"
               style={{
                 color: 'var(--text-secondary)',
                 fontSize: '0.9375rem',
                 fontWeight: '500',
-                transition: 'all 0.2s ease',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                transition: 'color 0.2s ease',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--text-primary)';
+                e.currentTarget.style.color = 'var(--accent-primary)';
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.color = 'var(--text-secondary)';
@@ -54,23 +56,24 @@ export default function Layout({ children }: LayoutProps) {
               المنتجات
             </Link>
             <Link href="/cart" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-              <ShoppingBag size={20} style={{ color: 'var(--text-secondary)' }} />
+              <ShoppingBag size={22} style={{ color: 'var(--text-secondary)' }} />
               {getTotalItems() > 0 && (
                 <span
                   style={{
                     position: 'absolute',
-                    top: '-6px',
-                    right: '-6px',
+                    top: '-8px',
+                    right: '-8px',
                     backgroundColor: 'var(--accent-primary)',
                     color: '#ffffff',
                     borderRadius: '50%',
-                    width: '18px',
-                    height: '18px',
+                    width: '20px',
+                    height: '20px',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '0.6875rem',
-                    fontWeight: '600',
+                    fontSize: '0.75rem',
+                    fontWeight: '700',
+                    boxShadow: '0 2px 6px rgba(236, 72, 153, 0.4)',
                   }}
                 >
                   {getTotalItems()}
@@ -80,46 +83,29 @@ export default function Layout({ children }: LayoutProps) {
             <Link
               href="/pos"
               style={{
-                color: 'var(--text-tertiary)',
+                color: 'var(--text-primary)',
                 fontSize: '0.8125rem',
-                fontWeight: '500',
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                background: 'rgba(255, 255, 255, 0.02)',
+                fontWeight: '600',
+                padding: '0.625rem 1.25rem',
+                borderRadius: '20px',
+                background: 'transparent',
+                border: '1px solid var(--text-primary)',
                 transition: 'all 0.2s ease',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.color = 'var(--success)';
+                e.currentTarget.style.background = 'var(--success)';
+                e.currentTarget.style.borderColor = 'var(--success)';
+                e.currentTarget.style.color = '#ffffff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                e.currentTarget.style.color = 'var(--text-tertiary)';
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = 'var(--text-primary)';
+                e.currentTarget.style.color = 'var(--text-primary)';
               }}
             >
               POS
-            </Link>
-            <Link
-              href="/admin/products"
-              style={{
-                color: 'var(--text-tertiary)',
-                fontSize: '0.8125rem',
-                fontWeight: '500',
-                padding: '0.5rem 1rem',
-                borderRadius: '6px',
-                background: 'rgba(236, 72, 153, 0.05)',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.1)';
-                e.currentTarget.style.color = 'var(--accent-primary)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(236, 72, 153, 0.05)';
-                e.currentTarget.style.color = 'var(--text-tertiary)';
-              }}
-            >
-              Admin
             </Link>
           </nav>
         </div>

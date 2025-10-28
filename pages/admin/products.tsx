@@ -21,6 +21,7 @@ export default function AdminProducts() {
     note: '',
   });
   const [showImportModal, setShowImportModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -62,7 +63,7 @@ export default function AdminProducts() {
         });
       }
       
-      setShowForm(false);
+      setShowEditModal(false);
       setEditingProduct(null);
       setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
       loadProducts();
@@ -84,7 +85,7 @@ export default function AdminProducts() {
       qty: product.qty?.toString() || '',
       note: product.note || '',
     });
-    setShowForm(true);
+    setShowEditModal(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -250,10 +251,10 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             Import CSV
           </button>
           <button
-            onClick={() => {
+              onClick={() => {
       setEditingProduct(null);
       setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
-      setShowForm(true);
+      setShowEditModal(true);
             }}
             style={{
               backgroundColor: '#ec4899',
@@ -292,151 +293,197 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
         </div>
       </div>
 
-      {showForm && (
+      {/* Edit Product Modal */}
+      {showEditModal && (
         <div
           style={{
-            backgroundColor: '#1a1a1a',
-            padding: '2rem',
-            borderRadius: '12px',
-            border: '1px solid #374151',
-            marginBottom: '2rem',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
           }}
+          onClick={() => setShowEditModal(false)}
         >
-          <h2 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '1.5rem' }}>
-            {editingProduct ? 'Edit Product' : 'Add New Product'}
-          </h2>
-          <form onSubmit={handleSubmit}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              padding: '2.5rem',
+              borderRadius: '0',
+              maxWidth: '800px',
+              width: '90%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '1.75rem', color: '#000000', fontWeight: '600', letterSpacing: '-0.02em' }}>
+                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowEditModal(false);
+                  setEditingProduct(null);
+                  setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#999999',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Title</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Title</label>
                 <input
+                  className="input"
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
-                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Category</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Category</label>
                 <input
+                  className="input"
                   type="text"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   required
-                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
                 />
               </div>
             </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Description</label>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Description</label>
               <textarea
+                className="input"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 required
-                rows={3}
-                style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff', resize: 'vertical' }}
+                rows={4}
+                style={{ resize: 'vertical' }}
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Selling Price</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Selling Price</label>
                 <input
+                  className="input"
                   type="number"
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   required
-                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Buy Price (Admin Only)</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Buy Price (Admin Only)</label>
                 <input
+                  className="input"
                   type="number"
                   step="0.01"
                   value={formData.buyPrice}
                   onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
-                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
                   placeholder="Cost price"
                 />
               </div>
             </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Image URL</label>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Image URL</label>
               <input
+                className="input"
                 type="text"
                 value={formData.image}
                 onChange={(e) => setFormData({ ...formData, image: e.target.value })}
                 required
-                style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Barcode (Admin Only)</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Barcode (Admin Only)</label>
                 <input
+                  className="input"
                   type="text"
                   value={formData.barcode}
                   onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
                   placeholder="Product barcode"
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Quantity (Admin Only)</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Quantity (Admin Only)</label>
                 <input
+                  className="input"
                   type="number"
                   value={formData.qty}
                   onChange={(e) => setFormData({ ...formData, qty: e.target.value })}
-                  style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff' }}
                   placeholder="Stock quantity"
                 />
               </div>
             </div>
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Internal Notes (Admin Only)</label>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Internal Notes (Admin Only)</label>
               <textarea
+                className="input"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                rows={2}
-                style={{ width: '100%', padding: '0.75rem', backgroundColor: '#2a2a2a', border: '1px solid #374151', borderRadius: '8px', color: '#ffffff', resize: 'vertical' }}
+                rows={3}
                 placeholder="Private notes about this product"
               />
             </div>
-            <div style={{ display: 'flex', gap: '1rem' }}>
-              <button
-                type="submit"
-                style={{
-                  backgroundColor: '#ec4899',
-                  color: '#ffffff',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '8px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '1rem',
-                }}
-              >
-                {editingProduct ? 'Update' : 'Create'}
-              </button>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
               <button
                 type="button"
                 onClick={() => {
-                  setShowForm(false);
+                  setShowEditModal(false);
                   setEditingProduct(null);
                   setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
                 }}
                 style={{
-                  backgroundColor: '#374151',
-                  color: '#ffffff',
-                  padding: '0.75rem 2rem',
-                  borderRadius: '8px',
-                  border: 'none',
+                  padding: '0.875rem 2rem',
+                  borderRadius: '0',
+                  border: '1px solid #000000',
+                  background: 'transparent',
+                  color: '#000000',
                   cursor: 'pointer',
-                  fontSize: '1rem',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#000000';
+                  e.currentTarget.style.color = '#ffffff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = '#000000';
                 }}
               >
                 Cancel
+              </button>
+              <button
+                type="submit"
+                className="btn-primary"
+                style={{
+                  padding: '0.875rem 2rem',
+                }}
+              >
+                {editingProduct ? 'Update Product' : 'Create Product'}
               </button>
             </div>
           </form>
