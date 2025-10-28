@@ -4,12 +4,13 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import {
   Scan, Search, Plus, Minus, Trash2, Percent, Printer,
-  Camera, DollarSign, ShoppingBag, Zap, CheckCircle, LogOut
+  Camera, DollarSign, ShoppingBag, Zap, CheckCircle, LogOut, Share2
 } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useCartStore } from '@/stores/cartStore';
 import { productsAPI } from '@/lib/api';
 import { Product } from '@/types';
+import { getCurrencySettings, formatPrice } from '@/lib/currency';
 
 export default function POSNew() {
   const [products, setProducts] = useState<any[]>([]);
@@ -19,6 +20,8 @@ export default function POSNew() {
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [discountType, setDiscountType] = useState<'fixed' | 'percent'>('fixed');
   const [discountValue, setDiscountValue] = useState(0);
+  const [exchangeRate, setExchangeRate] = useState(15000);
+  const [displayCurrency, setDisplayCurrency] = useState('SP');
   
   const barcodeInputRef = useRef<HTMLInputElement>(null);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
@@ -42,10 +45,17 @@ export default function POSNew() {
 
   useEffect(() => {
     loadProducts();
+    loadCurrencySettings();
     if (barcodeInputRef.current) {
       barcodeInputRef.current.focus();
     }
   }, []);
+
+  const loadCurrencySettings = async () => {
+    const settings = await getCurrencySettings();
+    setExchangeRate(settings.exchangeRate);
+    setDisplayCurrency(settings.displayCurrency);
+  };
 
   useEffect(() => {
     if (searchTerm) {
@@ -193,6 +203,8 @@ export default function POSNew() {
       });
 
       if (response.ok) {
+        // Generate and print receipt
+        generateReceipt();
         alert('Order completed successfully!');
         clearCart();
         setDiscount(0);
@@ -202,6 +214,127 @@ export default function POSNew() {
       console.error('Error saving order:', error);
       alert('Error saving order!');
     }
+  };
+
+  const generateReceipt = () => {
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="UTF-8">
+          <title>Receipt</title>
+          <style>
+            @media print {
+              @page { margin: 0; size: 80mm auto; }
+              body { margin: 0; padding: 10mm; }
+            }
+            body {
+              font-family: Arial, sans-serif;
+              padding: 20px;
+              max-width: 300px;
+              margin: 0 auto;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 20px;
+              border-bottom: 2px solid #000;
+              padding-bottom: 10px;
+            }
+            .item {
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 10px;
+              border-bottom: 1px dotted #000;
+              padding-bottom: 5px;
+            }
+            .total {
+              font-weight: bold;
+              font-size: 1.2em;
+              margin-top: 15px;
+              text-align: center;
+              border-top: 2px solid #000;
+              padding-top: 10px;
+            }
+            .date {
+              text-align: center;
+              font-size: 0.9em;
+              margin-top: 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h2>مجموعة روز</h2>
+            <p>Rose Collection</p>
+          </div>
+          ${items.map(item => `
+            <div class="item">
+              <span>${item.name} x${item.quantity}</span>
+              <span>${Math.round(item.price * exchangeRate).toLocaleString('ar-EG')} ل.س</span>
+            </div>
+          `).join('')}
+          <div class="total">
+            <div>Total: ${Math.round(getTotal() * exchangeRate).toLocaleString('ar-EG')} ل.س</div>
+            <div style="font-size: 0.8em; margin-top: 5px;">(${getTotal().toFixed(2)} USD)</div>
+          </div>
+          <div class="date">
+            Date: ${new Date().toLocaleString('ar-EG')}
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Create a new window for printing
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(receiptHTML);
+      printWindow.document.close();
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
+
+  const shareOnWhatsApp = () => {
+    if (items.length === 0) return;
+
+    const cartData = {
+      customerName: 'POS Sale',
+      items: items.map(item => ({
+        title: item.name,
+        priceUSD: item.price,
+        priceSP: Math.round(item.price * exchangeRate),
+        quantity: item.quantity,
+        subtotalUSD: item.subtotal,
+        subtotalSP: Math.round(item.subtotal * exchangeRate),
+      })),
+      subtotalUSD: getSubtotal(),
+      subtotalSP: Math.round(getSubtotal() * exchangeRate),
+      totalUSD: getTotal(),
+      totalSP: Math.round(getTotal() * exchangeRate),
+      discount: discount,
+      tax: tax,
+      exchangeRate: exchangeRate,
+      date: new Date().toISOString(),
+    };
+
+    // Create a formatted message
+    const message = `🧾 Bill - Receipt
+
+Items:
+${items.map(item => `  • ${item.name} x${item.quantity} = ${Math.round(item.subtotal * exchangeRate).toLocaleString('ar-EG')} ل.س`).join('\n')}
+
+Subtotal: ${Math.round(getSubtotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
+${discount > 0 ? `Discount: ${discount.toFixed(2)}\n` : ''}
+Total: ${Math.round(getTotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
+
+Exchange Rate: 1 USD = ${exchangeRate} SP
+Date: ${new Date().toLocaleString('ar-EG')}
+
+📋 Details: ${JSON.stringify(cartData, null, 2)}`;
+
+    const whatsappMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/?text=${whatsappMessage}`, '_blank');
   };
 
   return (
@@ -222,7 +355,7 @@ export default function POSNew() {
                POS System
              </h1>
              <p style={{ fontSize: '1rem', opacity: 0.9 }}>
-               {items.length} items in cart • Total: ${getTotal().toFixed(2)}
+               {items.length} items in cart • Total: {Math.round(getTotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
              </p>
            </div>
            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }} className="pos-header-actions">
@@ -479,10 +612,15 @@ export default function POSNew() {
 
                   {/* Totals */}
                   <div style={{ borderTop: '1px solid #333', paddingTop: '1rem', marginBottom: '1.5rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ color: '#9ca3af' }}>Subtotal:</span>
-                      <span style={{ color: '#ffffff' }}>${getSubtotal().toFixed(2)}</span>
-                    </div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                              <span style={{ color: '#9ca3af' }}>Subtotal:</span>
+                              <span style={{ color: '#ffffff' }}>
+                                {Math.round(getSubtotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
+                                <span style={{ fontSize: '0.75em', opacity: 0.7, marginLeft: '0.5rem' }}>
+                                  (${getSubtotal().toFixed(2)})
+                                </span>
+                              </span>
+                            </div>
                     {discount > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10b981' }}>
                         <span>Discount:</span>
@@ -510,7 +648,10 @@ export default function POSNew() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #3b82f6', paddingTop: '1rem', marginTop: '1rem' }}>
                       <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>Total:</span>
                       <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
-                        ${getTotal().toFixed(2)}
+                        {Math.round(getTotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
+                        <span style={{ fontSize: '0.7em', fontWeight: 'normal', opacity: 0.8, marginLeft: '0.5rem' }}>
+                          (${getTotal().toFixed(2)})
+                        </span>
                       </span>
                     </div>
                   </div>
@@ -557,6 +698,26 @@ export default function POSNew() {
                     >
                       <Printer size={24} />
                       Complete Sale
+                    </button>
+                    <button
+                      onClick={shareOnWhatsApp}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem',
+                        background: '#25D366',
+                        border: 'none',
+                        borderRadius: '12px',
+                        color: '#ffffff',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      <Share2 size={20} />
+                      Share WhatsApp
                     </button>
                     <button
                       onClick={clearCart}
