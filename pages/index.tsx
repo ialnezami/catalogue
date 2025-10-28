@@ -76,6 +76,7 @@ export default function Home() {
           gap: '1.5rem',
           marginTop: '2rem',
         }}
+        className="responsive-grid"
       >
         {filteredProducts.map((product) => (
           <ProductCard key={product.id} product={product} />

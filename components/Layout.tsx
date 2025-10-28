@@ -35,9 +35,10 @@ export default function Layout({ children }: LayoutProps) {
           <Link href="/" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
             مجموعة روز
           </Link>
-          <nav style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+          <nav className="main-nav" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <Link
               href="/"
+              className="nav-link"
               style={{
                 color: 'var(--text-secondary)',
                 fontSize: '0.9375rem',
@@ -55,7 +56,7 @@ export default function Layout({ children }: LayoutProps) {
             >
               المنتجات
             </Link>
-            <Link href="/cart" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Link href="/cart" className="cart-link" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <ShoppingBag size={22} style={{ color: 'var(--text-secondary)' }} />
               {getTotalItems() > 0 && (
                 <span
@@ -82,6 +83,7 @@ export default function Layout({ children }: LayoutProps) {
             </Link>
             <Link
               href="/pos"
+              className="nav-link"
               style={{
                 color: 'var(--text-primary)',
                 fontSize: '0.8125rem',
@@ -110,7 +112,7 @@ export default function Layout({ children }: LayoutProps) {
           </nav>
         </div>
       </header>
-      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }}>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem' }} className="main-content">
         {children}
       </main>
     </div>

@@ -246,3 +246,88 @@ input, select {
   border-color: var(--text-tertiary);
 }
 
+/* Mobile Responsive Design */
+@media (max-width: 768px) {
+  :root {
+    --space-md: 0.75rem;
+    --space-lg: 1rem;
+    --space-xl: 1.5rem;
+    --space-2xl: 2rem;
+  }
+
+  body {
+    font-size: 0.9375rem;
+  }
+
+  /* Touch-friendly buttons */
+  .btn-primary,
+  .btn-secondary {
+    padding: 1rem 1.5rem;
+    min-height: 44px;
+    font-size: 1rem;
+  }
+
+  /* Make inputs easier to tap */
+  .input {
+    padding: 1rem;
+    min-height: 44px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --space-md: 0.5rem;
+    --space-lg: 0.75rem;
+    --space-xl: 1rem;
+  }
+
+  body {
+    font-size: 0.875rem;
+  }
+}
+
+/* Mobile grid adjustments */
+.responsive-grid {
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+}
+
+@media (max-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)) !important;
+    gap: 1rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* Mobile navigation */
+  .main-nav {
+    gap: 0.5rem !important;
+  }
+
+  .nav-link {
+    font-size: 0.75rem !important;
+    padding: 0.5rem 1rem !important;
+  }
+
+  /* Mobile main content */
+  .main-content {
+    padding: 1rem !important;
+  }
+
+  /* Mobile header */
+  header {
+    padding: 1rem !important;
+  }
+
+  header h1,
+  header h2 {
+    font-size: 1.5rem !important;
+  }
+}
+
