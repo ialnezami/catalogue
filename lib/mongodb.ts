@@ -1,13 +1,10 @@
 import { MongoClient } from 'mongodb';
 
-const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/catalogue';
+// Default to Docker MongoDB connection if no URI is provided
+const uri = process.env.MONGODB_URI || 'mongodb://admin:admin123@localhost:27017/catalogue?authSource=admin';
 
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
-
-if (!process.env.MONGODB_URI) {
-  throw new Error('Please add your Mongo URI to .env.local');
-}
 
 if (process.env.NODE_ENV === 'development') {
   // In development mode, use a global variable so that the value

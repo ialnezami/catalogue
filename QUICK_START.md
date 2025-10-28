@@ -9,7 +9,17 @@ npm install
 
 ### 2. Setup MongoDB
 
-**Option A: Local MongoDB**
+**Option A: Docker (Recommended for Local Development)**
+```bash
+# Start MongoDB with Docker
+docker-compose up -d
+
+# Create .env.local
+echo "MONGODB_URI=mongodb://admin:admin123@localhost:27017/catalogue?authSource=admin" > .env.local
+echo "DB_NAME=catalogue" >> .env.local
+```
+
+**Option B: Local MongoDB (without Docker)**
 ```bash
 # macOS
 brew services start mongodb-community
@@ -19,7 +29,7 @@ echo "MONGODB_URI=mongodb://localhost:27017/catalogue" > .env.local
 echo "DB_NAME=catalogue" >> .env.local
 ```
 
-**Option B: MongoDB Atlas (Cloud)**
+**Option C: MongoDB Atlas (Cloud)**
 1. Sign up at [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 2. Create a free cluster
 3. Get connection string
