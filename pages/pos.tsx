@@ -161,7 +161,7 @@ export default function POSNew() {
 
   return (
     <Layout>
-      <div style={{ padding: '2rem', backgroundColor: '#0a0a0a', minHeight: '100vh' }}>
+      <div style={{ padding: '2rem', backgroundColor: '#0a0a0a', minHeight: '100vh' }} className="pos-container">
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
@@ -171,16 +171,16 @@ export default function POSNew() {
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           borderRadius: '16px',
           color: '#ffffff'
-        }}>
-          <div>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}             >
+        }} className="pos-header">
+          <div style={{ flex: 1 }}>
+            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
                POS System
              </h1>
              <p style={{ fontSize: '1rem', opacity: 0.9 }}>
                {items.length} items in cart • Total: ${getTotal().toFixed(2)}
              </p>
            </div>
-           <div style={{ display: 'flex', gap: '1rem' }}>
+           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }} className="pos-header-actions">
              <button
                onClick={() => setScannerActive(!scannerActive)}
                style={{
@@ -221,9 +221,9 @@ export default function POSNew() {
            </div>
          </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }} className="pos-main-grid">
           {/* Products Section */}
-          <div>
+          <div className="pos-products-section">
             <div style={{ 
               backgroundColor: '#1a1a1a',
               padding: '1.5rem',
@@ -286,52 +286,53 @@ export default function POSNew() {
               />
             </div>
 
-            {/* Products Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
-              {products.map((product) => (
-                <button
-                  key={product._id || product.id}
-                  onClick={() => addItem(product)}
-                  style={{
-                    padding: '1.5rem',
-                    background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
-                    border: '2px solid #333',
-                    borderRadius: '16px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s',
-                    textAlign: 'left',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = '#ec4899';
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.boxShadow = '0 8px 24px rgba(236, 72, 153, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = '#333';
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <h3 style={{ color: '#ffffff', marginBottom: '0.5rem', fontSize: '1rem' }}>
-                    {product.title || product.name}
-                  </h3>
-                  <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                    {product.category}
-                  </p>
-                  <p style={{ color: '#ec4899', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                    ${product.price}
-                  </p>
-                </button>
+             {/* Products Grid */}
+             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }} className="products-grid">
+               {products.map((product) => (
+                 <button
+                   key={product._id || product.id}
+                   onClick={() => addItem(product)}
+                   className="product-card"
+                   style={{
+                     padding: '1.5rem',
+                     background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
+                     border: '2px solid #333',
+                     borderRadius: '16px',
+                     cursor: 'pointer',
+                     transition: 'all 0.3s',
+                     textAlign: 'left',
+                   }}
+                   onMouseEnter={(e) => {
+                     e.currentTarget.style.borderColor = '#ec4899';
+                     e.currentTarget.style.transform = 'translateY(-4px)';
+                     e.currentTarget.style.boxShadow = '0 8px 24px rgba(236, 72, 153, 0.3)';
+                   }}
+                   onMouseLeave={(e) => {
+                     e.currentTarget.style.borderColor = '#333';
+                     e.currentTarget.style.transform = 'translateY(0)';
+                     e.currentTarget.style.boxShadow = 'none';
+                   }}
+                 >
+                   <h3 style={{ color: '#ffffff', marginBottom: '0.5rem', fontSize: '1rem' }}>
+                     {product.title || product.name}
+                   </h3>
+                   <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
+                     {product.category}
+                   </p>
+                   <p style={{ color: '#ec4899', fontSize: '1.25rem', fontWeight: 'bold' }}>
+                     ${product.price}
+                   </p>
+                 </button>
               ))}
             </div>
           </div>
 
-          {/* Cart Section */}
-          <div style={{ 
-            position: 'sticky', 
-            top: '120px',
-            alignSelf: 'start'
-          }}>
+           {/* Cart Section */}
+           <div style={{ 
+             position: 'sticky', 
+             top: '120px',
+             alignSelf: 'start'
+           }} className="pos-cart-section">
             <div style={{
               backgroundColor: '#1a1a1a',
               padding: '2rem',
