@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
-import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X, Settings } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X, Settings, Barcode, Printer } from 'lucide-react';
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
+import JsBarcode from 'jsbarcode';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -23,11 +24,85 @@ export default function AdminProducts() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [generatedBarcode, setGeneratedBarcode] = useState('');
+  const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
 
   useEffect(() => {
     loadProducts();
   }, []);
+
+  const generateBarcode = () => {
+    const barcode = 'PRD' + Date.now().toString().slice(-10);
+    setGeneratedBarcode(barcode);
+    setFormData({ ...formData, barcode });
+    
+    // Generate barcode canvas
+    if (barcodeCanvasRef.current) {
+      setTimeout(() => {
+        try {
+          JsBarcode(barcodeCanvasRef.current!, barcode, {
+            format: 'CODE128',
+            width: 2,
+            height: 60,
+            displayValue: true
+          });
+        } catch (error) {
+          console.error('Error generating barcode:', error);
+        }
+      }, 100);
+    }
+  };
+
+  const printBarcode = () => {
+    if (!barcodeCanvasRef.current || !generatedBarcode) return;
+    
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Barcode Print</title>
+            <style>
+              @media print {
+                @page { margin: 0; size: 80mm 40mm; }
+                body { margin: 0; padding: 10px; }
+              }
+              body {
+                font-family: Arial, sans-serif;
+                padding: 20px;
+                text-align: center;
+              }
+              .barcode-container {
+                margin: 10px 0;
+              }
+              .product-info {
+                margin-top: 10px;
+                font-size: 14px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="product-info">
+              <strong>${formData.title || 'Product'}</strong><br>
+              <span>${formData.category || 'Category'}</span>
+            </div>
+            <div class="barcode-container">
+              <img src="${barcodeCanvasRef.current.toDataURL()}" alt="Barcode" />
+            </div>
+            <div class="product-info">
+              SKU: ${generatedBarcode}
+            </div>
+            <script>
+              window.onload = () => setTimeout(() => window.print(), 500);
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    }
+  };
 
   const loadProducts = async () => {
     try {
@@ -75,7 +150,7 @@ export default function AdminProducts() {
 
   const handleEdit = (product: Product) => {
     setEditingProduct(product);
-    setFormData({
+    const formDataObj = {
       title: product.title,
       description: product.description,
       price: product.price.toString(),
@@ -85,7 +160,30 @@ export default function AdminProducts() {
       buyPrice: product.buyPrice?.toString() || '',
       qty: product.qty?.toString() || '',
       note: product.note || '',
-    });
+    };
+    setFormData(formDataObj);
+    
+    // If product has barcode, generate barcode display
+    if (product.barcode) {
+      setGeneratedBarcode(product.barcode);
+      setTimeout(() => {
+        if (barcodeCanvasRef.current && product.barcode) {
+          try {
+            JsBarcode(barcodeCanvasRef.current, product.barcode, {
+              format: 'CODE128',
+              width: 2,
+              height: 60,
+              displayValue: true
+            });
+          } catch (error) {
+            console.error('Error generating barcode:', error);
+          }
+        }
+      }, 100);
+    } else {
+      setGeneratedBarcode('');
+    }
+    
     setShowEditModal(true);
   };
 
@@ -290,6 +388,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               onClick={() => {
       setEditingProduct(null);
       setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+      setGeneratedBarcode('');
+      generateBarcode();
       setShowEditModal(true);
             }}
             style={{
@@ -457,19 +557,84 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 required
               />
             </div>
+            <div style={{ marginBottom: '1.25rem' }}>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Barcode</label>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+                <div style={{ flex: 1 }}>
+                  <input
+                    className="input"
+                    type="text"
+                    value={formData.barcode}
+                    onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
+                    placeholder="Product barcode"
+                    readOnly
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={generateBarcode}
+                  style={{
+                    padding: '0.875rem 1.25rem',
+                    background: 'transparent',
+                    border: '1px solid #000000',
+                    color: '#000000',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#000000';
+                    e.currentTarget.style.color = '#ffffff';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#000000';
+                  }}
+                >
+                  <Barcode size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                  Generate
+                </button>
+                {generatedBarcode && formData.barcode && (
+                  <button
+                    type="button"
+                    onClick={printBarcode}
+                    style={{
+                      padding: '0.875rem 1.25rem',
+                      background: '#000000',
+                      border: '1px solid #000000',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      transition: 'all 0.2s ease',
+                      whiteSpace: 'nowrap',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#333333';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#000000';
+                    }}
+                  >
+                    <Printer size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
+                    Print
+                  </button>
+                )}
+              </div>
+              {generatedBarcode && (
+                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px', textAlign: 'center' }}>
+                  <canvas ref={barcodeCanvasRef} style={{ maxWidth: '100%', height: 'auto' }} />
+                </div>
+              )}
+            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Barcode (Admin Only)</label>
-                <input
-                  className="input"
-                  type="text"
-                  value={formData.barcode}
-                  onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                  placeholder="Product barcode"
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Quantity (Admin Only)</label>
                 <input
                   className="input"
                   type="number"
