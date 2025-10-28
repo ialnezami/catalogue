@@ -7,7 +7,6 @@ import { useRouter } from 'next/router';
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -22,6 +21,8 @@ export default function AdminProducts() {
   });
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -124,42 +125,52 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const text = await file.text();
-    const lines = text.split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
-    
-    const products = [];
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue;
-
-      const values = line.split(',');
-      const product: any = {};
-      headers.forEach((header, index) => {
-        product[header] = values[index]?.trim() || '';
-      });
-
-      if (product.title) {
-        products.push(product);
-      }
-    }
+    setIsUploading(true);
+    setUploadProgress(0);
 
     try {
-      // Import products one by one
-      for (const product of products) {
+      const text = await file.text();
+      const lines = text.split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      const products = [];
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = line.split(',');
+        const product: any = {};
+        headers.forEach((header, index) => {
+          product[header] = values[index]?.trim() || '';
+        });
+
+        if (product.title) {
+          products.push(product);
+        }
+      }
+
+      // Import products one by one with progress
+      for (let i = 0; i < products.length; i++) {
         await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(product),
+          body: JSON.stringify(products[i]),
         });
+        
+        const progress = ((i + 1) / products.length) * 100;
+        setUploadProgress(Math.round(progress));
       }
 
       alert(`Successfully imported ${products.length} products!`);
       setShowImportModal(false);
+      setUploadProgress(0);
+      setIsUploading(false);
       loadProducts();
     } catch (error) {
       console.error('Error importing products:', error);
       alert('Error importing products!');
+      setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -487,6 +498,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               </button>
             </div>
           </form>
+          </div>
         </div>
       )}
 
@@ -645,52 +657,103 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               </div>
             </div>
 
-            <label
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '1.5rem',
-                border: '2px dashed #3b82f6',
-                borderRadius: '12px',
-                backgroundColor: '#2a2a2a',
-                cursor: 'pointer',
-                textAlign: 'center',
-              }}
-            >
-              <Upload size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-              <p style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Click to select CSV file</p>
-              <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop</p>
-              <input
-                type="file"
-                accept=".csv"
-                onChange={handleFileUpload}
-                style={{ display: 'none' }}
-              />
-            </label>
+            {!isUploading ? (
+              <label
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  padding: '1.5rem',
+                  border: '2px dashed #3b82f6',
+                  borderRadius: '12px',
+                  backgroundColor: '#2a2a2a',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#3b82f6';
+                  e.currentTarget.style.backgroundColor = '#2a2a2a';
+                }}
+              >
+                <Upload size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+                <p style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Click to select CSV file</p>
+                <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop</p>
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileUpload}
+                  style={{ display: 'none' }}
+                  disabled={isUploading}
+                />
+              </label>
+            ) : (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  marginBottom: '0.5rem',
+                  color: '#ffffff'
+                }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Uploading products...</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{uploadProgress}%</span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '12px',
+                  backgroundColor: '#2a2a2a',
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${uploadProgress}%`,
+                    background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+                    borderRadius: '6px',
+                    transition: 'width 0.3s ease',
+                    boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
+                  }} />
+                </div>
+                <p style={{ 
+                  color: '#9ca3af', 
+                  fontSize: '0.75rem', 
+                  textAlign: 'center', 
+                  marginTop: '0.5rem' 
+                }}>
+                  Please wait while products are being created...
+                </p>
+              </div>
+            )}
 
             <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
               <button
                 onClick={downloadTemplate}
+                disabled={isUploading}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: isUploading ? '#374151' : '#3b82f6',
                   border: 'none',
                   borderRadius: '8px',
                   color: '#ffffff',
-                  cursor: 'pointer',
+                  cursor: isUploading ? 'not-allowed' : 'pointer',
                   fontSize: '1rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
+                  opacity: isUploading ? 0.5 : 1,
                 }}
               >
                 <Download size={18} />
                 Download Template
               </button>
               <button
-                onClick={() => setShowImportModal(false)}
+                onClick={() => {
+                  if (!isUploading) {
+                    setShowImportModal(false);
+                  }
+                }}
+                disabled={isUploading}
                 style={{
                   flex: 1,
                   padding: '0.75rem',
@@ -698,11 +761,12 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   border: 'none',
                   borderRadius: '8px',
                   color: '#ffffff',
-                  cursor: 'pointer',
+                  cursor: isUploading ? 'not-allowed' : 'pointer',
                   fontSize: '1rem',
+                  opacity: isUploading ? 0.5 : 1,
                 }}
               >
-                Cancel
+                {isUploading ? 'Processing...' : 'Cancel'}
               </button>
             </div>
           </div>
