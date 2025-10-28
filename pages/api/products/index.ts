@@ -13,6 +13,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(200).json(products);
     }
 
+    // Check authentication for POST, PUT, DELETE
+    const isLoggedIn = req.cookies.admin === 'true';
+    if (!isLoggedIn) {
+      return res.status(401).json({ message: 'Unauthorized - Admin access required' });
+    }
+
     if (req.method === 'POST') {
       const { title, description, price, category, image, barcode, buyPrice, qty, note } = req.body;
       

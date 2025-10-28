@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X } from 'lucide-react';
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
 
@@ -20,6 +20,7 @@ export default function AdminProducts() {
     qty: '',
     note: '',
   });
+  const [showImportModal, setShowImportModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -102,6 +103,65 @@ export default function AdminProducts() {
     router.push('/');
   };
 
+  const downloadTemplate = () => {
+    const csvContent = `title,description,price,category,image,barcode,buyPrice,qty,note
+Rose Gold Ring,Elegant ring with diamond,299.99,Rings,ring-1.jpg,123456789,150.00,10,Special edition
+Silver Necklace,Beautiful necklace with pendant,199.99,Necklaces,necklace-1.jpg,123456790,100.00,5,From Italy
+Pearl Earrings,Classic pearl studs,149.99,Earrings,earrings-1.jpg,123456791,75.00,8,Popular item
+Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,120.00,3,Limited stock`;
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'products-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const text = await file.text();
+    const lines = text.split('\n');
+    const headers = lines[0].split(',').map(h => h.trim());
+    
+    const products = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+
+      const values = line.split(',');
+      const product: any = {};
+      headers.forEach((header, index) => {
+        product[header] = values[index]?.trim() || '';
+      });
+
+      if (product.title) {
+        products.push(product);
+      }
+    }
+
+    try {
+      // Import products one by one
+      for (const product of products) {
+        await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(product),
+        });
+      }
+
+      alert(`Successfully imported ${products.length} products!`);
+      setShowImportModal(false);
+      loadProducts();
+    } catch (error) {
+      console.error('Error importing products:', error);
+      alert('Error importing products!');
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -152,6 +212,42 @@ export default function AdminProducts() {
           >
             <FileText size={20} />
             Orders
+          </button>
+          <button
+            onClick={downloadTemplate}
+            style={{
+              backgroundColor: '#f59e0b',
+              color: '#ffffff',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1rem',
+            }}
+          >
+            <Download size={20} />
+            Download Template
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            style={{
+              backgroundColor: '#8b5cf6',
+              color: '#ffffff',
+              padding: '0.75rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1rem',
+            }}
+          >
+            <Upload size={20} />
+            Import CSV
           </button>
           <button
             onClick={() => {
@@ -445,6 +541,126 @@ export default function AdminProducts() {
           </div>
         ))}
       </div>
+
+      {/* Import CSV Modal */}
+      {showImportModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowImportModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '12px',
+              border: '1px solid #374151',
+              maxWidth: '500px',
+              width: '90%',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Upload size={24} />
+                Import Products
+              </h2>
+              <button
+                onClick={() => setShowImportModal(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: '#9ca3af',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <p style={{ color: '#d1d5db', marginBottom: '1rem' }}>
+                Upload a CSV file with products. Make sure the CSV has the following columns:
+              </p>
+              <div style={{ background: '#2a2a2a', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem', color: '#9ca3af' }}>
+                <code>title, description, price, category, image, barcode, buyPrice, qty, note</code>
+              </div>
+            </div>
+
+            <label
+              style={{
+                display: 'block',
+                width: '100%',
+                padding: '1.5rem',
+                border: '2px dashed #3b82f6',
+                borderRadius: '12px',
+                backgroundColor: '#2a2a2a',
+                cursor: 'pointer',
+                textAlign: 'center',
+              }}
+            >
+              <Upload size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
+              <p style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Click to select CSV file</p>
+              <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop</p>
+              <input
+                type="file"
+                accept=".csv"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }}
+              />
+            </label>
+
+            <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+              <button
+                onClick={downloadTemplate}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  backgroundColor: '#3b82f6',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Download size={18} />
+                Download Template
+              </button>
+              <button
+                onClick={() => setShowImportModal(false)}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  backgroundColor: '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontSize: '1rem',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }
