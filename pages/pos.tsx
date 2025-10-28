@@ -38,6 +38,8 @@ export default function POSNew() {
     getTotal,
   } = useCartStore();
 
+  const cartSectionRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     loadProducts();
     if (barcodeInputRef.current) {
@@ -71,6 +73,14 @@ export default function POSNew() {
     );
     if (product) {
       addItem(product);
+      
+      // Scroll to cart section on mobile after adding item
+      if (cartSectionRef.current && window.innerWidth <= 768) {
+        setTimeout(() => {
+          cartSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+      
       if (barcodeInputRef.current) {
         barcodeInputRef.current.value = '';
         barcodeInputRef.current.focus();
@@ -78,17 +88,46 @@ export default function POSNew() {
     }
   };
 
-  const startScanner = () => {
+  const startScanner = async () => {
     setScannerVisible(true);
-    setTimeout(() => {
-      const html5QrcodeScanner = new Html5QrcodeScanner(
-        'barcode-scanner',
-        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 },
-        false
-      );
-      html5QrcodeScanner.render(onScanSuccess, onScanError);
-      scannerRef.current = html5QrcodeScanner;
-    }, 100);
+    
+    try {
+      // Request camera permissions first
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Use back camera
+      });
+      // Stop the stream as we just needed permission
+      stream.getTracks().forEach(track => track.stop());
+      
+      // Now initialize the scanner
+      setTimeout(() => {
+        const html5QrcodeScanner = new Html5QrcodeScanner(
+          'barcode-scanner',
+          { 
+            fps: 10, 
+            qrbox: { width: 250, height: 250 }, 
+            aspectRatio: 1.0,
+            // This will try to use back camera by default
+            videoConstraints: {
+              facingMode: { exact: 'environment' } // Back camera for mobile
+            }
+          },
+          false // verbose
+        );
+        html5QrcodeScanner.render(onScanSuccess, onScanError);
+        scannerRef.current = html5QrcodeScanner;
+      }, 100);
+    } catch (error: any) {
+      console.error('Camera permission error:', error);
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        alert('Please allow camera access to use the barcode scanner. Go to browser settings to enable camera permissions.');
+      } else if (error.name === 'NotFoundError') {
+        alert('No camera found on this device.');
+      } else {
+        alert('Error accessing camera: ' + error.message);
+      }
+      setScannerVisible(false);
+    }
   };
 
   const stopScanner = () => {
@@ -99,13 +138,19 @@ export default function POSNew() {
     setScannerVisible(false);
   };
 
-  const onScanSuccess = (decodedText: string) => {
+  const onScanSuccess = (decodedText: string, decodedResult: any) => {
     handleBarcodeScan(decodedText);
     stopScanner();
   };
 
-  const onScanError = () => {
-    // Ignore
+  const onScanError = (error: any) => {
+    // Silently ignore scan errors (the scanner will keep trying)
+    // Only show errors if it's a permission issue
+    if (error && typeof error === 'string' && (error.includes('Permission') || error.includes('NotAllowed'))) {
+      // Permission error already handled in startScanner
+      console.log('Scan error (may be ongoing):', error);
+    }
+    // Don't alert on scan errors as they happen frequently during scanning
   };
 
   const applyDiscount = () => {
@@ -328,11 +373,15 @@ export default function POSNew() {
           </div>
 
            {/* Cart Section */}
-           <div style={{ 
-             position: 'sticky', 
-             top: '120px',
-             alignSelf: 'start'
-           }} className="pos-cart-section">
+           <div 
+             ref={cartSectionRef}
+             style={{ 
+               position: 'sticky', 
+               top: '120px',
+               alignSelf: 'start'
+             }} 
+             className="pos-cart-section"
+           >
             <div style={{
               backgroundColor: '#1a1a1a',
               padding: '2rem',
@@ -341,10 +390,13 @@ export default function POSNew() {
               maxHeight: '80vh',
               overflowY: 'auto'
             }}>
-              <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <ShoppingBag size={24} />
-                Cart ({items.length})
-              </h2>
+               <h2 
+                 id="cart-header"
+                 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+               >
+                 <ShoppingBag size={24} />
+                 Cart ({items.length})
+               </h2>
 
               {items.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
