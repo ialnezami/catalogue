@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import { ShoppingBag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
@@ -9,6 +10,32 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const { getTotalItems } = useCart();
+  const router = useRouter();
+  const [platform, setPlatform] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Get platform from URL on client side
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const platformParam = urlParams.get('platform');
+      setPlatform(platformParam);
+    }
+  }, [router.query]);
+
+  // Get the appropriate href based on platform
+  const getProductsHref = () => {
+    if (platform) {
+      return `/?platform=${platform}`;
+    }
+    return '/';
+  };
+
+  const getAdminHref = () => {
+    if (platform) {
+      return `/admin/products?platform=${platform}`;
+    }
+    return '/admin/products';
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
@@ -32,12 +59,12 @@ export default function Layout({ children }: LayoutProps) {
             alignItems: 'center',
           }}
         >
-          <Link href="/" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+          <Link href={getProductsHref()} style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
             مجموعة روز
           </Link>
           <nav className="main-nav" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
             <Link
-              href="/"
+              href={getProductsHref()}
               className="nav-link"
               style={{
                 color: 'var(--text-secondary)',
@@ -82,7 +109,7 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </Link>
             <Link
-              href="/admin/products"
+              href={getAdminHref()}
               className="nav-link"
               style={{
                 color: 'var(--text-primary)',
