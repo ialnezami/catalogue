@@ -106,12 +106,15 @@ export default function SuperAdmin() {
   };
 
   const createPlatformAdmin = async (platform: string) => {
+    // Generate unique username based on platform
+    const username = `${platform}_admin`;
+    
     try {
       const response = await fetch('/api/platforms/admins', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username: 'admin',
+          username: username,
           platform: platform,
           password: `admin${platform}platform`,
         }),
@@ -140,10 +143,12 @@ export default function SuperAdmin() {
 
   const changeCredentials = (platform: string) => {
     const foundPlatform = platforms.find(p => p.code === platform);
+    const platformAdmin = admins.find(a => a.platform === platform);
+    
     if (foundPlatform) {
       setSelectedPlatform(foundPlatform);
       setShowChangeCredentialsModal(true);
-      setNewPassword(`admin${platform}platform`);
+      // Keep existing password field ready for new password
     }
   };
 
@@ -153,12 +158,19 @@ export default function SuperAdmin() {
       return;
     }
 
+    // Find the admin for this platform
+    const platformAdmin = admins.find(a => a.platform === selectedPlatform.code);
+    if (!platformAdmin) {
+      toast.error('Admin not found for this platform');
+      return;
+    }
+
     try {
       const response = await fetch('/api/platforms/admins', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          platform: selectedPlatform.code,
+          username: platformAdmin.username,
           password: newPassword,
         }),
       });
@@ -373,7 +385,7 @@ export default function SuperAdmin() {
                   <div style={{ padding: '1rem', backgroundColor: '#2a2a2a', borderRadius: '8px', marginTop: '1rem' }}>
                     <p style={{ color: '#10b981', fontWeight: 'bold' }}>Admin Created ✓</p>
                     <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                      Username: admin • Platform: {platform.code}
+                      Username: {platformAdmin.username} • Platform: {platform.code}
                     </p>
                   </div>
                 )}
@@ -439,7 +451,9 @@ export default function SuperAdmin() {
                   </div>
                   <div style={{ borderTop: '1px solid #374151', paddingTop: '1rem', marginTop: '0.5rem' }}>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>Username:</span>
-                    <p style={{ color: '#ffffff', fontSize: '1.25rem', fontWeight: 'bold', marginTop: '0.5rem' }}>admin</p>
+                    <p style={{ color: '#ffffff', fontSize: '1.25rem', fontWeight: 'bold', marginTop: '0.5rem' }}>
+                      {admins.find(a => a.platform === selectedPlatform.code)?.username || `${selectedPlatform.code}_admin`}
+                    </p>
                   </div>
                   <div>
                     <span style={{ color: '#10b981', fontWeight: 'bold' }}>Password:</span>
@@ -521,7 +535,7 @@ export default function SuperAdmin() {
                 <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Username</label>
                 <input
                   type="text"
-                  value="admin"
+                  value={admins.find(a => a.platform === selectedPlatform.code)?.username || `${selectedPlatform.code}_admin`}
                   disabled
                   style={{
                     width: '100%',

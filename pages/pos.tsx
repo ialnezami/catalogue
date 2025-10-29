@@ -11,6 +11,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { productsAPI } from '@/lib/api';
 import { Product } from '@/types';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
+import toast from 'react-hot-toast';
 
 export default function POSNew() {
   const [products, setProducts] = useState<any[]>([]);
@@ -133,11 +134,11 @@ export default function POSNew() {
     } catch (error: any) {
       console.error('Camera permission error:', error);
       if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
-        alert('Please allow camera access to use the barcode scanner. Go to browser settings to enable camera permissions.');
+        toast.error('Please allow camera access to use the barcode scanner. Go to browser settings to enable camera permissions.');
       } else if (error.name === 'NotFoundError') {
-        alert('No camera found on this device.');
+        toast.error('No camera found on this device.');
       } else {
-        alert('Error accessing camera: ' + error.message);
+        toast.error('Error accessing camera: ' + error.message);
       }
       setScannerVisible(false);
     }
@@ -178,7 +179,7 @@ export default function POSNew() {
 
   const handleCheckout = async () => {
     if (items.length === 0) {
-      alert('Cart is empty!');
+      toast.error('Cart is empty!');
       return;
     }
 
@@ -212,18 +213,18 @@ export default function POSNew() {
         console.log('Order saved successfully:', orderData);
         // Generate and print receipt
         generateReceipt();
-        alert('Order completed and saved successfully!');
+        toast.success('Order completed and saved successfully!');
         clearCart();
         setDiscount(0);
         setTax(0);
       } else {
         const errorData = await response.json();
         console.error('Error saving order:', errorData);
-        alert('Error saving order!');
+        toast.error('Error saving order!');
       }
     } catch (error) {
       console.error('Error saving order:', error);
-      alert('Error saving order!');
+      toast.error('Error saving order!');
     }
   };
 

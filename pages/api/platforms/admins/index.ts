@@ -21,10 +21,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
       const { username, platform, password } = req.body;
 
-      // Check if admin already exists for this platform
-      const existing = await collection.findOne({ username, platform });
+      // Check if username already exists (username must be unique across all platforms)
+      const existing = await collection.findOne({ username });
       if (existing) {
-        return res.status(400).json({ message: 'Admin already exists for this platform' });
+        return res.status(400).json({ message: 'Username already exists!' });
       }
 
       const admin = {
@@ -40,11 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'PUT') {
-      const { platform, password } = req.body;
+      const { username, password } = req.body;
 
-      // Update admin password for the platform
+      // Update admin password by username
       const result = await collection.updateOne(
-        { platform, username: 'admin' },
+        { username },
         { 
           $set: { 
             password,
@@ -54,7 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       );
 
       if (result.matchedCount === 0) {
-        return res.status(404).json({ message: 'Admin not found for this platform' });
+        return res.status(404).json({ message: 'Admin not found' });
       }
 
       return res.status(200).json({ message: 'Password updated successfully' });

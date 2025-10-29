@@ -22,36 +22,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ success: true, role: 'super_admin' });
   }
   
-  // Get platform from request
-  const platform = getPlatformFromRequest(req);
-  
-  // Check platform-specific admin
-  // Password format: admin{platform}platform
-  // Example: adminrozeplatform, adminjadorplatform
-  const expectedPassword = `admin${platform}platform`;
-  
-  if (username === 'admin' && password === expectedPassword) {
-    // Set platform-specific admin cookie
-    res.setHeader('Set-Cookie', [
-      'admin=true; Path=/; HttpOnly; SameSite=Strict',
-      `admin_platform=${platform}; Path=/; HttpOnly; SameSite=Strict`
-    ]);
-    return res.status(200).json({ success: true, role: 'admin', platform });
-  }
-  
-  // Also check from database for custom admins
+  // Check admin credentials in database (username must be unique)
   try {
     const client = await clientPromise;
     const db = client.db(process.env.DB_NAME || 'catalogue');
     const collection = db.collection('admins');
     
+    // Find admin by username only (username must be unique across all platforms)
     const admin = await collection.findOne({ 
-      username, 
-      platform,
+      username,
       active: true 
     });
     
     if (admin && admin.password === password) {
+      // Get platform from admin record
+      const platform = admin.platform;
+      
       res.setHeader('Set-Cookie', [
         'admin=true; Path=/; HttpOnly; SameSite=Strict',
         `admin_platform=${platform}; Path=/; HttpOnly; SameSite=Strict`

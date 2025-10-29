@@ -4,6 +4,7 @@ import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, 
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
 import JsBarcode from 'jsbarcode';
+import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -131,12 +132,14 @@ export default function AdminProducts() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
+        toast.success('Product updated successfully!');
       } else {
         await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
+        toast.success('Product created successfully!');
       }
       
       setShowEditModal(false);
@@ -145,6 +148,7 @@ export default function AdminProducts() {
       loadProducts();
     } catch (error) {
       console.error('Error saving product:', error);
+      toast.error('Error saving product!');
     }
   };
 
@@ -192,9 +196,11 @@ export default function AdminProducts() {
     
     try {
       await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      toast.success('Product deleted successfully!');
       loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
+      toast.error('Error deleting product!');
     }
   };
 
@@ -259,14 +265,14 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
         setUploadProgress(Math.round(progress));
       }
 
-      alert(`Successfully imported ${products.length} products!`);
+      toast.success(`Successfully imported ${products.length} products!`);
       setShowImportModal(false);
       setUploadProgress(0);
       setIsUploading(false);
       loadProducts();
     } catch (error) {
       console.error('Error importing products:', error);
-      alert('Error importing products!');
+      toast.error('Error importing products!');
       setIsUploading(false);
       setUploadProgress(0);
     }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { LogIn } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -20,7 +21,17 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // Get platform from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const platformParam = urlParams.get('platform');
+      
+      // Build login URL with platform param
+      let loginUrl = '/api/auth/login';
+      if (platformParam) {
+        loginUrl += `?platform=${platformParam}`;
+      }
+      
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,6 +42,8 @@ export default function Login() {
       if (response.ok) {
         const data = await response.json();
         
+        toast.success('Login successful!');
+        
         // Redirect based on role
         if (data.role === 'super_admin') {
           router.push('/super-admin');
@@ -39,9 +52,11 @@ export default function Login() {
         }
       } else {
         setError('Invalid credentials');
+        toast.error('Invalid credentials');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
+      toast.error('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
