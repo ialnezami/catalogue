@@ -27,6 +27,7 @@ export default function AdminProducts() {
   const [isUploading, setIsUploading] = useState(false);
   const [generatedBarcode, setGeneratedBarcode] = useState('');
   const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
+  const csvFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -254,7 +255,13 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    
+    console.log('File upload triggered:', file);
+    
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
 
     // Validate file type
     if (!file.name.endsWith('.csv')) {
@@ -262,6 +269,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       return;
     }
 
+    console.log('File validated:', file.name);
+    
     setIsUploading(true);
     setUploadProgress(0);
 
@@ -276,6 +285,9 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       }
 
       const headers = parseCSVLine(lines[0]);
+      console.log('Headers:', headers);
+      console.log('Total lines:', lines.length);
+      
       const products = [];
       
       for (let i = 1; i < lines.length; i++) {
@@ -292,8 +304,11 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
         // Only add products with title
         if (product.title) {
           products.push(product);
+          console.log('Product added:', product.title);
         }
       }
+
+      console.log('Total products parsed:', products.length);
 
       if (products.length === 0) {
         toast.error('No valid products found in CSV');
@@ -1031,6 +1046,10 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             {!isUploading ? (
               <label
                 htmlFor="csv-upload-input"
+                onClick={() => {
+                  console.log('Upload area clicked');
+                  csvFileInputRef.current?.click();
+                }}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -1060,6 +1079,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 <p style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Click to select CSV file</p>
                 <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop</p>
                 <input
+                  ref={csvFileInputRef}
                   id="csv-upload-input"
                   type="file"
                   accept=".csv"

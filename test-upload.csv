@@ -1,0 +1,4 @@
+title,description,price,category,image,barcode,buyPrice,qty,note
+Test Product 1,"Simple description",99.99,Electronics,test1.jpg,111111111,50.00,10,Test note
+Test Product 2,"Description, with comma",149.99,Clothing,test2.jpg,222222222,75.00,5,Special item
+
