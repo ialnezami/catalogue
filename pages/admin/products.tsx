@@ -225,32 +225,81 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
     document.body.removeChild(link);
   };
 
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
+      
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Please upload a CSV file');
+      return;
+    }
 
     setIsUploading(true);
     setUploadProgress(0);
 
     try {
       const text = await file.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
+      const lines = text.split('\n').filter(line => line.trim());
       
+      if (lines.length < 2) {
+        toast.error('CSV file must have header and at least one product');
+        setIsUploading(false);
+        return;
+      }
+
+      const headers = parseCSVLine(lines[0]);
       const products = [];
+      
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
 
-        const values = line.split(',');
+        const values = parseCSVLine(line);
         const product: any = {};
+        
         headers.forEach((header, index) => {
           product[header] = values[index]?.trim() || '';
         });
 
+        // Only add products with title
         if (product.title) {
           products.push(product);
         }
+      }
+
+      if (products.length === 0) {
+        toast.error('No valid products found in CSV');
+        setIsUploading(false);
+        setUploadProgress(0);
+        return;
       }
 
       // Import products one by one with progress
@@ -270,11 +319,15 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       setUploadProgress(0);
       setIsUploading(false);
       loadProducts();
+      
+      // Reset file input
+      event.target.value = '';
     } catch (error) {
       console.error('Error importing products:', error);
-      toast.error('Error importing products!');
+      toast.error('Error importing products: ' + (error as Error).message);
       setIsUploading(false);
       setUploadProgress(0);
+      event.target.value = '';
     }
   };
 
@@ -977,6 +1030,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
             {!isUploading ? (
               <label
+                htmlFor="csv-upload-input"
                 style={{
                   display: 'block',
                   width: '100%',
@@ -984,19 +1038,29 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   border: '2px dashed #3b82f6',
                   borderRadius: '12px',
                   backgroundColor: '#2a2a2a',
-                  cursor: 'pointer',
+                  cursor: isUploading ? 'not-allowed' : 'pointer',
                   textAlign: 'center',
                   transition: 'all 0.2s ease',
+                  opacity: isUploading ? 0.5 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#3b82f6';
-                  e.currentTarget.style.backgroundColor = '#2a2a2a';
+                  if (!isUploading) {
+                    e.currentTarget.style.borderColor = '#8b5cf6';
+                    e.currentTarget.style.backgroundColor = '#374151';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isUploading) {
+                    e.currentTarget.style.borderColor = '#3b82f6';
+                    e.currentTarget.style.backgroundColor = '#2a2a2a';
+                  }
                 }}
               >
                 <Upload size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
                 <p style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Click to select CSV file</p>
                 <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop</p>
                 <input
+                  id="csv-upload-input"
                   type="file"
                   accept=".csv"
                   onChange={handleFileUpload}
