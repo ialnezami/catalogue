@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Plus, Trash2, Eye, EyeOff, LogOut, CheckCircle } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, LogOut, CheckCircle, Key, Edit, X } from 'lucide-react';
 
 interface Platform {
   _id?: string;
@@ -24,6 +24,10 @@ export default function SuperAdmin() {
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCredentialsModal, setShowCredentialsModal] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
+  const [showChangeCredentialsModal, setShowChangeCredentialsModal] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '' });
   const router = useRouter();
 
@@ -126,7 +130,50 @@ export default function SuperAdmin() {
   };
 
   const showCredentials = (platform: string) => {
-    alert(`Platform: ${platform}\nUsername: admin\nPassword: admin${platform}platform`);
+    const foundPlatform = platforms.find(p => p.code === platform);
+    if (foundPlatform) {
+      setSelectedPlatform(foundPlatform);
+      setShowCredentialsModal(true);
+    }
+  };
+
+  const changeCredentials = (platform: string) => {
+    const foundPlatform = platforms.find(p => p.code === platform);
+    if (foundPlatform) {
+      setSelectedPlatform(foundPlatform);
+      setShowChangeCredentialsModal(true);
+      setNewPassword(`admin${platform}platform`);
+    }
+  };
+
+  const updateCredentials = async () => {
+    if (!selectedPlatform || !newPassword.trim()) {
+      alert('New password is required');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/platforms/admins', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: selectedPlatform.code,
+          password: newPassword,
+        }),
+      });
+
+      if (response.ok) {
+        await loadAdmins();
+        setShowChangeCredentialsModal(false);
+        setNewPassword('');
+        alert('Credentials updated successfully!');
+      } else {
+        alert('Failed to update credentials');
+      }
+    } catch (error) {
+      console.error('Error updating credentials:', error);
+      alert('Failed to update credentials');
+    }
   };
 
   const handleLogout = async () => {
@@ -258,23 +305,42 @@ export default function SuperAdmin() {
                         Create Admin
                       </button>
                     ) : (
-                      <button
-                        onClick={() => showCredentials(platform.code)}
-                        style={{
-                          padding: '0.75rem 1.5rem',
-                          backgroundColor: '#3b82f6',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        <Eye size={18} />
-                        Show Credentials
-                      </button>
+                      <>
+                        <button
+                          onClick={() => showCredentials(platform.code)}
+                          style={{
+                            padding: '0.75rem 1.5rem',
+                            backgroundColor: '#3b82f6',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                        >
+                          <Eye size={18} />
+                          Show Credentials
+                        </button>
+                        <button
+                          onClick={() => changeCredentials(platform.code)}
+                          style={{
+                            padding: '0.75rem 1.5rem',
+                            backgroundColor: '#f59e0b',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                          }}
+                        >
+                          <Key size={18} />
+                          Change Password
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -291,6 +357,212 @@ export default function SuperAdmin() {
             );
           })}
         </div>
+
+        {/* Show Credentials Modal */}
+        {showCredentialsModal && selectedPlatform && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+            onClick={() => setShowCredentialsModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: '#1a1a1a',
+                padding: '2rem',
+                borderRadius: '12px',
+                border: '1px solid #374151',
+                maxWidth: '500px',
+                width: '90%',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', color: '#ffffff' }}>Platform Credentials</h2>
+                <button
+                  onClick={() => setShowCredentialsModal(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div style={{ backgroundColor: '#2a2a2a', padding: '1.5rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <p style={{ color: '#10b981', fontWeight: 'bold', marginBottom: '1rem', fontSize: '1.125rem' }}>✓ Admin Created</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  <div>
+                    <span style={{ color: '#9ca3af' }}>Platform Name:</span>
+                    <span style={{ color: '#ffffff', marginLeft: '0.5rem', fontWeight: 'bold' }}>{selectedPlatform.name}</span>
+                  </div>
+                  <div>
+                    <span style={{ color: '#9ca3af' }}>Platform Code:</span>
+                    <span style={{ color: '#ffffff', marginLeft: '0.5rem', fontWeight: 'bold' }}>{selectedPlatform.code}</span>
+                  </div>
+                  <div style={{ borderTop: '1px solid #374151', paddingTop: '1rem', marginTop: '0.5rem' }}>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>Username:</span>
+                    <p style={{ color: '#ffffff', fontSize: '1.25rem', fontWeight: 'bold', marginTop: '0.5rem' }}>admin</p>
+                  </div>
+                  <div>
+                    <span style={{ color: '#10b981', fontWeight: 'bold' }}>Password:</span>
+                    <p style={{ color: '#ffffff', fontSize: '1.25rem', fontWeight: 'bold', marginTop: '0.5rem', wordBreak: 'break-all' }}>
+                      admin{selectedPlatform.code}platform
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowCredentialsModal(false)}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  backgroundColor: '#3b82f6',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Change Credentials Modal */}
+        {showChangeCredentialsModal && selectedPlatform && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+            onClick={() => setShowChangeCredentialsModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: '#1a1a1a',
+                padding: '2rem',
+                borderRadius: '12px',
+                border: '1px solid #374151',
+                maxWidth: '500px',
+                width: '90%',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', color: '#ffffff' }}>Change Credentials</h2>
+                <button
+                  onClick={() => setShowChangeCredentialsModal(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <p style={{ color: '#9ca3af', marginBottom: '0.5rem' }}>Platform: <strong style={{ color: '#ffffff' }}>{selectedPlatform.name} ({selectedPlatform.code})</strong></p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Username</label>
+                <input
+                  type="text"
+                  value="admin"
+                  disabled
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#666',
+                    cursor: 'not-allowed',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>New Password *</label>
+                <input
+                  type="text"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  onClick={() => setShowChangeCredentialsModal(false)}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    backgroundColor: '#374151',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={updateCredentials}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    backgroundColor: '#f59e0b',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Update Password
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Create Platform Modal */}
         {showCreateModal && (

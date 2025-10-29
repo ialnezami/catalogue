@@ -39,6 +39,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(201).json({ ...admin, id: result.insertedId.toString() });
     }
 
+    if (req.method === 'PUT') {
+      const { platform, password } = req.body;
+
+      // Update admin password for the platform
+      const result = await collection.updateOne(
+        { platform, username: 'admin' },
+        { 
+          $set: { 
+            password,
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ message: 'Admin not found for this platform' });
+      }
+
+      return res.status(200).json({ message: 'Password updated successfully' });
+    }
+
     return res.status(405).json({ message: 'Method not allowed' });
   } catch (error) {
     console.error('API error:', error);
