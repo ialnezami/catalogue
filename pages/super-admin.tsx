@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Plus, Trash2, Eye, EyeOff, LogOut, CheckCircle, Key, Edit, X } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 interface Platform {
   _id?: string;
@@ -73,7 +74,7 @@ export default function SuperAdmin() {
 
   const createPlatform = async () => {
     if (!newPlatform.name || !newPlatform.name.trim()) {
-      alert('Platform name is required');
+      toast.error('Platform name is required');
       return;
     }
 
@@ -94,13 +95,13 @@ export default function SuperAdmin() {
         await loadPlatforms();
         setShowCreateModal(false);
         setNewPlatform({ name: '', description: '' });
-        alert('Platform created successfully!');
+        toast.success('Platform created successfully!');
       } else {
-        alert('Failed to create platform');
+        toast.error('Failed to create platform');
       }
     } catch (error) {
       console.error('Error creating platform:', error);
-      alert('Failed to create platform');
+      toast.error('Failed to create platform');
     }
   };
 
@@ -118,14 +119,14 @@ export default function SuperAdmin() {
 
       if (response.ok) {
         await loadAdmins();
-        alert(`Admin created for platform: ${platform}`);
+        toast.success(`Admin created for platform: ${platform}`);
         showCredentials(platform);
       } else {
-        alert('Failed to create admin');
+        toast.error('Failed to create admin');
       }
     } catch (error) {
       console.error('Error creating admin:', error);
-      alert('Failed to create admin');
+      toast.error('Failed to create admin');
     }
   };
 
@@ -148,7 +149,7 @@ export default function SuperAdmin() {
 
   const updateCredentials = async () => {
     if (!selectedPlatform || !newPassword.trim()) {
-      alert('New password is required');
+      toast.error('New password is required');
       return;
     }
 
@@ -166,13 +167,13 @@ export default function SuperAdmin() {
         await loadAdmins();
         setShowChangeCredentialsModal(false);
         setNewPassword('');
-        alert('Credentials updated successfully!');
+        toast.success('Password updated successfully!');
       } else {
-        alert('Failed to update credentials');
+        toast.error('Failed to update credentials');
       }
     } catch (error) {
       console.error('Error updating credentials:', error);
-      alert('Failed to update credentials');
+      toast.error('Failed to update credentials');
     }
   };
 
@@ -216,6 +217,29 @@ export default function SuperAdmin() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', padding: '2rem' }}>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1a1a1a',
+            color: '#ffffff',
+            border: '1px solid #374151',
+          },
+          success: {
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#ffffff',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#ffffff',
+            },
+          },
+        }}
+      />
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
