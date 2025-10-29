@@ -1,137 +1,276 @@
-# Docker MongoDB Setup Guide
+# Docker Setup for Multi-Tenant Testing
 
-This guide explains how to run MongoDB locally using Docker for the Catalogue application.
-
-## Prerequisites
-
-- Docker and Docker Compose installed on your system
-- Node.js and npm installed
+Quick start guide for setting up and testing the multi-tenant system with Docker.
 
 ## Quick Start
 
-1. **Start MongoDB with Docker**:
-   ```bash
-   docker-compose up -d
-   ```
-
-2. **Verify MongoDB is running**:
-   ```bash
-   docker ps
-   ```
-   You should see the `catalogue-mongodb` container running.
-
-3. **Create environment file**:
-   Create a `.env.local` file in the project root:
-   ```bash
-   cp .env.example .env.local
-   ```
-
-   Or manually create `.env.local` with:
-   ```bash
-   MONGODB_URI=mongodb://admin:admin123@localhost:27017/catalogue?authSource=admin
-   DB_NAME=catalogue
-   ```
-
-4. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-
-## Docker Commands
-
-### Start MongoDB
 ```bash
+# 1. Start MongoDB
+npm run docker:up
+
+# 2. Seed test data
+npm run seed:test
+
+# 3. Start Next.js
+npm run dev
+
+# 4. Open browser
+# http://localhost:3000/login
+```
+
+## Commands Reference
+
+| Command | Description |
+|---------|-------------|
+| `npm run docker:up` | Start MongoDB container |
+| `npm run docker:down` | Stop MongoDB container |
+| `npm run docker:logs` | View MongoDB logs |
+| `npm run seed:test` | Seed test data (platforms, products, admins) |
+| `npm run test:tenant` | Test data isolation |
+| `npm run dev` | Start Next.js development server |
+
+## Docker Container Management
+
+### Start/Stop Container
+
+```bash
+# Start
 docker-compose up -d
-```
 
-### Stop MongoDB
-```bash
+# Stop
 docker-compose down
+
+# View running containers
+docker ps
+
+# View MongoDB logs
+docker logs catalogue-mongodb -f
 ```
 
-### Stop and Remove All Data
+### Database Access
+
+**Using MongoDB Compass (GUI):**
+```
+mongodb://admin:password123@localhost:27017/?authSource=admin
+```
+
+**Using MongoDB Shell:**
 ```bash
-docker-compose down -v
+# Connect to MongoDB
+docker exec -it catalogue-mongodb mongosh -u admin -p password123 --authenticationDatabase admin
+
+# Switch to catalogue database
+use catalogue
+
+# View collections
+show collections
+
+# Count documents
+db.products.countDocuments({platform: 'roze'})
+db.orders.countDocuments({platform: 'jador'})
+
+# View data
+db.products.find({platform: 'roze'}).pretty()
+db.platforms.find().pretty()
 ```
 
-### View MongoDB Logs
+## Testing Flow
+
+### 1. Initial Setup
+
 ```bash
-docker-compose logs -f mongodb
+# Clone/navigate to project
+cd catalogue
+
+# Install dependencies (if not done)
+npm install
+
+# Start Docker MongoDB
+npm run docker:up
+
+# Wait for MongoDB to be ready (about 10 seconds)
+sleep 10
+
+# Seed test data
+npm run seed:test
+
+# Start application
+npm run dev
 ```
 
-### Connect to MongoDB Shell
+### 2. Test Super Admin
+
+1. Open http://localhost:3000/login
+2. Login:
+   - Username: `super_admin`
+   - Password: `super_admin876635`
+3. You'll be redirected to `/super-admin`
+4. Create a new platform
+5. Create admin for the platform
+
+### 3. Test Platform Admin (Roze)
+
+1. Logout from super admin
+2. Login as:
+   - Username: `admin`
+   - Password: `adminrozeplatform`
+3. Navigate to Products - should see 3 Roze products
+4. Add a new product - automatically tagged with "roze" platform
+5. Complete an order in POS - order saved with "roze" platform
+
+### 4. Test Platform Admin (Jador)
+
+1. Logout
+2. Login as:
+   - Username: `admin`
+   - Password: `adminjadorplatform`
+3. Navigate to Products - should see 3 Jador products (different from Roze)
+4. Add a new product - automatically tagged with "jador" platform
+5. Complete an order in POS - order saved with "jador" platform
+
+### 5. Verify Data Isolation
+
 ```bash
-docker exec -it catalogue-mongodb mongosh -u admin -p admin123
+npm run test:tenant
 ```
 
-### Access MongoDB with mongosh
+Expected output shows:
+- Roze has 3 products (plus any you added)
+- Jador has 3 products (plus any you added)
+- Each platform sees only its own data
+
+## Manual Database Queries
+
+### Check Platform Separation
+
 ```bash
-mongosh mongodb://admin:admin123@localhost:27017/catalogue?authSource=admin
+# Count products per platform
+docker exec -it catalogue-mongodb mongosh -u admin -p password123 --authenticationDatabase admin catalogue --eval "
+db.products.aggregate([
+  { \$group: { _id: '\$platform', count: { \$sum: 1 } } },
+  { \$sort: { _id: 1 } }
+]).forEach(p => print(p._id + ': ' + p.count + ' products'))
+"
+
+# View all platforms
+docker exec -it catalogue-mongodb mongosh -u admin -p password123 --authenticationDatabase admin catalogue --eval "db.platforms.find().pretty()"
+
+# Count orders per platform
+docker exec -it catalogue-mongodb mongosh -u admin -p password123 --authenticationDatabase admin catalogue --eval "
+db.orders.aggregate([
+  { \$group: { _id: '\$platform', count: { \$sum: 1 } } },
+  { \$sort: { _id: 1 } }
+]).forEach(p => print(p._id + ': ' + p.count + ' orders'))
+"
 ```
 
-## MongoDB Configuration
+## Environment Setup
 
-The Docker setup includes:
-- **Container Name**: `catalogue-mongodb`
-- **Port**: `27017` (mapped to host)
-- **Database**: `catalogue`
-- **Root Username**: `admin`
-- **Root Password**: `admin123`
-- **Data Persistence**: Docker volume `mongodb_data`
+### .env.local File
 
-## Connection String
+```env
+# MongoDB Connection
+MONGODB_URI=mongodb://admin:password123@localhost:27017/catalogue?authSource=admin
+DB_NAME=catalogue
 
-For local development with Docker:
-```
-mongodb://admin:admin123@localhost:27017/catalogue?authSource=admin
+# Environment
+NODE_ENV=development
+
+# Next.js
+NEXT_PUBLIC_API_URL=http://localhost:3000
 ```
 
 ## Troubleshooting
 
-### Port Already in Use
-If port 27017 is already in use:
-```bash
-# Find the process using the port
-lsof -i :27017
+### Cannot connect to MongoDB
 
-# Stop the existing MongoDB process
-# Then start Docker MongoDB
-docker-compose up -d
+```bash
+# Check if container is running
+docker ps
+
+# If not running, start it
+npm run docker:up
+
+# Check logs
+docker logs catalogue-mongodb
 ```
 
-### Reset Database
-To completely reset the MongoDB data:
+### Seed script fails
+
 ```bash
+# Drop database and try again
+docker exec -it catalogue-mongodb mongosh -u admin -p password123 --authenticationDatabase admin --eval "db.dropDatabase()"
+
+# Re-run seed
+npm run seed:test
+```
+
+### Port conflicts
+
+If port 27017 is in use, change it in `docker-compose.yml`:
+
+```yaml
+ports:
+  - "27018:27017"  # Use 27018 instead
+```
+
+And update `.env.local`:
+```env
+MONGODB_URI=mongodb://admin:password123@localhost:27018/catalogue?authSource=admin
+```
+
+## Clean Slate
+
+To start completely fresh:
+
+```bash
+# Stop containers
+npm run docker:down
+
+# Remove volumes (deletes all data)
 docker-compose down -v
-docker-compose up -d
+
+# Start fresh
+npm run docker:up
+npm run seed:test
 ```
 
-### Connection Issues
-1. Verify MongoDB is running: `docker ps`
-2. Check logs: `docker-compose logs mongodb`
-3. Test connection: `mongosh mongodb://admin:admin123@localhost:27017/catalogue?authSource=admin`
+## Next.js Dev Server
 
-### Environment Variables Not Loading
-- Make sure `.env.local` exists in the project root
-- Restart your development server after creating `.env.local`
-- Check that the `MONGODB_URI` matches the Docker setup
+The development server uses environment variables from `.env.local`:
 
-## Production Deployment
+```bash
+npm run dev
+```
 
-For production, use a managed MongoDB service such as:
-- MongoDB Atlas (recommended)
-- AWS DocumentDB
-- Azure Cosmos DB
+Open http://localhost:3000
 
-Update your `.env.production` with the appropriate connection string.
+## Useful Docker Commands
 
-## Security Notes
+```bash
+# View all containers (including stopped)
+docker ps -a
 
-⚠️ **Important**: The default credentials (`admin`/`admin123`) are for local development only. 
+# View MongoDB container status
+docker stats catalogue-mongodb
 
-For production:
-1. Use strong, unique passwords
-2. Enable authentication
-3. Use MongoDB Atlas or another managed service
-4. Never commit `.env` files to version control
+# Execute command in container
+docker exec -it catalogue-mongodb mongosh ...
 
+# Remove everything (cleanup)
+docker-compose down -v
+
+# Rebuild containers
+docker-compose up -d --force-recreate
+```
+
+## Production Considerations
+
+For production deployment:
+
+1. Use environment-specific MongoDB credentials
+2. Enable MongoDB authentication properly
+3. Use connection pooling
+4. Set up proper backup strategy
+5. Monitor database performance
+6. Use production-ready database (MongoDB Atlas, etc.)

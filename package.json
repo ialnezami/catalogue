@@ -6,7 +6,12 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f mongodb",
+    "seed:test": "node scripts/seed-test-data.js",
+    "test:tenant": "node scripts/test-multi-tenant.js"
   },
   "dependencies": {
     "@types/jsbarcode": "^3.11.4",

@@ -15,7 +15,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   // Check for super admin
   if (username === SUPER_ADMIN_USERNAME && password === SUPER_ADMIN_PASSWORD) {
-    res.setHeader('Set-Cookie', 'admin=true; super_admin=true; Path=/; HttpOnly; SameSite=Strict');
+    res.setHeader('Set-Cookie', [
+      'admin=true; Path=/; HttpOnly; SameSite=Strict',
+      'super_admin=true; Path=/; HttpOnly; SameSite=Strict'
+    ]);
     return res.status(200).json({ success: true, role: 'super_admin' });
   }
   
@@ -30,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (username === 'admin' && password === expectedPassword) {
     // Set platform-specific admin cookie
     res.setHeader('Set-Cookie', [
-      `admin=true; Path=/; HttpOnly; SameSite=Strict`,
+      'admin=true; Path=/; HttpOnly; SameSite=Strict',
       `admin_platform=${platform}; Path=/; HttpOnly; SameSite=Strict`
     ]);
     return res.status(200).json({ success: true, role: 'admin', platform });
@@ -50,7 +53,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     if (admin && admin.password === password) {
       res.setHeader('Set-Cookie', [
-        `admin=true; Path=/; HttpOnly; SameSite=Strict`,
+        'admin=true; Path=/; HttpOnly; SameSite=Strict',
         `admin_platform=${platform}; Path=/; HttpOnly; SameSite=Strict`
       ]);
       return res.status(200).json({ success: true, role: 'admin', platform });
