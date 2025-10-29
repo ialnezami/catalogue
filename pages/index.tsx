@@ -4,6 +4,7 @@ import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
 import { Product } from '@/types';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
+import { useRouter } from 'next/router';
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -11,19 +12,33 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
+  const router = useRouter();
+  const [showNoPlatform, setShowNoPlatform] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         
+        // Get platform from URL parameter - REQUIRED
+        const platform = router.query.platform as string;
+        
+        // If no platform parameter, show blank page
+        if (!platform) {
+          setShowNoPlatform(true);
+          setLoading(false);
+          return;
+        }
+        
+        setShowNoPlatform(false);
+        
         // Load currency settings
         const settings = await getCurrencySettings();
         setExchangeRate(settings.exchangeRate);
         setDisplayCurrency(settings.displayCurrency);
         
-        // Load products
-        const response = await fetch('/api/products');
+        // Load products with platform filter
+        const response = await fetch(`/api/products?platform=${platform}`);
         const data = await response.json();
         // Convert MongoDB _id to id for Product type
         const formattedData = data.map((item: any) => ({
@@ -38,8 +53,39 @@ export default function Home() {
         setLoading(false);
       }
     };
-    loadData();
-  }, []);
+    
+    if (router.isReady) {
+      loadData();
+    }
+  }, [router.isReady, router.query.platform]);
+
+  // Show blank page if no platform
+  if (showNoPlatform) {
+    return (
+      <Layout>
+        <div style={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '2rem'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', color: '#ef4444', marginBottom: '1rem' }}>
+              Platform Required
+            </h1>
+            <p style={{ color: '#9ca3af', fontSize: '1rem' }}>
+              Please specify a platform parameter in the URL
+            </p>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+              Example: ?platform=roze
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   const handleFilter = (filtered: Product[]) => {
     setFilteredProducts(filtered);

@@ -72,9 +72,37 @@ export default function POSNew() {
     }
   }, [searchTerm, products]);
 
+  const [showNoPlatform, setShowNoPlatform] = useState(false);
+
+  useEffect(() => {
+    // Check for platform on mount
+    const urlParams = new URLSearchParams(window.location.search);
+    const platform = urlParams.get('platform');
+    
+    if (!platform) {
+      setShowNoPlatform(true);
+    } else {
+      loadProducts();
+      loadCurrencySettings();
+      if (barcodeInputRef.current) {
+        barcodeInputRef.current.focus();
+      }
+    }
+  }, []);
+
   const loadProducts = async () => {
     try {
-      const data = await productsAPI.getAll();
+      // Get platform from URL - REQUIRED
+      const urlParams = new URLSearchParams(window.location.search);
+      const platform = urlParams.get('platform');
+      
+      if (!platform) {
+        setShowNoPlatform(true);
+        return;
+      }
+      
+      const response = await fetch(`/api/products?platform=${platform}`);
+      const data = await response.json();
       setProducts(data);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -405,6 +433,35 @@ Date: ${new Date().toLocaleString('ar-EG')}
     const whatsappMessage = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${whatsappMessage}`, '_blank');
   };
+
+  // Show blank page if no platform
+  if (showNoPlatform) {
+    return (
+      <Layout>
+        <div style={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '2rem',
+          backgroundColor: '#0a0a0a'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', color: '#ef4444', marginBottom: '1rem' }}>
+              Platform Required
+            </h1>
+            <p style={{ color: '#9ca3af', fontSize: '1rem' }}>
+              POS requires a platform parameter
+            </p>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+              Use: /pos?platform=roze
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>

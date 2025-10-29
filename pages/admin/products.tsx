@@ -10,6 +10,8 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [showNoPlatform, setShowNoPlatform] = useState(false);
+  const [platform, setPlatform] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -35,6 +37,18 @@ export default function AdminProducts() {
   const router = useRouter();
 
   useEffect(() => {
+    // Get platform from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const platformParam = urlParams.get('platform');
+    
+    if (!platformParam) {
+      setShowNoPlatform(true);
+      setLoading(false);
+      return;
+    }
+    
+    setPlatform(platformParam);
+    setShowNoPlatform(false);
     loadProducts();
   }, []);
 
@@ -112,7 +126,9 @@ export default function AdminProducts() {
 
   const loadProducts = async () => {
     try {
-      const response = await fetch('/api/products');
+      if (!platform) return;
+      
+      const response = await fetch(`/api/products?platform=${platform}`);
       const data = await response.json();
       // Convert MongoDB _id to id for Product type
       const formattedData = data.map((item: any) => ({
@@ -130,16 +146,21 @@ export default function AdminProducts() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!platform) {
+      toast.error('Platform required!');
+      return;
+    }
+    
     try {
       if (editingProduct) {
-        await fetch(`/api/products/${editingProduct.id}`, {
+        await fetch(`/api/products/${editingProduct.id}?platform=${platform}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
         toast.success('Product updated successfully!');
       } else {
-        await fetch('/api/products', {
+        await fetch(`/api/products?platform=${platform}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
@@ -412,6 +433,34 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
     const newSelected = new Set(Array.from(selectedProducts).filter(i => i !== index).map(i => i > index ? i - 1 : i));
     setSelectedProducts(newSelected);
   };
+
+  // Show blank page if no platform
+  if (showNoPlatform) {
+    return (
+      <Layout>
+        <div style={{ 
+          minHeight: '100vh', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          textAlign: 'center',
+          padding: '2rem'
+        }}>
+          <div>
+            <h1 style={{ fontSize: '2rem', color: '#ef4444', marginBottom: '1rem' }}>
+              Platform Required
+            </h1>
+            <p style={{ color: '#9ca3af', fontSize: '1rem' }}>
+              Admin requires a platform parameter
+            </p>
+            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+              Use: /admin/products?platform=roze
+            </p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (loading) {
     return (
