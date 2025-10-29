@@ -23,8 +23,12 @@ export default function AdminProducts() {
   });
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [parsedProducts, setParsedProducts] = useState<any[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
   const [generatedBarcode, setGeneratedBarcode] = useState('');
   const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
@@ -271,7 +275,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
     console.log('File validated:', file.name);
     
-    setIsUploading(true);
+    setIsUploading(false);
+    setIsParsing(true);
     setUploadProgress(0);
 
     try {
@@ -313,37 +318,99 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       if (products.length === 0) {
         toast.error('No valid products found in CSV');
         setIsUploading(false);
+        setIsParsing(false);
         setUploadProgress(0);
         return;
       }
 
-      // Import products one by one with progress
-      for (let i = 0; i < products.length; i++) {
-        await fetch('/api/products', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(products[i]),
-        });
-        
-        const progress = ((i + 1) / products.length) * 100;
-        setUploadProgress(Math.round(progress));
-      }
-
-      toast.success(`Successfully imported ${products.length} products!`);
-      setShowImportModal(false);
-      setUploadProgress(0);
+      // Show preview modal with parsed products
+      setParsedProducts(products);
+      // Select all products by default
+      setSelectedProducts(new Set(products.map((_, index) => index)));
       setIsUploading(false);
-      loadProducts();
+      setIsParsing(false);
+      setShowImportModal(false);
+      setShowPreviewModal(true);
       
       // Reset file input
       event.target.value = '';
+    } catch (error) {
+      console.error('Error parsing products:', error);
+      toast.error('Error parsing CSV: ' + (error as Error).message);
+      setIsUploading(false);
+      setIsParsing(false);
+      setUploadProgress(0);
+      event.target.value = '';
+    }
+  };
+
+  const handleImportSelected = async () => {
+    const productsToImport = parsedProducts.filter((_, index) => selectedProducts.has(index));
+    
+    if (productsToImport.length === 0) {
+      toast.error('Please select at least one product to import');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Import selected products one by one with progress
+      for (let i = 0; i < productsToImport.length; i++) {
+        await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(productsToImport[i]),
+        });
+        
+        const progress = ((i + 1) / productsToImport.length) * 100;
+        setUploadProgress(Math.round(progress));
+      }
+
+      toast.success(`Successfully imported ${productsToImport.length} products!`);
+      setShowPreviewModal(false);
+      setUploadProgress(0);
+      setIsUploading(false);
+      setSelectedProducts(new Set());
+      loadProducts();
     } catch (error) {
       console.error('Error importing products:', error);
       toast.error('Error importing products: ' + (error as Error).message);
       setIsUploading(false);
       setUploadProgress(0);
-      event.target.value = '';
     }
+  };
+
+  const toggleProductSelection = (index: number) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const selectAllProducts = () => {
+    setSelectedProducts(new Set(parsedProducts.map((_, index) => index)));
+  };
+
+  const deselectAllProducts = () => {
+    setSelectedProducts(new Set());
+  };
+
+  const updateParsedProduct = (index: number, field: string, value: string) => {
+    const updated = [...parsedProducts];
+    updated[index] = { ...updated[index], [field]: value };
+    setParsedProducts(updated);
+  };
+
+  const removeParsedProduct = (index: number) => {
+    const updated = parsedProducts.filter((_, i) => i !== index);
+    setParsedProducts(updated);
+    const newSelected = new Set(Array.from(selectedProducts).filter(i => i !== index).map(i => i > index ? i - 1 : i));
+    setSelectedProducts(newSelected);
   };
 
   if (loading) {
@@ -1171,6 +1238,280 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 {isUploading ? 'Processing...' : 'Cancel'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreviewModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '2rem',
+          }}
+          onClick={() => {
+            if (!isUploading) setShowPreviewModal(false);
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '12px',
+              border: '1px solid #374151',
+              maxWidth: '1200px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Upload size={24} />
+                Preview Products ({selectedProducts.size} selected)
+              </h2>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {!isUploading && (
+                  <>
+                    <button
+                      onClick={selectAllProducts}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#3b82f6',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={deselectAllProducts}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#6b7280',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Deselect All
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                  }}
+                  disabled={isUploading}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, overflow: 'auto', marginBottom: '1rem' }}>
+              {parsedProducts.map((product, index) => (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: selectedProducts.has(index) ? '#2a2a2a' : '#1f1f1f',
+                    border: selectedProducts.has(index) ? '2px solid #3b82f6' : '1px solid #374151',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.has(index)}
+                      onChange={() => toggleProductSelection(index)}
+                      disabled={isUploading}
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        cursor: 'pointer',
+                        marginTop: '0.5rem',
+                      }}
+                    />
+                    <div style={{ flex: 1, display: 'grid', gap: '0.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={product.title || ''}
+                          onChange={(e) => updateParsedProduct(index, 'title', e.target.value)}
+                          placeholder="Title"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={product.description || ''}
+                          onChange={(e) => updateParsedProduct(index, 'description', e.target.value)}
+                          placeholder="Description"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                        <input
+                          type="number"
+                          value={product.price || ''}
+                          onChange={(e) => updateParsedProduct(index, 'price', e.target.value)}
+                          placeholder="Price"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={product.category || ''}
+                          onChange={(e) => updateParsedProduct(index, 'category', e.target.value)}
+                          placeholder="Category"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={product.barcode || ''}
+                          onChange={(e) => updateParsedProduct(index, 'barcode', e.target.value)}
+                          placeholder="Barcode"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <button
+                          onClick={() => removeParsedProduct(index)}
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#ef4444',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: isUploading ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            {isUploading ? (
+              <div>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  marginBottom: '0.5rem',
+                  color: '#ffffff'
+                }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Importing products...</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{uploadProgress}%</span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '12px',
+                  backgroundColor: '#2a2a2a',
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${uploadProgress}%`,
+                    background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+                    borderRadius: '6px',
+                    transition: 'width 0.3s ease',
+                  }} />
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#374151',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleImportSelected}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Import {selectedProducts.size} Product{selectedProducts.size !== 1 ? 's' : ''}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
