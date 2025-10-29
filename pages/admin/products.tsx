@@ -10,7 +10,6 @@ export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [showNoPlatform, setShowNoPlatform] = useState(false);
   const [platform, setPlatform] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -37,18 +36,11 @@ export default function AdminProducts() {
   const router = useRouter();
 
   useEffect(() => {
-    // Get platform from URL
+    // Get platform from URL or use 'default'
     const urlParams = new URLSearchParams(window.location.search);
-    const platformParam = urlParams.get('platform');
-    
-    if (!platformParam) {
-      setShowNoPlatform(true);
-      setLoading(false);
-      return;
-    }
+    const platformParam = urlParams.get('platform') || 'default';
     
     setPlatform(platformParam);
-    setShowNoPlatform(false);
     loadProducts();
   }, []);
 
@@ -434,33 +426,6 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
     setSelectedProducts(newSelected);
   };
 
-  // Show blank page if no platform
-  if (showNoPlatform) {
-    return (
-      <Layout>
-        <div style={{ 
-          minHeight: '100vh', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: '2rem'
-        }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', color: '#ef4444', marginBottom: '1rem' }}>
-              Platform Required
-            </h1>
-            <p style={{ color: '#9ca3af', fontSize: '1rem' }}>
-              Admin requires a platform parameter
-            </p>
-            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-              Use: /admin/products?platform=roze
-            </p>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
 
   if (loading) {
     return (
