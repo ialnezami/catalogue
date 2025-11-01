@@ -11,7 +11,9 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f mongodb",
     "seed:test": "node scripts/seed-test-data.js",
-    "test:tenant": "node scripts/test-multi-tenant.js"
+    "test:tenant": "node scripts/test-multi-tenant.js",
+    "audit:platforms": "node scripts/audit-platforms.js",
+    "fix:platforms": "node scripts/fix-platforms.js"
   },
   "dependencies": {
     "@types/jsbarcode": "^3.11.4",
