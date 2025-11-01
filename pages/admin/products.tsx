@@ -36,13 +36,36 @@ export default function AdminProducts() {
   const router = useRouter();
 
   useEffect(() => {
-    // Get platform from URL or use 'default'
-    const urlParams = new URLSearchParams(window.location.search);
-    const platformParam = urlParams.get('platform') || 'default';
+    // Get platform from admin session
+    const loadAdminPlatform = async () => {
+      try {
+        const authResponse = await fetch('/api/auth/check');
+        const authData = await authResponse.json();
+        
+        if (authData.adminPlatform) {
+          setPlatform(authData.adminPlatform);
+        } else {
+          // Fallback to URL parameter or default
+          const urlParams = new URLSearchParams(window.location.search);
+          const platformParam = urlParams.get('platform') || 'default';
+          setPlatform(platformParam);
+        }
+      } catch (error) {
+        console.error('Error fetching admin platform:', error);
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform') || 'default';
+        setPlatform(platformParam);
+      }
+    };
     
-    setPlatform(platformParam);
-    loadProducts();
+    loadAdminPlatform();
   }, []);
+
+  useEffect(() => {
+    if (platform) {
+      loadProducts();
+    }
+  }, [platform]);
 
   const generateBarcode = () => {
     const barcode = 'PRD' + Date.now().toString().slice(-10);
@@ -118,9 +141,8 @@ export default function AdminProducts() {
 
   const loadProducts = async () => {
     try {
-      if (!platform) return;
-      
-      const response = await fetch(`/api/products?platform=${platform}`);
+      // API automatically uses admin's platform from cookie
+      const response = await fetch('/api/products');
       const data = await response.json();
       // Convert MongoDB _id to id for Product type
       const formattedData = data.map((item: any) => ({
@@ -138,21 +160,17 @@ export default function AdminProducts() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!platform) {
-      toast.error('Platform required!');
-      return;
-    }
-    
     try {
+      // API automatically uses admin's platform from cookie
       if (editingProduct) {
-        await fetch(`/api/products/${editingProduct.id}?platform=${platform}`, {
+        await fetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
         toast.success('Product updated successfully!');
       } else {
-        await fetch(`/api/products?platform=${platform}`, {
+        await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),

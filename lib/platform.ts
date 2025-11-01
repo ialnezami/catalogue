@@ -11,21 +11,44 @@ export interface PlatformContext {
 /**
  * Get platform key from request
  * Supports:
- * - Subdomain: roze.catalogue.com -> "roze"
+ * - Admin cookie (for authenticated admins): admin_platform cookie -> platform
  * - URL parameter: catalogue.com/?platform=roze -> "roze"
+ * - Subdomain: roze.catalogue.com -> "roze"
  * - Default: "default"
  */
 export function getPlatformFromRequest(req?: {
   headers?: {
     host?: string;
     'x-forwarded-host'?: string;
+    cookie?: string;
   };
   query?: {
     platform?: string;
   };
+  cookies?: {
+    admin_platform?: string;
+  };
   url?: string;
 }): string {
-  // Try URL parameter first
+  // For authenticated admins, use their platform from cookie (highest priority)
+  if (req?.cookies?.admin_platform) {
+    return req.cookies.admin_platform.toLowerCase();
+  }
+  
+  // Parse cookie string if it exists in headers
+  if (req?.headers?.cookie) {
+    const cookies = req.headers.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      acc[key] = value;
+      return acc;
+    }, {} as Record<string, string>);
+    
+    if (cookies.admin_platform) {
+      return cookies.admin_platform.toLowerCase();
+    }
+  }
+
+  // Try URL parameter second (for public pages)
   if (req?.query?.platform && typeof req.query.platform === 'string') {
     return req.query.platform.toLowerCase();
   }
