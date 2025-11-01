@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Layout from '@/components/Layout';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
 import { Product } from '@/types';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
 import { useRouter } from 'next/router';
+
+const LandingPage = dynamic(() => import('@/components/LandingPage'), { ssr: false });
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -59,32 +62,9 @@ export default function Home() {
     }
   }, [router.isReady, router.query.platform]);
 
-  // Show blank page if no platform
+  // Show landing page if no platform
   if (showNoPlatform) {
-    return (
-      <Layout>
-        <div style={{ 
-          minHeight: '100vh', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          textAlign: 'center',
-          padding: '2rem'
-        }}>
-          <div>
-            <h1 style={{ fontSize: '2rem', color: '#ef4444', marginBottom: '1rem' }}>
-              Platform Required
-            </h1>
-            <p style={{ color: '#9ca3af', fontSize: '1rem' }}>
-              Please specify a platform parameter in the URL
-            </p>
-            <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.5rem' }}>
-              Example: ?platform=roze
-            </p>
-          </div>
-        </div>
-      </Layout>
-    );
+    return <LandingPage />;
   }
 
   const handleFilter = (filtered: Product[]) => {

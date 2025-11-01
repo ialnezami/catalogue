@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { Plus, Trash2, Eye, EyeOff, LogOut, CheckCircle, Key, Edit, X } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, LogOut, CheckCircle, Key, Edit, X, Clock, Check, XCircle, Mail, Phone, Building } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Platform {
@@ -19,15 +19,34 @@ interface Admin {
   createdAt?: Date;
 }
 
+interface PlatformRequest {
+  _id?: string;
+  platformName: string;
+  platformDescription?: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone?: string;
+  businessType?: string;
+  message?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt?: Date;
+  approvedAt?: Date;
+  platformCode?: string;
+}
+
 export default function SuperAdmin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [admins, setAdmins] = useState<Admin[]>([]);
+  const [platformRequests, setPlatformRequests] = useState<PlatformRequest[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showCredentialsModal, setShowCredentialsModal] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
   const [showChangeCredentialsModal, setShowChangeCredentialsModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState<PlatformRequest | null>(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [requestFilter, setRequestFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [newPassword, setNewPassword] = useState('');
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '' });
   const router = useRouter();
@@ -44,6 +63,7 @@ export default function SuperAdmin() {
       if (data.isSuperAdmin) {
         loadPlatforms();
         loadAdmins();
+        loadPlatformRequests();
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -69,6 +89,52 @@ export default function SuperAdmin() {
       setAdmins(data);
     } catch (error) {
       console.error('Failed to load admins:', error);
+    }
+  };
+
+  const loadPlatformRequests = async () => {
+    try {
+      const status = requestFilter === 'all' ? '' : requestFilter;
+      const url = status ? `/api/platforms/requests?status=${status}` : '/api/platforms/requests';
+      const response = await fetch(url);
+      const data = await response.json();
+      setPlatformRequests(data);
+    } catch (error) {
+      console.error('Failed to load platform requests:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadPlatformRequests();
+    }
+  }, [isAuthenticated, requestFilter]);
+
+  const handleRequestAction = async (requestId: string, action: 'approve' | 'reject') => {
+    try {
+      const response = await fetch('/api/platforms/requests', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: requestId,
+          status: action === 'approve' ? 'approved' : 'rejected',
+          action: action === 'approve' ? 'approve' : undefined,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success(action === 'approve' ? 'Request approved and platform created!' : 'Request rejected');
+        await loadPlatformRequests();
+        await loadPlatforms();
+        await loadAdmins();
+        setShowRequestModal(false);
+      } else {
+        const data = await response.json();
+        toast.error(data.message || 'Failed to update request');
+      }
+    } catch (error) {
+      console.error('Error updating request:', error);
+      toast.error('Failed to update request');
     }
   };
 
@@ -279,7 +345,7 @@ export default function SuperAdmin() {
         </div>
 
         {/* Create Platform Button */}
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
           <button
             onClick={() => setShowCreateModal(true)}
             style={{
@@ -299,6 +365,170 @@ export default function SuperAdmin() {
             <Plus size={24} />
             Create New Platform
           </button>
+        </div>
+
+        {/* Platform Requests Section */}
+        <div style={{ marginBottom: '3rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <h2 style={{ fontSize: '2rem', color: '#ec4899', margin: 0 }}>Platform Requests</h2>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {(['all', 'pending', 'approved', 'rejected'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setRequestFilter(filter)}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: requestFilter === filter ? '#ec4899' : '#374151',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize',
+                    fontSize: '0.875rem',
+                    fontWeight: requestFilter === filter ? '600' : '400',
+                  }}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {platformRequests.length === 0 ? (
+            <div style={{ 
+              padding: '3rem', 
+              textAlign: 'center', 
+              backgroundColor: '#1a1a1a', 
+              borderRadius: '12px',
+              border: '1px solid #374151'
+            }}>
+              <p style={{ color: '#9ca3af' }}>No {requestFilter === 'all' ? '' : requestFilter} requests found</p>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: '1rem' }}>
+              {platformRequests.map((request) => (
+                <div
+                  key={request._id}
+                  style={{
+                    backgroundColor: '#1a1a1a',
+                    padding: '1.5rem',
+                    borderRadius: '12px',
+                    border: '1px solid #374151',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#ec4899';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#374151';
+                  }}
+                  onClick={() => {
+                    setSelectedRequest(request);
+                    setShowRequestModal(true);
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                        <h3 style={{ fontSize: '1.25rem', color: '#ffffff', margin: 0 }}>
+                          {request.platformName}
+                        </h3>
+                        <span style={{
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: '600',
+                          backgroundColor: 
+                            request.status === 'approved' ? '#10b981' :
+                            request.status === 'rejected' ? '#ef4444' :
+                            '#f59e0b',
+                          color: '#ffffff'
+                        }}>
+                          {request.status}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', color: '#9ca3af', fontSize: '0.875rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <Mail size={14} />
+                          {request.contactEmail}
+                        </div>
+                        {request.contactPhone && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Phone size={14} />
+                            {request.contactPhone}
+                          </div>
+                        )}
+                        {request.businessType && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Building size={14} />
+                            {request.businessType}
+                          </div>
+                        )}
+                        {request.createdAt && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Clock size={14} />
+                            {new Date(request.createdAt).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    {request.status === 'pending' && (
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRequestAction(request._id!, 'approve');
+                          }}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#10b981',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <Check size={16} />
+                          Approve
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRequestAction(request._id!, 'reject');
+                          }}
+                          style={{
+                            padding: '0.5rem 1rem',
+                            backgroundColor: '#ef4444',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            fontSize: '0.875rem'
+                          }}
+                        >
+                          <XCircle size={16} />
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {request.platformDescription && (
+                    <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginTop: '0.5rem', lineHeight: '1.6' }}>
+                      {request.platformDescription}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Platforms List */}
@@ -597,6 +827,182 @@ export default function SuperAdmin() {
                 >
                   Update Password
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Request Detail Modal */}
+        {showRequestModal && selectedRequest && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+              padding: '2rem',
+            }}
+            onClick={() => setShowRequestModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: '#1a1a1a',
+                padding: '2rem',
+                borderRadius: '12px',
+                border: '1px solid #374151',
+                maxWidth: '700px',
+                width: '100%',
+                maxHeight: '90vh',
+                overflowY: 'auto',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', color: '#ffffff' }}>Platform Request Details</h2>
+                <button
+                  onClick={() => setShowRequestModal(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div>
+                  <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Platform Name</label>
+                  <p style={{ color: '#ffffff', fontSize: '1.125rem', fontWeight: '600', marginTop: '0.25rem' }}>
+                    {selectedRequest.platformName}
+                  </p>
+                </div>
+
+                {selectedRequest.platformDescription && (
+                  <div>
+                    <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Description</label>
+                    <p style={{ color: '#ffffff', marginTop: '0.25rem', lineHeight: '1.6' }}>
+                      {selectedRequest.platformDescription}
+                    </p>
+                  </div>
+                )}
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Contact Name</label>
+                    <p style={{ color: '#ffffff', marginTop: '0.25rem' }}>{selectedRequest.contactName}</p>
+                  </div>
+                  <div>
+                    <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Email</label>
+                    <p style={{ color: '#ffffff', marginTop: '0.25rem' }}>{selectedRequest.contactEmail}</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  {selectedRequest.contactPhone && (
+                    <div>
+                      <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Phone</label>
+                      <p style={{ color: '#ffffff', marginTop: '0.25rem' }}>{selectedRequest.contactPhone}</p>
+                    </div>
+                  )}
+                  {selectedRequest.businessType && (
+                    <div>
+                      <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Business Type</label>
+                      <p style={{ color: '#ffffff', marginTop: '0.25rem' }}>{selectedRequest.businessType}</p>
+                    </div>
+                  )}
+                </div>
+
+                {selectedRequest.message && (
+                  <div>
+                    <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Additional Message</label>
+                    <p style={{ color: '#ffffff', marginTop: '0.25rem', lineHeight: '1.6', whiteSpace: 'pre-wrap' }}>
+                      {selectedRequest.message}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Status</label>
+                  <span style={{
+                    display: 'inline-block',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '12px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    backgroundColor: 
+                      selectedRequest.status === 'approved' ? '#10b981' :
+                      selectedRequest.status === 'rejected' ? '#ef4444' :
+                      '#f59e0b',
+                    color: '#ffffff',
+                    marginTop: '0.25rem'
+                  }}>
+                    {selectedRequest.status}
+                  </span>
+                </div>
+
+                {selectedRequest.createdAt && (
+                  <div>
+                    <label style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Request Date</label>
+                    <p style={{ color: '#ffffff', marginTop: '0.25rem' }}>
+                      {new Date(selectedRequest.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+                {selectedRequest.status === 'pending' && (
+                  <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid #374151' }}>
+                    <button
+                      onClick={() => handleRequestAction(selectedRequest._id!, 'approve')}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        backgroundColor: '#10b981',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      <Check size={20} />
+                      Approve & Create Platform
+                    </button>
+                    <button
+                      onClick={() => handleRequestAction(selectedRequest._id!, 'reject')}
+                      style={{
+                        flex: 1,
+                        padding: '0.75rem',
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '0.5rem',
+                        fontWeight: '600'
+                      }}
+                    >
+                      <XCircle size={20} />
+                      Reject
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
