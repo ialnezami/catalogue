@@ -4,6 +4,7 @@ import { ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { formatPrice, getCurrencySettings } from '@/lib/currency';
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 interface ProductCardProps {
   product: Product;
@@ -11,8 +12,10 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const router = useRouter();
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
+  const [platform, setPlatform] = useState<string | null>(null);
 
   useEffect(() => {
     getCurrencySettings().then(settings => {
@@ -21,14 +24,49 @@ export default function ProductCard({ product }: ProductCardProps) {
     });
   }, []);
 
+  useEffect(() => {
+    // Load platform from session or URL
+    const loadPlatform = async () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const authResponse = await fetch('/api/auth/check');
+          const authData = await authResponse.json();
+          
+          if (authData.adminPlatform) {
+            setPlatform(authData.adminPlatform);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching auth check:', error);
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform');
+        if (platformParam) {
+          setPlatform(platformParam);
+        }
+      }
+    };
+    
+    loadPlatform();
+  }, [router.query]);
+
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
   };
 
+  const getProductHref = () => {
+    const baseHref = `/products/${product.id}`;
+    if (platform) {
+      return `${baseHref}?platform=${platform}`;
+    }
+    return baseHref;
+  };
+
   return (
-    <Link href={`/products/${product.id}`}>
+    <Link href={getProductHref()}>
       <div
         className="product-card"
         style={{
