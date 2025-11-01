@@ -28,14 +28,44 @@ export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [platform, setPlatform] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    loadOrders();
+    // Get platform from admin session
+    const loadAdminPlatform = async () => {
+      try {
+        const authResponse = await fetch('/api/auth/check');
+        const authData = await authResponse.json();
+        
+        if (authData.adminPlatform) {
+          setPlatform(authData.adminPlatform);
+        } else {
+          // Fallback to URL parameter or default
+          const urlParams = new URLSearchParams(window.location.search);
+          const platformParam = urlParams.get('platform') || 'default';
+          setPlatform(platformParam);
+        }
+      } catch (error) {
+        console.error('Error fetching admin platform:', error);
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform') || 'default';
+        setPlatform(platformParam);
+      }
+    };
+    
+    loadAdminPlatform();
   }, []);
+
+  useEffect(() => {
+    if (platform) {
+      loadOrders();
+    }
+  }, [platform]);
 
   const loadOrders = async () => {
     try {
+      // API automatically uses admin's platform from cookie
       const response = await fetch('/api/orders');
       const data = await response.json();
       setOrders(data);
