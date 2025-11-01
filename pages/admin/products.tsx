@@ -31,6 +31,8 @@ export default function AdminProducts() {
   const [isUploading, setIsUploading] = useState(false);
   const [isParsing, setIsParsing] = useState(false);
   const [generatedBarcode, setGeneratedBarcode] = useState('');
+  const [importUrl, setImportUrl] = useState('');
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
@@ -286,6 +288,78 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
     }
     result.push(current.trim());
     return result;
+  };
+
+  const handleUrlImport = async () => {
+    if (!importUrl.trim()) {
+      toast.error('Please enter a CSV URL');
+      return;
+    }
+
+    // Validate URL
+    try {
+      new URL(importUrl);
+    } catch (e) {
+      toast.error('Invalid URL');
+      return;
+    }
+
+    setIsLoadingUrl(true);
+    try {
+      // Fetch CSV from URL
+      const response = await fetch(importUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const csvText = await response.text();
+      
+      // Parse CSV same way as file upload
+      const lines = csvText.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.error('CSV must have header and at least one product');
+        setIsLoadingUrl(false);
+        return;
+      }
+
+      const headers = parseCSVLine(lines[0]);
+      const products = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = parseCSVLine(line);
+        const product: any = {};
+        
+        headers.forEach((header, index) => {
+          product[header] = values[index]?.trim() || '';
+        });
+
+        if (product.title) {
+          products.push(product);
+        }
+      }
+
+      if (products.length === 0) {
+        toast.error('No valid products found in CSV');
+        setIsLoadingUrl(false);
+        return;
+      }
+
+      // Show preview modal with parsed products
+      setParsedProducts(products);
+      setSelectedProducts(new Set(products.map((_, index) => index)));
+      setIsLoadingUrl(false);
+      setShowImportModal(false);
+      setShowPreviewModal(true);
+      setImportUrl('');
+      
+    } catch (error) {
+      console.error('Error fetching CSV:', error);
+      toast.error('Error loading CSV from URL: ' + (error as Error).message);
+      setIsLoadingUrl(false);
+    }
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -1140,6 +1214,57 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               <div style={{ background: '#2a2a2a', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem', color: '#9ca3af' }}>
                 <code>title, description, price, category, image, barcode, buyPrice, qty, note</code>
               </div>
+            </div>
+
+            {/* URL Import Section */}
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#2a2a2a', borderRadius: '8px', border: '1px solid #374151' }}>
+              <h3 style={{ color: '#ffffff', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                📡 Import from URL (Google Sheets, etc.)
+              </h3>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"
+                  disabled={isLoadingUrl || isUploading}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '0.875rem',
+                  }}
+                />
+                <button
+                  onClick={handleUrlImport}
+                  disabled={isLoadingUrl || isUploading || !importUrl.trim()}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: isLoadingUrl ? '#374151' : '#3b82f6',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: (isLoadingUrl || isUploading || !importUrl.trim()) ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    opacity: (isLoadingUrl || isUploading || !importUrl.trim()) ? 0.5 : 1,
+                  }}
+                >
+                  {isLoadingUrl ? 'Loading...' : 'Import'}
+                </button>
+              </div>
+              <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', marginBottom: 0 }}>
+                💡 Works with Google Sheets CSV export URLs
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#374151' }}></div>
+              <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>OR</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#374151' }}></div>
             </div>
 
             {!isUploading ? (
