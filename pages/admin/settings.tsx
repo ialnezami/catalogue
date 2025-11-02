@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [platform, setPlatform] = useState<string | null>(null);
   const [settings, setSettings] = useState({
     currency: 'USD',
     exchangeRate: 1,
@@ -15,11 +16,40 @@ export default function AdminSettings() {
   const router = useRouter();
 
   useEffect(() => {
-    loadSettings();
+    // Get platform from admin session
+    const loadAdminPlatform = async () => {
+      try {
+        const authResponse = await fetch('/api/auth/check');
+        const authData = await authResponse.json();
+        
+        if (authData.adminPlatform) {
+          setPlatform(authData.adminPlatform);
+        } else {
+          // Fallback to URL parameter or default
+          const urlParams = new URLSearchParams(window.location.search);
+          const platformParam = urlParams.get('platform') || 'default';
+          setPlatform(platformParam);
+        }
+      } catch (error) {
+        console.error('Error fetching admin platform:', error);
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform') || 'default';
+        setPlatform(platformParam);
+      }
+    };
+    
+    loadAdminPlatform();
   }, []);
+
+  useEffect(() => {
+    if (platform) {
+      loadSettings();
+    }
+  }, [platform]);
 
   const loadSettings = async () => {
     try {
+      // API automatically uses admin's platform from cookie
       const response = await fetch('/api/settings');
       const data = await response.json();
       setSettings(data);

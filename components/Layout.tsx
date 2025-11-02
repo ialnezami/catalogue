@@ -14,12 +14,32 @@ export default function Layout({ children }: LayoutProps) {
   const [platform, setPlatform] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get platform from URL on client side
-    if (typeof window !== 'undefined') {
-      const urlParams = new URLSearchParams(window.location.search);
-      const platformParam = urlParams.get('platform');
-      setPlatform(platformParam);
-    }
+    // Get platform from session cookie (for admins) or URL parameter (for public pages)
+    const loadPlatform = async () => {
+      if (typeof window !== 'undefined') {
+        // First, try to get platform from session cookie (for authenticated admins)
+        try {
+          const authResponse = await fetch('/api/auth/check');
+          const authData = await authResponse.json();
+          
+          if (authData.adminPlatform) {
+            setPlatform(authData.adminPlatform);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching auth check:', error);
+        }
+        
+        // Fallback to URL parameter (for public pages)
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform');
+        if (platformParam) {
+          setPlatform(platformParam);
+        }
+      }
+    };
+    
+    loadPlatform();
   }, [router.query]);
 
   // Get the appropriate href based on platform

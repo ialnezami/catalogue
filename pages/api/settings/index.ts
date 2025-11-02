@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '@/lib/mongodb';
+import { getPlatformFromRequest, withPlatformFilter, withPlatform } from '@/lib/platform';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -7,8 +8,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db(process.env.DB_NAME || 'catalogue');
     const collection = db.collection('settings');
 
+    // Get platform from request
+    const platform = getPlatformFromRequest(req);
+
     if (req.method === 'GET') {
-      const settings = await collection.findOne({ type: 'app_settings' });
+      const settings = await collection.findOne(withPlatformFilter(platform, { type: 'app_settings' }));
       if (!settings) {
         // Return default settings
         return res.status(200).json({
@@ -29,16 +33,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
       const { exchangeRate, displayCurrency, currency } = req.body;
       
-      const settings = {
+      const settings = withPlatform(platform, {
         type: 'app_settings',
         currency: currency || 'USD',
         exchangeRate: parseFloat(exchangeRate) || 1,
         displayCurrency: displayCurrency || 'SP',
         updatedAt: new Date(),
-      };
+      });
 
       await collection.updateOne(
-        { type: 'app_settings' },
+        withPlatformFilter(platform, { type: 'app_settings' }),
         { $set: settings },
         { upsert: true }
       );

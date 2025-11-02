@@ -4,11 +4,13 @@ import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, 
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
 import JsBarcode from 'jsbarcode';
+import toast from 'react-hot-toast';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [platform, setPlatform] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -22,15 +24,50 @@ export default function AdminProducts() {
   });
   const [showImportModal, setShowImportModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [parsedProducts, setParsedProducts] = useState<any[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
+  const [isParsing, setIsParsing] = useState(false);
   const [generatedBarcode, setGeneratedBarcode] = useState('');
+  const [importUrl, setImportUrl] = useState('');
+  const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
+  const csvFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
-    loadProducts();
+    // Get platform from admin session
+    const loadAdminPlatform = async () => {
+      try {
+        const authResponse = await fetch('/api/auth/check');
+        const authData = await authResponse.json();
+        
+        if (authData.adminPlatform) {
+          setPlatform(authData.adminPlatform);
+        } else {
+          // Fallback to URL parameter or default
+          const urlParams = new URLSearchParams(window.location.search);
+          const platformParam = urlParams.get('platform') || 'default';
+          setPlatform(platformParam);
+        }
+      } catch (error) {
+        console.error('Error fetching admin platform:', error);
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform') || 'default';
+        setPlatform(platformParam);
+      }
+    };
+    
+    loadAdminPlatform();
   }, []);
+
+  useEffect(() => {
+    if (platform) {
+      loadProducts();
+    }
+  }, [platform]);
 
   const generateBarcode = () => {
     const barcode = 'PRD' + Date.now().toString().slice(-10);
@@ -106,6 +143,7 @@ export default function AdminProducts() {
 
   const loadProducts = async () => {
     try {
+      // API automatically uses admin's platform from cookie
       const response = await fetch('/api/products');
       const data = await response.json();
       // Convert MongoDB _id to id for Product type
@@ -125,18 +163,21 @@ export default function AdminProducts() {
     e.preventDefault();
     
     try {
+      // API automatically uses admin's platform from cookie
       if (editingProduct) {
         await fetch(`/api/products/${editingProduct.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
+        toast.success('Product updated successfully!');
       } else {
         await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData),
         });
+        toast.success('Product created successfully!');
       }
       
       setShowEditModal(false);
@@ -145,6 +186,7 @@ export default function AdminProducts() {
       loadProducts();
     } catch (error) {
       console.error('Error saving product:', error);
+      toast.error('Error saving product!');
     }
   };
 
@@ -192,9 +234,11 @@ export default function AdminProducts() {
     
     try {
       await fetch(`/api/products/${id}`, { method: 'DELETE' });
+      toast.success('Product deleted successfully!');
       loadProducts();
     } catch (error) {
       console.error('Error deleting product:', error);
+      toast.error('Error deleting product!');
     }
   };
 
@@ -219,25 +263,75 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
     document.body.removeChild(link);
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    setUploadProgress(0);
-
-    try {
-      const text = await file.text();
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim());
+  const parseCSVLine = (line: string): string[] => {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      const nextChar = line[i + 1];
       
+      if (char === '"') {
+        if (inQuotes && nextChar === '"') {
+          current += '"';
+          i++; // Skip next quote
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  };
+
+  const handleUrlImport = async () => {
+    if (!importUrl.trim()) {
+      toast.error('Please enter a CSV URL');
+      return;
+    }
+
+    // Validate URL
+    try {
+      new URL(importUrl);
+    } catch (e) {
+      toast.error('Invalid URL');
+      return;
+    }
+
+    setIsLoadingUrl(true);
+    try {
+      // Fetch CSV from URL
+      const response = await fetch(importUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const csvText = await response.text();
+      
+      // Parse CSV same way as file upload
+      const lines = csvText.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.error('CSV must have header and at least one product');
+        setIsLoadingUrl(false);
+        return;
+      }
+
+      const headers = parseCSVLine(lines[0]);
       const products = [];
+      
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
 
-        const values = line.split(',');
+        const values = parseCSVLine(line);
         const product: any = {};
+        
         headers.forEach((header, index) => {
           product[header] = values[index]?.trim() || '';
         });
@@ -247,30 +341,183 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
         }
       }
 
-      // Import products one by one with progress
-      for (let i = 0; i < products.length; i++) {
+      if (products.length === 0) {
+        toast.error('No valid products found in CSV');
+        setIsLoadingUrl(false);
+        return;
+      }
+
+      // Show preview modal with parsed products
+      setParsedProducts(products);
+      setSelectedProducts(new Set(products.map((_, index) => index)));
+      setIsLoadingUrl(false);
+      setShowImportModal(false);
+      setShowPreviewModal(true);
+      setImportUrl('');
+      
+    } catch (error) {
+      console.error('Error fetching CSV:', error);
+      toast.error('Error loading CSV from URL: ' + (error as Error).message);
+      setIsLoadingUrl(false);
+    }
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    
+    console.log('File upload triggered:', file);
+    
+    if (!file) {
+      console.log('No file selected');
+      return;
+    }
+
+    // Validate file type
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Please upload a CSV file');
+      return;
+    }
+
+    console.log('File validated:', file.name);
+    
+    setIsUploading(false);
+    setIsParsing(true);
+    setUploadProgress(0);
+
+    try {
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+      
+      if (lines.length < 2) {
+        toast.error('CSV file must have header and at least one product');
+        setIsUploading(false);
+        return;
+      }
+
+      const headers = parseCSVLine(lines[0]);
+      console.log('Headers:', headers);
+      console.log('Total lines:', lines.length);
+      
+      const products = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = parseCSVLine(line);
+        const product: any = {};
+        
+        headers.forEach((header, index) => {
+          product[header] = values[index]?.trim() || '';
+        });
+
+        // Only add products with title
+        if (product.title) {
+          products.push(product);
+          console.log('Product added:', product.title);
+        }
+      }
+
+      console.log('Total products parsed:', products.length);
+
+      if (products.length === 0) {
+        toast.error('No valid products found in CSV');
+        setIsUploading(false);
+        setIsParsing(false);
+        setUploadProgress(0);
+        return;
+      }
+
+      // Show preview modal with parsed products
+      setParsedProducts(products);
+      // Select all products by default
+      setSelectedProducts(new Set(products.map((_, index) => index)));
+      setIsUploading(false);
+      setIsParsing(false);
+      setShowImportModal(false);
+      setShowPreviewModal(true);
+      
+      // Reset file input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error parsing products:', error);
+      toast.error('Error parsing CSV: ' + (error as Error).message);
+      setIsUploading(false);
+      setIsParsing(false);
+      setUploadProgress(0);
+      event.target.value = '';
+    }
+  };
+
+  const handleImportSelected = async () => {
+    const productsToImport = parsedProducts.filter((_, index) => selectedProducts.has(index));
+    
+    if (productsToImport.length === 0) {
+      toast.error('Please select at least one product to import');
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Import selected products one by one with progress
+      for (let i = 0; i < productsToImport.length; i++) {
         await fetch('/api/products', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(products[i]),
+          body: JSON.stringify(productsToImport[i]),
         });
         
-        const progress = ((i + 1) / products.length) * 100;
+        const progress = ((i + 1) / productsToImport.length) * 100;
         setUploadProgress(Math.round(progress));
       }
 
-      alert(`Successfully imported ${products.length} products!`);
-      setShowImportModal(false);
+      toast.success(`Successfully imported ${productsToImport.length} products!`);
+      setShowPreviewModal(false);
       setUploadProgress(0);
       setIsUploading(false);
+      setSelectedProducts(new Set());
       loadProducts();
     } catch (error) {
       console.error('Error importing products:', error);
-      alert('Error importing products!');
+      toast.error('Error importing products: ' + (error as Error).message);
       setIsUploading(false);
       setUploadProgress(0);
     }
   };
+
+  const toggleProductSelection = (index: number) => {
+    const newSelected = new Set(selectedProducts);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedProducts(newSelected);
+  };
+
+  const selectAllProducts = () => {
+    setSelectedProducts(new Set(parsedProducts.map((_, index) => index)));
+  };
+
+  const deselectAllProducts = () => {
+    setSelectedProducts(new Set());
+  };
+
+  const updateParsedProduct = (index: number, field: string, value: string) => {
+    const updated = [...parsedProducts];
+    updated[index] = { ...updated[index], [field]: value };
+    setParsedProducts(updated);
+  };
+
+  const removeParsedProduct = (index: number) => {
+    const updated = parsedProducts.filter((_, i) => i !== index);
+    setParsedProducts(updated);
+    const newSelected = new Set(Array.from(selectedProducts).filter(i => i !== index).map(i => i > index ? i - 1 : i));
+    setSelectedProducts(newSelected);
+  };
+
 
   if (loading) {
     return (
@@ -969,8 +1216,64 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               </div>
             </div>
 
+            {/* URL Import Section */}
+            <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#2a2a2a', borderRadius: '8px', border: '1px solid #374151' }}>
+              <h3 style={{ color: '#ffffff', fontSize: '0.875rem', fontWeight: '600', marginBottom: '0.75rem' }}>
+                📡 Import from URL (Google Sheets, etc.)
+              </h3>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input
+                  type="text"
+                  value={importUrl}
+                  onChange={(e) => setImportUrl(e.target.value)}
+                  placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv"
+                  disabled={isLoadingUrl || isUploading}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '0.875rem',
+                  }}
+                />
+                <button
+                  onClick={handleUrlImport}
+                  disabled={isLoadingUrl || isUploading || !importUrl.trim()}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: isLoadingUrl ? '#374151' : '#3b82f6',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: (isLoadingUrl || isUploading || !importUrl.trim()) ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    opacity: (isLoadingUrl || isUploading || !importUrl.trim()) ? 0.5 : 1,
+                  }}
+                >
+                  {isLoadingUrl ? 'Loading...' : 'Import'}
+                </button>
+              </div>
+              <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', marginBottom: 0 }}>
+                💡 Works with Google Sheets CSV export URLs
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#374151' }}></div>
+              <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>OR</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#374151' }}></div>
+            </div>
+
             {!isUploading ? (
               <label
+                htmlFor="csv-upload-input"
+                onClick={() => {
+                  console.log('Upload area clicked');
+                  csvFileInputRef.current?.click();
+                }}
                 style={{
                   display: 'block',
                   width: '100%',
@@ -978,19 +1281,30 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   border: '2px dashed #3b82f6',
                   borderRadius: '12px',
                   backgroundColor: '#2a2a2a',
-                  cursor: 'pointer',
+                  cursor: isUploading ? 'not-allowed' : 'pointer',
                   textAlign: 'center',
                   transition: 'all 0.2s ease',
+                  opacity: isUploading ? 0.5 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = '#3b82f6';
-                  e.currentTarget.style.backgroundColor = '#2a2a2a';
+                  if (!isUploading) {
+                    e.currentTarget.style.borderColor = '#8b5cf6';
+                    e.currentTarget.style.backgroundColor = '#374151';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isUploading) {
+                    e.currentTarget.style.borderColor = '#3b82f6';
+                    e.currentTarget.style.backgroundColor = '#2a2a2a';
+                  }
                 }}
               >
                 <Upload size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
                 <p style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Click to select CSV file</p>
                 <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop</p>
                 <input
+                  ref={csvFileInputRef}
+                  id="csv-upload-input"
                   type="file"
                   accept=".csv"
                   onChange={handleFileUpload}
@@ -1081,6 +1395,280 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 {isUploading ? 'Processing...' : 'Cancel'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Preview Modal */}
+      {showPreviewModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '2rem',
+          }}
+          onClick={() => {
+            if (!isUploading) setShowPreviewModal(false);
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '12px',
+              border: '1px solid #374151',
+              maxWidth: '1200px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: '1.5rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Upload size={24} />
+                Preview Products ({selectedProducts.size} selected)
+              </h2>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                {!isUploading && (
+                  <>
+                    <button
+                      onClick={selectAllProducts}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#3b82f6',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Select All
+                    </button>
+                    <button
+                      onClick={deselectAllProducts}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        backgroundColor: '#6b7280',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Deselect All
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    padding: '0.5rem',
+                  }}
+                  disabled={isUploading}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, overflow: 'auto', marginBottom: '1rem' }}>
+              {parsedProducts.map((product, index) => (
+                <div
+                  key={index}
+                  style={{
+                    backgroundColor: selectedProducts.has(index) ? '#2a2a2a' : '#1f1f1f',
+                    border: selectedProducts.has(index) ? '2px solid #3b82f6' : '1px solid #374151',
+                    borderRadius: '8px',
+                    padding: '1rem',
+                    marginBottom: '1rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.has(index)}
+                      onChange={() => toggleProductSelection(index)}
+                      disabled={isUploading}
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        cursor: 'pointer',
+                        marginTop: '0.5rem',
+                      }}
+                    />
+                    <div style={{ flex: 1, display: 'grid', gap: '0.5rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.5rem' }}>
+                        <input
+                          type="text"
+                          value={product.title || ''}
+                          onChange={(e) => updateParsedProduct(index, 'title', e.target.value)}
+                          placeholder="Title"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={product.description || ''}
+                          onChange={(e) => updateParsedProduct(index, 'description', e.target.value)}
+                          placeholder="Description"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                        <input
+                          type="number"
+                          value={product.price || ''}
+                          onChange={(e) => updateParsedProduct(index, 'price', e.target.value)}
+                          placeholder="Price"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={product.category || ''}
+                          onChange={(e) => updateParsedProduct(index, 'category', e.target.value)}
+                          placeholder="Category"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <input
+                          type="text"
+                          value={product.barcode || ''}
+                          onChange={(e) => updateParsedProduct(index, 'barcode', e.target.value)}
+                          placeholder="Barcode"
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #374151',
+                            borderRadius: '6px',
+                            color: '#ffffff',
+                          }}
+                        />
+                        <button
+                          onClick={() => removeParsedProduct(index)}
+                          disabled={isUploading}
+                          style={{
+                            padding: '0.5rem',
+                            backgroundColor: '#ef4444',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: isUploading ? 'not-allowed' : 'pointer',
+                          }}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Actions */}
+            {isUploading ? (
+              <div>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  marginBottom: '0.5rem',
+                  color: '#ffffff'
+                }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Importing products...</span>
+                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{uploadProgress}%</span>
+                </div>
+                <div style={{
+                  width: '100%',
+                  height: '12px',
+                  backgroundColor: '#2a2a2a',
+                  borderRadius: '6px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${uploadProgress}%`,
+                    background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
+                    borderRadius: '6px',
+                    transition: 'width 0.3s ease',
+                  }} />
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setShowPreviewModal(false)}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#374151',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleImportSelected}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#10b981',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                  }}
+                >
+                  Import {selectedProducts.size} Product{selectedProducts.size !== 1 ? 's' : ''}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

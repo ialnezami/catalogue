@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
+import { getPlatformFromRequest, withPlatformFilter, withPlatform } from '@/lib/platform';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
@@ -8,8 +9,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db(process.env.DB_NAME || 'catalogue');
     const collection = db.collection('products');
 
+    // Get platform from request
+    const platform = getPlatformFromRequest(req);
+
     if (req.method === 'GET') {
-      const products = await collection.find({}).toArray();
+      const products = await collection.find(withPlatformFilter(platform)).toArray();
       return res.status(200).json(products);
     }
 
@@ -22,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
       const { title, description, price, category, image, barcode, buyPrice, qty, note } = req.body;
       
-      const newProduct = {
+      const newProduct = withPlatform(platform, {
         title,
         description,
         price: parseFloat(price),
@@ -33,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         qty: qty ? parseInt(qty) : undefined,
         note: note || undefined,
         createdAt: new Date(),
-      };
+      });
 
       const result = await collection.insertOne(newProduct);
       return res.status(201).json({ ...newProduct, id: result.insertedId.toString() });

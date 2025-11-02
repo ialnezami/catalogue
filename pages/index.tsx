@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import Layout from '@/components/Layout';
 import ProductCard from '@/components/ProductCard';
 import ProductFilters from '@/components/ProductFilters';
 import { Product } from '@/types';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
+import { useRouter } from 'next/router';
+
+const LandingPage = dynamic(() => import('@/components/LandingPage'), { ssr: false });
 
 export default function Home() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -11,19 +15,33 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
+  const router = useRouter();
+  const [showNoPlatform, setShowNoPlatform] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
         
+        // Get platform from URL parameter - REQUIRED
+        const platform = router.query.platform as string;
+        
+        // If no platform parameter, show blank page
+        if (!platform) {
+          setShowNoPlatform(true);
+          setLoading(false);
+          return;
+        }
+        
+        setShowNoPlatform(false);
+        
         // Load currency settings
         const settings = await getCurrencySettings();
         setExchangeRate(settings.exchangeRate);
         setDisplayCurrency(settings.displayCurrency);
         
-        // Load products
-        const response = await fetch('/api/products');
+        // Load products with platform filter
+        const response = await fetch(`/api/products?platform=${platform}`);
         const data = await response.json();
         // Convert MongoDB _id to id for Product type
         const formattedData = data.map((item: any) => ({
@@ -38,8 +56,16 @@ export default function Home() {
         setLoading(false);
       }
     };
-    loadData();
-  }, []);
+    
+    if (router.isReady) {
+      loadData();
+    }
+  }, [router.isReady, router.query.platform]);
+
+  // Show landing page if no platform
+  if (showNoPlatform) {
+    return <LandingPage />;
+  }
 
   const handleFilter = (filtered: Product[]) => {
     setFilteredProducts(filtered);

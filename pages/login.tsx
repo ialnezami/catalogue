@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { LogIn } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -20,7 +21,17 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await fetch('/api/auth/login', {
+      // Get platform from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      const platformParam = urlParams.get('platform');
+      
+      // Build login URL with platform param
+      let loginUrl = '/api/auth/login';
+      if (platformParam) {
+        loginUrl += `?platform=${platformParam}`;
+      }
+      
+      const response = await fetch(loginUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -29,12 +40,23 @@ export default function Login() {
       });
 
       if (response.ok) {
-        router.push('/admin/products');
+        const data = await response.json();
+        
+        toast.success('Login successful!');
+        
+        // Redirect based on role
+        if (data.role === 'super_admin') {
+          router.push('/super-admin');
+        } else {
+          router.push('/admin/products');
+        }
       } else {
         setError('Invalid credentials');
+        toast.error('Invalid credentials');
       }
     } catch (err) {
       setError('Login failed. Please try again.');
+      toast.error('Login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -55,7 +77,7 @@ export default function Login() {
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
           <LogIn size={48} color="#ec4899" style={{ margin: '0 auto 1rem' }} />
           <h1 style={{ fontSize: '2rem', color: '#ffffff', marginBottom: '0.5rem' }}>Admin Login</h1>
-          <p style={{ color: '#9ca3af' }}>Enter your credentials to access the admin panel</p>
+          <p style={{ color: '#9ca3af' }}>Super Admin or Platform Admin Access</p>
         </div>
 
         {error && (

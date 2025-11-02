@@ -13,6 +13,34 @@ export default function ProductDetail() {
   const [linkCopied, setLinkCopied] = useState(false);
   const { addToCart } = useCart();
   const [loading, setLoading] = useState(true);
+  const [platform, setPlatform] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Load platform from session or URL
+    const loadPlatform = async () => {
+      if (typeof window !== 'undefined') {
+        try {
+          const authResponse = await fetch('/api/auth/check');
+          const authData = await authResponse.json();
+          
+          if (authData.adminPlatform) {
+            setPlatform(authData.adminPlatform);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching auth check:', error);
+        }
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform');
+        if (platformParam) {
+          setPlatform(platformParam);
+        }
+      }
+    };
+    
+    loadPlatform();
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -67,7 +95,7 @@ export default function ProductDetail() {
   return (
     <Layout>
       <Link
-        href="/"
+        href={platform ? `/?platform=${platform}` : '/'}
         style={{
           display: 'inline-flex',
           alignItems: 'center',
