@@ -21,10 +21,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'POST') {
       const { username, platform, password } = req.body;
 
+      // Validate required fields
+      if (!username || !platform || !password) {
+        return res.status(400).json({ message: 'Username, platform, and password are required' });
+      }
+
       // Check if username already exists (username must be unique across all platforms)
       const existing = await collection.findOne({ username });
       if (existing) {
-        return res.status(400).json({ message: 'Username already exists!' });
+        return res.status(400).json({ message: 'Username already exists! Usernames must be unique across all platforms.' });
       }
 
       const admin = {
@@ -58,6 +63,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       return res.status(200).json({ message: 'Password updated successfully' });
+    }
+
+    if (req.method === 'DELETE') {
+      const { username } = req.query;
+
+      if (!username || typeof username !== 'string') {
+        return res.status(400).json({ message: 'Username is required' });
+      }
+
+      // Don't allow deleting super admin
+      const admin = await collection.findOne({ username });
+      if (admin && admin.role === 'super_admin') {
+        return res.status(403).json({ message: 'Cannot delete super admin' });
+      }
+
+      const result = await collection.deleteOne({ username });
+
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: 'Admin not found' });
+      }
+
+      return res.status(200).json({ message: 'Admin deleted successfully' });
     }
 
     return res.status(405).json({ message: 'Method not allowed' });

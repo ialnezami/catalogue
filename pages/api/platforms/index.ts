@@ -8,7 +8,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const collection = db.collection('platforms');
 
     if (req.method === 'GET') {
-      const platforms = await collection.find({}).sort({ name: 1 }).toArray();
+      // Optional: filter by active status
+      const { active } = req.query;
+      const query: any = {};
+      
+      if (active !== undefined) {
+        query.active = active === 'true';
+      }
+      
+      const platforms = await collection.find(query).sort({ name: 1 }).toArray();
       return res.status(200).json(platforms);
     }
 
@@ -33,11 +41,66 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: description || '',
         logo: logo || '',
         language: language || 'ar', // Default to Arabic
+        active: true, // Default to active
         createdAt: new Date(),
       };
 
       const result = await collection.insertOne(platform);
       return res.status(201).json({ ...platform, id: result.insertedId.toString() });
+    }
+
+    if (req.method === 'PATCH') {
+      const { code, active } = req.body;
+
+      if (!code) {
+        return res.status(400).json({ message: 'Platform code is required' });
+      }
+
+      if (typeof active !== 'boolean') {
+        return res.status(400).json({ message: 'Active status must be a boolean' });
+      }
+
+      const result = await collection.updateOne(
+        { code },
+        { 
+          $set: { 
+            active,
+            updatedAt: new Date()
+          } 
+        }
+      );
+
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ message: 'Platform not found' });
+      }
+
+      return res.status(200).json({ message: `Platform ${active ? 'activated' : 'deactivated'} successfully` });
+    }
+
+    if (req.method === 'DELETE') {
+      const { code } = req.query;
+
+      if (!code || typeof code !== 'string') {
+        return res.status(400).json({ message: 'Platform code is required' });
+      }
+
+      // Don't allow deleting default platform
+      if (code === 'default') {
+        return res.status(403).json({ message: 'Cannot delete default platform' });
+      }
+
+      // Delete the platform
+      const platformResult = await collection.deleteOne({ code });
+
+      if (platformResult.deletedCount === 0) {
+        return res.status(404).json({ message: 'Platform not found' });
+      }
+
+      // Also delete associated admin (optional - you might want to keep it)
+      const adminsCollection = db.collection('admins');
+      await adminsCollection.deleteMany({ platform: code });
+
+      return res.status(200).json({ message: 'Platform deleted successfully' });
     }
 
     return res.status(405).json({ message: 'Method not allowed' });
