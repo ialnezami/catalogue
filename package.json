@@ -13,7 +13,8 @@
     "seed:test": "node scripts/seed-test-data.js",
     "test:tenant": "node scripts/test-multi-tenant.js",
     "audit:platforms": "node scripts/audit-platforms.js",
-    "fix:platforms": "node scripts/fix-platforms.js"
+    "fix:platforms": "node scripts/fix-platforms.js",
+    "migrate:language": "node scripts/migrate-add-language.js"
   },
   "dependencies": {
     "@types/formidable": "^3.4.6",
