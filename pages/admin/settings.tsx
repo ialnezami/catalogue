@@ -3,6 +3,7 @@ import Layout from '@/components/Layout';
 import { Save, DollarSign, Settings, Key, X } from 'lucide-react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
@@ -102,13 +103,47 @@ export default function AdminSettings() {
       });
 
       if (response.ok) {
-        alert('Settings saved successfully!');
+        toast.success('Settings saved successfully!', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#10b981',
+            color: '#ffffff',
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          },
+          iconTheme: {
+            primary: '#ffffff',
+            secondary: '#10b981',
+          },
+        });
       } else {
-        alert('Error saving settings!');
+        toast.error('Error saving settings!', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#ef4444',
+            color: '#ffffff',
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          },
+        });
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      alert('Error saving settings!');
+      toast.error('Error saving settings!', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#ef4444',
+          color: '#ffffff',
+          padding: '16px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        },
+      });
     } finally {
       setSaving(false);
     }

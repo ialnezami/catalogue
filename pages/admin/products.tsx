@@ -6,6 +6,7 @@ import { useRouter } from 'next/router';
 import JsBarcode from 'jsbarcode';
 import toast from 'react-hot-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -28,6 +29,9 @@ export default function AdminProducts() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [parsedProducts, setParsedProducts] = useState<any[]>([]);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Set<number>>(new Set());
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -361,16 +365,55 @@ export default function AdminProducts() {
     setShowEditModal(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this product?')) return;
+  const handleDeleteClick = (id: string) => {
+    setProductToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
     
+    setDeleting(true);
     try {
-      await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      toast.success('Product deleted successfully!');
-      loadProducts();
+      const response = await fetch(`/api/products/${productToDelete}`, { method: 'DELETE' });
+      
+      if (response.ok) {
+        toast.success(t('admin.productDeleted') || 'Product deleted successfully!', {
+          duration: 3000,
+          position: 'top-right',
+          style: {
+            background: '#10b981',
+            color: '#ffffff',
+            padding: '16px',
+            borderRadius: '8px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          },
+          iconTheme: {
+            primary: '#ffffff',
+            secondary: '#10b981',
+          },
+        });
+        loadProducts();
+        setShowDeleteModal(false);
+        setProductToDelete(null);
+      } else {
+        throw new Error('Failed to delete product');
+      }
     } catch (error) {
       console.error('Error deleting product:', error);
-      toast.error('Error deleting product!');
+      toast.error(t('admin.productDeleteError') || 'Error deleting product!', {
+        duration: 3000,
+        position: 'top-right',
+        style: {
+          background: '#ef4444',
+          color: '#ffffff',
+          padding: '16px',
+          borderRadius: '8px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        },
+      });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -1456,7 +1499,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   {t('admin.edit')}
                 </button>
                 <button
-                  onClick={() => handleDelete(product.id)}
+                  onClick={() => handleDeleteClick(product.id)}
                   style={{
                     flex: 1,
                     background: '#ffffff',
@@ -2369,6 +2412,22 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setProductToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title={t('admin.deleteProduct') || 'Delete Product'}
+        message={t('admin.deleteProductConfirm') || 'Are you sure you want to delete this product? This action cannot be undone.'}
+        confirmText={t('admin.delete') || 'Delete'}
+        cancelText={t('admin.cancel') || 'Cancel'}
+        type="danger"
+        isLoading={deleting}
+      />
     </Layout>
   );
 }
