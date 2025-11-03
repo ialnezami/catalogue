@@ -75,7 +75,12 @@ export function LanguageProvider({ children, defaultLanguage = 'ar' }: LanguageP
       t: (key: string, options?: any) => {
         // Use i18next translation with namespace
         const translation = i18n.t(key, { ns: 'common', ...options });
-        return translation !== key ? translation : key;
+        // Ensure we always return a string
+        if (typeof translation === 'string') {
+          return translation !== key ? translation : key;
+        }
+        // If translation is an object, return the key as fallback
+        return key;
       }, 
       isLoading: isLoading || !ready 
     }}>
