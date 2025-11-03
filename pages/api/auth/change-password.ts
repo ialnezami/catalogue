@@ -91,17 +91,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           username: SUPER_ADMIN_USERNAME
         });
       }
-    } else {
+    } else if (adminPlatform) {
       // Regular admin password change
       // Get username from request body (admin will provide it)
       const { username: requestUsername } = req.body;
       
       if (!requestUsername) {
         return res.status(400).json({ message: 'Username is required for admin password change' });
-      }
-
-      if (!adminPlatform) {
-        return res.status(401).json({ message: 'Unauthorized - Admin platform not found' });
       }
 
       user = await adminsCollection.findOne({
@@ -125,6 +121,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       username = user.username;
     } else {
+      // Not super admin and no admin platform - unauthorized
       return res.status(401).json({ message: 'Unauthorized - Admin access required' });
     }
 
