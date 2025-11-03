@@ -6,10 +6,12 @@ import ProductFilters from '@/components/ProductFilters';
 import { Product } from '@/types';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
 import { useRouter } from 'next/router';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const LandingPage = dynamic(() => import('@/components/LandingPage'), { ssr: false });
 
 export default function Home() {
+  const { t, language } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,8 +76,8 @@ export default function Home() {
   if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: 'center', padding: '4rem 2rem' }}>
-          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>جاري تحميل المنتجات...</p>
+        <div style={{ textAlign: 'center', padding: '4rem 2rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>{t('loadingProducts')}</p>
         </div>
       </Layout>
     );
@@ -83,7 +85,7 @@ export default function Home() {
 
   return (
     <Layout>
-      <div style={{ marginBottom: '4rem' }}>
+      <div style={{ marginBottom: '4rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
         <h1 style={{ 
           fontSize: '2.5rem', 
           fontWeight: '700', 
@@ -92,14 +94,14 @@ export default function Home() {
           letterSpacing: '-0.03em',
           lineHeight: '1.2'
         }}>
-          اكتشفي مجموعتنا
+          {t('discoverCollection')}
         </h1>
         <p style={{ 
           fontSize: '1rem', 
           color: 'var(--text-secondary)',
           letterSpacing: '-0.01em'
         }}>
-          قطع أنيقة للمرأة العصرية
+          {t('elegantPieces')}
         </p>
       </div>
 
@@ -125,10 +127,11 @@ export default function Home() {
           padding: '4rem 2rem',
           background: 'var(--bg-card)',
           borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-subtle)'
+          border: '1px solid var(--border-subtle)',
+          direction: language === 'ar' ? 'rtl' : 'ltr'
         }}>
           <p style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>
-            لم يتم العثور على منتجات تطابق معايير البحث.
+            {t('noProducts')}
           </p>
         </div>
       )}

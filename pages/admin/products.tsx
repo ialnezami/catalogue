@@ -11,6 +11,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [platform, setPlatform] = useState<string | null>(null);
+  const [language, setLanguage] = useState<string>('ar');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -69,8 +70,81 @@ export default function AdminProducts() {
   useEffect(() => {
     if (platform) {
       loadProducts();
+      loadSettings();
     }
   }, [platform]);
+
+  const loadSettings = async () => {
+    try {
+      const response = await fetch('/api/settings');
+      const data = await response.json();
+      if (data.language) {
+        setLanguage(data.language);
+      }
+    } catch (error) {
+      console.error('Error loading settings:', error);
+    }
+  };
+
+  // Translations object
+  const getModalTitle = () => {
+    if (language === 'ar') {
+      return editingProduct ? 'تعديل المنتج' : 'إضافة منتج جديد';
+    }
+    return editingProduct ? 'Edit Product' : 'Add New Product';
+  };
+
+  const t = {
+    ar: {
+      title: 'العنوان',
+      category: 'الفئة',
+      description: 'الوصف',
+      sellingPrice: 'سعر البيع',
+      buyPrice: 'سعر الشراء (للمدير فقط)',
+      productImage: 'صورة المنتج',
+      uploadImage: 'رفع صورة إلى Cloudinary',
+      uploading: 'جاري الرفع...',
+      or: 'أو',
+      imageUrlPlaceholder: 'أدخل رابط الصورة (مثل: https://example.com/image.jpg أو /images/logo.png)',
+      imageUploadHint: '💡 ارفع صورة أو الصق رابط. رفع Cloudinary يحسن الصور تلقائياً.',
+      barcode: 'الباركود',
+      generate: 'إنشاء',
+      print: 'طباعة',
+      quantity: 'الكمية',
+      note: 'ملاحظة (للمدير فقط)',
+      notePlaceholder: 'ملاحظات خاصة حول هذا المنتج',
+      save: 'حفظ',
+      cancel: 'إلغاء',
+      costPricePlaceholder: 'سعر التكلفة',
+      barcodePlaceholder: 'باركود المنتج',
+    },
+    en: {
+      modalTitle: editingProduct ? 'Edit Product' : 'Add New Product',
+      title: 'Title',
+      category: 'Category',
+      description: 'Description',
+      sellingPrice: 'Selling Price',
+      buyPrice: 'Buy Price (Admin Only)',
+      productImage: 'Product Image',
+      uploadImage: 'Upload Image to Cloudinary',
+      uploading: 'Uploading...',
+      or: 'OR',
+      imageUrlPlaceholder: 'Enter image URL (e.g., https://example.com/image.jpg or /images/logo.png)',
+      imageUploadHint: '💡 Upload an image or paste a URL. Cloudinary upload automatically optimizes your images.',
+      barcode: 'Barcode',
+      generate: 'Generate',
+      print: 'Print',
+      quantity: 'Quantity',
+      note: 'Internal Notes (Admin Only)',
+      notePlaceholder: 'Private notes about this product',
+      save: 'Save',
+      cancel: 'Cancel',
+      costPricePlaceholder: 'Cost price',
+      barcodePlaceholder: 'Product barcode',
+    },
+  };
+  
+  const translations = t[language as keyof typeof t] || t.ar;
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -773,8 +847,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-              <h2 style={{ fontSize: '1.75rem', color: '#000000', fontWeight: '600', letterSpacing: '-0.02em' }}>
-                {editingProduct ? 'Edit Product' : 'Add New Product'}
+              <h2 style={{ fontSize: '1.75rem', color: '#000000', fontWeight: '600', letterSpacing: '-0.02em', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                {getModalTitle()}
               </h2>
               <button
                 onClick={() => {
@@ -796,28 +870,30 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Title</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.title}</label>
                 <input
                   className="input"
                   type="text"
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                   required
+                  style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Category</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.category}</label>
                 <input
                   className="input"
                   type="text"
                   value={formData.category}
                   onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                   required
+                  style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Description</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.description}</label>
               <textarea
                 className="input"
                 value={formData.description}
@@ -829,7 +905,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Selling Price</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.sellingPrice}</label>
                 <input
                   className="input"
                   type="number"
@@ -837,23 +913,25 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   required
+                  style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Buy Price (Admin Only)</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.buyPrice}</label>
                 <input
                   className="input"
                   type="number"
                   step="0.01"
                   value={formData.buyPrice}
                   onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
-                  placeholder="Cost price"
+                  placeholder={translations.costPricePlaceholder}
+                  style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>
-                Product Image
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                {translations.productImage}
               </label>
               
               {/* Image Preview */}
@@ -914,12 +992,12 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite'
                       }} />
-                      Uploading...
+                      {translations.uploading}
                     </>
                   ) : (
                     <>
                       <Upload size={16} />
-                      Upload Image to Cloudinary
+                      {translations.uploadImage}
                     </>
                   )}
                 </button>
@@ -928,7 +1006,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               {/* Or Divider */}
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
                 <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
-                <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>OR</span>
+                <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>{translations.or}</span>
                 <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
               </div>
 
@@ -941,15 +1019,16 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   setFormData({ ...formData, image: e.target.value });
                   setImagePreview(e.target.value || null);
                 }}
-                placeholder="Enter image URL (e.g., https://example.com/image.jpg or /images/logo.png)"
+                placeholder={translations.imageUrlPlaceholder}
                 required
+                style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
               />
-              <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                💡 Upload an image or paste a URL. Cloudinary upload automatically optimizes your images.
+              <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                {translations.imageUploadHint}
               </p>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Barcode</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.barcode}</label>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <input
@@ -957,8 +1036,9 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                     type="text"
                     value={formData.barcode}
                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    placeholder="Product barcode"
+                    placeholder={translations.barcodePlaceholder}
                     readOnly
+                    style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                   />
                 </div>
                 <button
@@ -976,6 +1056,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                     letterSpacing: '0.05em',
                     transition: 'all 0.2s ease',
                     whiteSpace: 'nowrap',
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = '#000000';
@@ -986,8 +1067,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                     e.currentTarget.style.color = '#000000';
                   }}
                 >
-                  <Barcode size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                  Generate
+                  <Barcode size={16} style={{ display: 'inline', marginRight: language === 'ar' ? '0' : '0.5rem', marginLeft: language === 'ar' ? '0.5rem' : '0' }} />
+                  {translations.generate}
                 </button>
                 {generatedBarcode && formData.barcode && (
                   <button
@@ -1005,6 +1086,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                       letterSpacing: '0.05em',
                       transition: 'all 0.2s ease',
                       whiteSpace: 'nowrap',
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = '#333333';
@@ -1013,8 +1095,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                       e.currentTarget.style.background = '#000000';
                     }}
                   >
-                    <Printer size={16} style={{ display: 'inline', marginRight: '0.5rem' }} />
-                    Print
+                    <Printer size={16} style={{ display: 'inline', marginRight: language === 'ar' ? '0' : '0.5rem', marginLeft: language === 'ar' ? '0.5rem' : '0' }} />
+                    {translations.print}
                   </button>
                 )}
               </div>
@@ -1026,26 +1108,29 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.quantity}</label>
                 <input
                   className="input"
                   type="number"
                   value={formData.qty}
                   onChange={(e) => setFormData({ ...formData, qty: e.target.value })}
-                  placeholder="Stock quantity"
+                  placeholder={language === 'ar' ? 'الكمية في المخزن' : 'Stock quantity'}
+                  style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Internal Notes (Admin Only)</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.note}</label>
               <textarea
                 className="input"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                 rows={3}
-                placeholder="Private notes about this product"
+                placeholder={translations.notePlaceholder}
+                style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
               />
             </div>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
               <button
                 type="button"
                 onClick={() => {
@@ -1076,16 +1161,17 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   e.currentTarget.style.color = '#000000';
                 }}
               >
-                Cancel
+                {translations.cancel}
               </button>
               <button
                 type="submit"
                 className="btn-primary"
                 style={{
                   padding: '0.875rem 2rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr',
                 }}
               >
-                {editingProduct ? 'Update Product' : 'Create Product'}
+                {editingProduct ? (language === 'ar' ? 'تحديث المنتج' : 'Update Product') : (language === 'ar' ? 'إنشاء منتج' : 'Create Product')}
               </button>
             </div>
           </form>

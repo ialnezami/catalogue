@@ -11,6 +11,7 @@ export default function AdminSettings() {
     currency: 'USD',
     exchangeRate: 1,
     displayCurrency: 'SP',
+    language: 'ar',
   });
 
   const router = useRouter();
@@ -186,7 +187,7 @@ export default function AdminSettings() {
               </p>
             </div>
 
-            <div style={{ marginBottom: '2rem' }}>
+            <div style={{ marginBottom: '1.5rem' }}>
               <label style={{ 
                 display: 'block', 
                 color: '#333333', 
@@ -206,6 +207,29 @@ export default function AdminSettings() {
               </select>
               <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
                 Prices shown to customers will be converted to this currency
+              </p>
+            </div>
+
+            <div style={{ marginBottom: '2rem' }}>
+              <label style={{ 
+                display: 'block', 
+                color: '#333333', 
+                marginBottom: '0.5rem', 
+                fontSize: '0.875rem', 
+                fontWeight: '600' 
+              }}>
+                Platform Language
+              </label>
+              <select
+                className="input"
+                value={settings.language}
+                onChange={(e) => setSettings({ ...settings, language: e.target.value })}
+              >
+                <option value="ar">العربية (Arabic)</option>
+                <option value="en">English</option>
+              </select>
+              <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
+                This will set the language for the product creation modal and other admin interfaces
               </p>
             </div>
 

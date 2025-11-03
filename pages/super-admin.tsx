@@ -8,6 +8,7 @@ interface Platform {
   name: string;
   code: string;
   description?: string;
+  language?: string;
   logo?: string;
   createdAt?: Date;
 }
@@ -49,7 +50,7 @@ export default function SuperAdmin() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestFilter, setRequestFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [newPassword, setNewPassword] = useState('');
-  const [newPlatform, setNewPlatform] = useState({ name: '', description: '', logo: '' });
+  const [newPlatform, setNewPlatform] = useState({ name: '', description: '', logo: '', language: 'ar' });
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
@@ -210,13 +211,14 @@ export default function SuperAdmin() {
           code: code,
           description: newPlatform.description,
           logo: newPlatform.logo || '',
+          language: newPlatform.language || 'ar',
         }),
       });
 
       if (response.ok) {
         await loadPlatforms();
         setShowCreateModal(false);
-        setNewPlatform({ name: '', description: '', logo: '' });
+        setNewPlatform({ name: '', description: '', logo: '', language: 'ar' });
         setLogoPreview(null);
         toast.success('Platform created successfully!');
       } else {

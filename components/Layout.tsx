@@ -1,8 +1,9 @@
 import { ReactNode, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Globe } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,9 +16,12 @@ interface PlatformInfo {
 
 export default function Layout({ children }: LayoutProps) {
   const { getTotalItems } = useCart();
+  const { language, setLanguage, t, isLoading: langLoading } = useLanguage();
   const router = useRouter();
   const [platform, setPlatform] = useState<string | null>(null);
   const [platformInfo, setPlatformInfo] = useState<PlatformInfo | null>(null);
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [platformLanguage, setPlatformLanguage] = useState<string>('ar');
 
   useEffect(() => {
     // Get platform from session cookie (for admins) or URL parameter (for public pages)
@@ -58,6 +62,20 @@ export default function Layout({ children }: LayoutProps) {
                 name: platformData.name,
                 logo: platformData.logo || '',
               });
+              
+              // Load platform default language from settings
+              const settingsResponse = await fetch(`/api/settings?platform=${platformCode}`);
+              if (settingsResponse.ok) {
+                const settingsData = await settingsResponse.json();
+                const defaultLang = settingsData.language || platformData.language || 'ar';
+                setPlatformLanguage(defaultLang);
+                
+                // If customer hasn't set a preference, use platform default
+                const customerLang = localStorage.getItem('customerLanguage');
+                if (!customerLang) {
+                  setLanguage(defaultLang as 'ar' | 'en');
+                }
+              }
             } else {
               // If platform not found, use defaults
               setPlatformInfo(null);
@@ -162,7 +180,7 @@ export default function Layout({ children }: LayoutProps) {
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }}
             >
-              المنتجات
+              {t('products')}
             </Link>
             <Link href="/cart" className="cart-link" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <ShoppingBag size={22} style={{ color: 'var(--text-secondary)' }} />
@@ -171,7 +189,8 @@ export default function Layout({ children }: LayoutProps) {
                   style={{
                     position: 'absolute',
                     top: '-8px',
-                    right: '-8px',
+                    right: language === 'ar' ? '-8px' : 'auto',
+                    left: language === 'en' ? '-8px' : 'auto',
                     backgroundColor: 'var(--accent-primary)',
                     color: '#ffffff',
                     borderRadius: '50%',
@@ -189,6 +208,134 @@ export default function Layout({ children }: LayoutProps) {
                 </span>
               )}
             </Link>
+            
+            {/* Language Selector */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--text-secondary)',
+                  borderRadius: '8px',
+                  padding: '0.5rem 0.75rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: 'var(--text-secondary)',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--accent-primary)';
+                  e.currentTarget.style.color = 'var(--accent-primary)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = 'var(--text-secondary)';
+                  e.currentTarget.style.color = 'var(--text-secondary)';
+                }}
+              >
+                <Globe size={18} />
+                <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>
+                  {language === 'ar' ? 'ع' : 'EN'}
+                </span>
+              </button>
+              
+              {showLanguageSelector && (
+                <>
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      zIndex: 998,
+                    }}
+                    onClick={() => setShowLanguageSelector(false)}
+                  />
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 'calc(100% + 0.5rem)',
+                      right: language === 'ar' ? 0 : 'auto',
+                      left: language === 'en' ? 0 : 'auto',
+                      backgroundColor: '#ffffff',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                      padding: '0.5rem',
+                      minWidth: '120px',
+                      zIndex: 999,
+                      border: '1px solid var(--border-subtle)',
+                    }}
+                  >
+                    <button
+                      onClick={() => {
+                        setLanguage('ar');
+                        setShowLanguageSelector(false);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem 1rem',
+                        background: language === 'ar' ? 'var(--accent-primary)' : 'transparent',
+                        color: language === 'ar' ? '#ffffff' : 'var(--text-primary)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        textAlign: 'right',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (language !== 'ar') {
+                          e.currentTarget.style.background = '#f5f5f5';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (language !== 'ar') {
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                    >
+                      العربية
+                    </button>
+                    <button
+                      onClick={() => {
+                        setLanguage('en');
+                        setShowLanguageSelector(false);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '0.625rem 1rem',
+                        background: language === 'en' ? 'var(--accent-primary)' : 'transparent',
+                        color: language === 'en' ? '#ffffff' : 'var(--text-primary)',
+                        border: 'none',
+                        borderRadius: '6px',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        textAlign: 'left',
+                        marginTop: '0.25rem',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (language !== 'en') {
+                          e.currentTarget.style.background = '#f5f5f5';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (language !== 'en') {
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                    >
+                      English
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+            
             <Link
               href={getAdminHref()}
               className="nav-link"
@@ -215,7 +362,7 @@ export default function Layout({ children }: LayoutProps) {
                 e.currentTarget.style.color = 'var(--text-primary)';
               }}
             >
-              Admin
+              {t('admin')}
             </Link>
           </nav>
         </div>

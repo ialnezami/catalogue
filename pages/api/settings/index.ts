@@ -14,12 +14,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (req.method === 'GET') {
       const settings = await collection.findOne(withPlatformFilter(platform, { type: 'app_settings' }));
       if (!settings) {
+        // Get platform language from platforms collection
+        const platformsCollection = db.collection('platforms');
+        const platformDoc = await platformsCollection.findOne({ code: platform });
+        const platformLanguage = platformDoc?.language || 'ar';
+        
         // Return default settings
         return res.status(200).json({
           currency: 'USD',
           exchangeRate: 1,
           displayCurrency: 'USD',
+          language: platformLanguage,
         });
+      }
+      // Ensure language is included even if not in settings
+      if (!settings.language) {
+        const platformsCollection = db.collection('platforms');
+        const platformDoc = await platformsCollection.findOne({ code: platform });
+        settings.language = platformDoc?.language || 'ar';
       }
       return res.status(200).json(settings);
     }
@@ -31,13 +43,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { exchangeRate, displayCurrency, currency } = req.body;
+      const { exchangeRate, displayCurrency, currency, language } = req.body;
       
       const settings = withPlatform(platform, {
         type: 'app_settings',
         currency: currency || 'USD',
         exchangeRate: parseFloat(exchangeRate) || 1,
         displayCurrency: displayCurrency || 'SP',
+        language: language || 'ar',
         updatedAt: new Date(),
       });
 
@@ -46,6 +59,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         { $set: settings },
         { upsert: true }
       );
+
+      // Also update platform language
+      if (language) {
+        const platformsCollection = db.collection('platforms');
+        await platformsCollection.updateOne(
+          { code: platform },
+          { $set: { language: language } }
+        );
+      }
 
       return res.status(200).json({ message: 'Settings updated successfully', settings });
     }

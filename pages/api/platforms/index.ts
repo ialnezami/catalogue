@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { name, code, description, logo } = req.body;
+      const { name, code, description, logo, language } = req.body;
 
       // Check if platform code already exists
       const existing = await collection.findOne({ code });
@@ -32,6 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         code,
         description: description || '',
         logo: logo || '',
+        language: language || 'ar', // Default to Arabic
         createdAt: new Date(),
       };
 
