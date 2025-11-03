@@ -12,10 +12,12 @@ import {
   Send,
   ShoppingBag,
   Shield,
-  Zap
+  Zap,
+  Globe
 } from 'lucide-react';
 import { useRouter } from 'next/router';
 import toast, { Toaster } from 'react-hot-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Platform {
   _id?: string;
@@ -26,12 +28,40 @@ interface Platform {
 
 export default function LandingPage() {
   const router = useRouter();
+  const { t, language, setLanguage } = useLanguage();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
+  const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  
+  // Set default language on mount (Arabic)
+  useEffect(() => {
+    const savedLang = typeof window !== 'undefined' ? localStorage.getItem('customerLanguage') : null;
+    if (!savedLang && typeof window !== 'undefined') {
+      setLanguage('ar');
+      localStorage.setItem('customerLanguage', 'ar');
+      document.documentElement.dir = 'rtl';
+      document.documentElement.lang = 'ar';
+    }
+  }, [setLanguage]);
+
+  // Close language selector when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showLanguageSelector && !target.closest('[data-language-selector]')) {
+        setShowLanguageSelector(false);
+      }
+    };
+
+    if (showLanguageSelector) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showLanguageSelector]);
   
   // Login form
   const [loginData, setLoginData] = useState({ username: '', password: '' });
@@ -179,7 +209,7 @@ export default function LandingPage() {
           },
         }}
       />
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
       {/* Hero Section */}
       <div style={{ 
         padding: '4rem 2rem',
@@ -205,22 +235,104 @@ export default function LandingPage() {
           }}>
             <ShoppingBag size={80} style={{ filter: 'drop-shadow(0 10px 30px rgba(255,255,255,0.3))' }} />
           </div>
+          <div style={{ position: 'relative', width: '100%' }}>
+            {/* Language Selector */}
+            <div style={{ position: 'absolute', top: 0, right: language === 'ar' ? 0 : 'auto', left: language === 'en' ? 0 : 'auto', zIndex: 10 }} data-language-selector>
+              <div style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+                  data-language-selector
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    borderRadius: '8px',
+                    padding: '0.5rem 0.75rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    color: '#ffffff',
+                    transition: 'all 0.2s ease',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                  }}
+                >
+                  <Globe size={18} />
+                  <span>{language === 'ar' ? 'العربية' : 'English'}</span>
+                </button>
+                {showLanguageSelector && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: language === 'ar' ? 0 : 'auto',
+                    left: language === 'en' ? 0 : 'auto',
+                    marginTop: '0.5rem',
+                    backgroundColor: '#ffffff',
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                    overflow: 'hidden',
+                    minWidth: '150px',
+                  }}>
+                    <button
+                      onClick={() => { setLanguage('ar'); setShowLanguageSelector(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        background: language === 'ar' ? '#667eea' : 'transparent',
+                        color: language === 'ar' ? '#ffffff' : '#1a1a1a',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'block',
+                        direction: 'rtl',
+                      }}
+                    >
+                      العربية
+                    </button>
+                    <button
+                      onClick={() => { setLanguage('en'); setShowLanguageSelector(false); }}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        background: language === 'en' ? '#667eea' : 'transparent',
+                        color: language === 'en' ? '#ffffff' : '#1a1a1a',
+                        border: 'none',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        display: 'block',
+                        borderTop: '1px solid #e5e7eb',
+                      }}
+                    >
+                      English
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
           <h1 style={{ 
             fontSize: '3.5rem', 
             fontWeight: '800', 
             marginBottom: '1rem',
             letterSpacing: '-0.02em',
-            textShadow: '0 4px 20px rgba(0,0,0,0.2)'
+            textShadow: '0 4px 20px rgba(0,0,0,0.2)',
+            direction: language === 'ar' ? 'rtl' : 'ltr'
           }}>
-            Multi-Platform Catalogue
+            {t('landing.multiPlatformCatalogue')}
           </h1>
           <p style={{ 
             fontSize: '1.5rem', 
             marginBottom: '2rem',
             opacity: 0.95,
-            lineHeight: '1.6'
+            lineHeight: '1.6',
+            direction: language === 'ar' ? 'rtl' : 'ltr'
           }}>
-            Create and manage your own e-commerce platform with ease
+            {t('landing.tagline')}
           </p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button
@@ -250,7 +362,7 @@ export default function LandingPage() {
               }}
             >
               <LogIn size={20} />
-              Login
+              {t('landing.login')}
             </button>
             <button
               onClick={() => { setShowSignup(true); setActiveTab('signup'); }}
@@ -266,7 +378,8 @@ export default function LandingPage() {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.5rem',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                direction: language === 'ar' ? 'rtl' : 'ltr'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#ffffff';
@@ -280,7 +393,7 @@ export default function LandingPage() {
               }}
             >
               <UserPlus size={20} />
-              Request Platform
+              {t('landing.requestPlatform')}
             </button>
           </div>
         </div>
@@ -298,9 +411,10 @@ export default function LandingPage() {
             fontSize: '2.5rem', 
             fontWeight: '700',
             marginBottom: '3rem',
-            color: '#1a1a1a'
+            color: '#1a1a1a',
+            direction: language === 'ar' ? 'rtl' : 'ltr'
           }}>
-            Why Choose Our Platform?
+            {t('landing.whyChoose')}
           </h2>
           <div style={{ 
             display: 'grid', 
@@ -308,9 +422,9 @@ export default function LandingPage() {
             gap: '2rem' 
           }}>
             {[
-              { icon: Shield, title: 'Secure & Isolated', desc: 'Each platform has its own secure data isolation' },
-              { icon: Zap, title: 'Fast & Reliable', desc: 'Lightning-fast performance with 99.9% uptime' },
-              { icon: Store, title: 'Easy Management', desc: 'Intuitive admin panel for product and order management' },
+              { icon: Shield, titleKey: 'landing.secureIsolated', descKey: 'landing.secureIsolatedDesc' },
+              { icon: Zap, titleKey: 'landing.fastReliable', descKey: 'landing.fastReliableDesc' },
+              { icon: Store, titleKey: 'landing.easyManagement', descKey: 'landing.easyManagementDesc' },
             ].map((feature, idx) => (
               <div
                 key={idx}
@@ -332,10 +446,10 @@ export default function LandingPage() {
                 }}
               >
                 <feature.icon size={40} style={{ color: '#667eea', marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1a1a1a' }}>
-                  {feature.title}
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t(feature.titleKey)}
                 </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6' }}>{feature.desc}</p>
+                <p style={{ color: '#6b7280', lineHeight: '1.6', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t(feature.descKey)}</p>
               </div>
             ))}
           </div>
@@ -353,17 +467,18 @@ export default function LandingPage() {
             fontSize: '2.5rem', 
             fontWeight: '700',
             marginBottom: '3rem',
-            color: '#1a1a1a'
+            color: '#1a1a1a',
+            direction: language === 'ar' ? 'rtl' : 'ltr'
           }}>
-            Existing Platforms
+            {t('landing.existingPlatforms')}
           </h2>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <p style={{ color: '#6b7280' }}>Loading platforms...</p>
+              <p style={{ color: '#6b7280', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('landing.loadingPlatforms')}</p>
             </div>
           ) : platforms.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <p style={{ color: '#6b7280' }}>No platforms available yet. Be the first to request one!</p>
+              <p style={{ color: '#6b7280', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('landing.noPlatformsYet')}</p>
             </div>
           ) : (
             <div style={{ 
@@ -414,8 +529,8 @@ export default function LandingPage() {
                         {platform.description}
                       </p>
                     )}
-                    <div style={{ display: 'flex', alignItems: 'center', color: '#667eea', fontSize: '0.875rem', fontWeight: '600' }}>
-                      Visit Platform <ArrowRight size={16} style={{ marginLeft: '0.5rem' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', color: '#667eea', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                      {t('landing.visitPlatform')} <ArrowRight size={16} style={{ marginLeft: language === 'ar' ? 0 : '0.5rem', marginRight: language === 'ar' ? '0.5rem' : 0, transform: language === 'ar' ? 'scaleX(-1)' : 'none' }} />
                     </div>
                   </div>
                 </Link>
@@ -433,11 +548,11 @@ export default function LandingPage() {
       }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <Mail size={48} style={{ color: '#667eea', marginBottom: '1rem' }} />
-          <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', color: '#1a1a1a' }}>
-            Need Help?
+          <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+            {t('landing.needHelp')}
           </h2>
-          <p style={{ color: '#6b7280', marginBottom: '2rem' }}>
-            Have questions? We're here to help!
+          <p style={{ color: '#6b7280', marginBottom: '2rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+            {t('landing.haveQuestions')}
           </p>
           <button
             onClick={() => setShowContact(true)}
@@ -453,7 +568,8 @@ export default function LandingPage() {
               display: 'inline-flex',
               alignItems: 'center',
               gap: '0.5rem',
-              transition: 'all 0.3s ease'
+              transition: 'all 0.3s ease',
+              direction: language === 'ar' ? 'rtl' : 'ltr'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#5568d3';
@@ -465,7 +581,7 @@ export default function LandingPage() {
             }}
           >
             <Mail size={20} />
-            Contact Us
+            {t('landing.contactUs')}
           </button>
         </div>
       </div>
@@ -474,13 +590,13 @@ export default function LandingPage() {
       {showLogin && (
         <Modal onClose={() => setShowLogin(false)}>
           <div style={{ width: '100%', maxWidth: '400px' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1a1a1a' }}>
-              Login to Your Platform
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              {t('landing.loginToPlatform')}
             </h2>
             <form onSubmit={handleLogin}>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Username
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.username')}
                 </label>
                 <input
                   type="text"
@@ -492,13 +608,14 @@ export default function LandingPage() {
                     padding: '0.75rem',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Password
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.password')}
                 </label>
                 <input
                   type="password"
@@ -510,7 +627,8 @@ export default function LandingPage() {
                     padding: '0.75rem',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
@@ -526,7 +644,8 @@ export default function LandingPage() {
                   fontSize: '1rem',
                   fontWeight: '600',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  direction: language === 'ar' ? 'rtl' : 'ltr'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#5568d3';
@@ -535,7 +654,7 @@ export default function LandingPage() {
                   e.currentTarget.style.backgroundColor = '#667eea';
                 }}
               >
-                Login
+                {t('landing.login')}
               </button>
             </form>
           </div>
@@ -546,35 +665,36 @@ export default function LandingPage() {
       {showSignup && (
         <Modal onClose={() => setShowSignup(false)}>
           <div style={{ width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1a1a1a' }}>
-              Request a New Platform
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              {t('landing.requestNewPlatform')}
             </h2>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.875rem' }}>
-              Fill out the form below to request your own platform. Our team will review your request and contact you soon.
+            <p style={{ color: '#6b7280', marginBottom: '1.5rem', fontSize: '0.875rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              {t('landing.requestFormDescription')}
             </p>
             <form onSubmit={handlePlatformRequest}>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Platform Name *
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.platformName')} *
                 </label>
                 <input
                   type="text"
                   value={signupData.platformName}
                   onChange={(e) => setSignupData({ ...signupData, platformName: e.target.value })}
                   required
-                  placeholder="e.g., My Store"
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
-                    fontSize: '1rem'
-                  }}
-                />
-              </div>
+                    placeholder="e.g., My Store"
+                    style={{
+                      width: '100%',
+                      padding: '0.75rem',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr'
+                    }}
+                  />
+                </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Platform Description
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.platformDescription')}
                 </label>
                 <textarea
                   value={signupData.platformDescription}
@@ -587,14 +707,15 @@ export default function LandingPage() {
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     fontSize: '1rem',
-                    resize: 'vertical'
+                    resize: 'vertical',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                    Contact Name *
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                    {t('landing.contactName')} *
                   </label>
                   <input
                     type="text"
@@ -606,13 +727,14 @@ export default function LandingPage() {
                       padding: '0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      fontSize: '1rem'
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                    Business Type
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                    {t('landing.businessType')}
                   </label>
                   <input
                     type="text"
@@ -624,15 +746,16 @@ export default function LandingPage() {
                       padding: '0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      fontSize: '1rem'
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr'
                     }}
                   />
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                    Email *
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                    {t('landing.email')} *
                   </label>
                   <input
                     type="email"
@@ -644,13 +767,14 @@ export default function LandingPage() {
                       padding: '0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      fontSize: '1rem'
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr'
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                    Phone
+                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                    {t('landing.phone')}
                   </label>
                   <input
                     type="tel"
@@ -661,19 +785,20 @@ export default function LandingPage() {
                       padding: '0.75rem',
                       border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      fontSize: '1rem'
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr'
                     }}
                   />
                 </div>
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Additional Message
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.additionalMessage')}
                 </label>
                 <textarea
                   value={signupData.message}
                   onChange={(e) => setSignupData({ ...signupData, message: e.target.value })}
-                  placeholder="Tell us more about your business..."
+                  placeholder={t('landing.tellUsMore')}
                   rows={4}
                   style={{
                     width: '100%',
@@ -681,7 +806,8 @@ export default function LandingPage() {
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     fontSize: '1rem',
-                    resize: 'vertical'
+                    resize: 'vertical',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
@@ -701,7 +827,8 @@ export default function LandingPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  direction: language === 'ar' ? 'rtl' : 'ltr'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#5568d3';
@@ -711,7 +838,7 @@ export default function LandingPage() {
                 }}
               >
                 <Send size={20} />
-                Submit Request
+                {t('landing.submitRequest')}
               </button>
             </form>
           </div>
@@ -722,13 +849,13 @@ export default function LandingPage() {
       {showContact && (
         <Modal onClose={() => setShowContact(false)}>
           <div style={{ width: '100%', maxWidth: '500px' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1a1a1a' }}>
-              Contact Us
+            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              {t('landing.contactUsTitle')}
             </h2>
             <form onSubmit={handleContact}>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Name *
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.name')} *
                 </label>
                 <input
                   type="text"
@@ -740,13 +867,14 @@ export default function LandingPage() {
                     padding: '0.75rem',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Email *
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.email')} *
                 </label>
                 <input
                   type="email"
@@ -758,13 +886,14 @@ export default function LandingPage() {
                     padding: '0.75rem',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Subject *
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.subject')} *
                 </label>
                 <input
                   type="text"
@@ -776,13 +905,14 @@ export default function LandingPage() {
                     padding: '0.75rem',
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
-                    fontSize: '1rem'
+                    fontSize: '1rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500' }}>
-                  Message *
+                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  {t('landing.message')} *
                 </label>
                 <textarea
                   value={contactData.message}
@@ -795,7 +925,8 @@ export default function LandingPage() {
                     border: '1px solid #d1d5db',
                     borderRadius: '8px',
                     fontSize: '1rem',
-                    resize: 'vertical'
+                    resize: 'vertical',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
                   }}
                 />
               </div>
@@ -815,7 +946,8 @@ export default function LandingPage() {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  direction: language === 'ar' ? 'rtl' : 'ltr'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.backgroundColor = '#5568d3';
@@ -825,7 +957,7 @@ export default function LandingPage() {
                 }}
               >
                 <Send size={20} />
-                Send Message
+                {t('landing.sendMessage')}
               </button>
             </form>
           </div>
