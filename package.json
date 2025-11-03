@@ -16,8 +16,11 @@
     "fix:platforms": "node scripts/fix-platforms.js"
   },
   "dependencies": {
+    "@types/formidable": "^3.4.6",
     "@types/jsbarcode": "^3.11.4",
     "bcryptjs": "^2.4.3",
+    "cloudinary": "^2.8.0",
+    "formidable": "^3.5.4",
     "html5-qrcode": "^2.3.8",
     "jsbarcode": "^3.12.1",
     "lucide-react": "^0.294.0",

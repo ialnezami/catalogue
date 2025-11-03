@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { Plus, Trash2, Eye, EyeOff, LogOut, CheckCircle, Key, Edit, X, Clock, Check, XCircle, Mail, Phone, Building } from 'lucide-react';
+import { Plus, Trash2, Eye, EyeOff, LogOut, CheckCircle, Key, Edit, X, Clock, Check, XCircle, Mail, Phone, Building, Upload } from 'lucide-react';
 import toast, { Toaster } from 'react-hot-toast';
 
 interface Platform {
@@ -50,6 +50,9 @@ export default function SuperAdmin() {
   const [requestFilter, setRequestFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [newPassword, setNewPassword] = useState('');
   const [newPlatform, setNewPlatform] = useState({ name: '', description: '', logo: '' });
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -139,6 +142,57 @@ export default function SuperAdmin() {
     }
   };
 
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload to Cloudinary via API (platform logos folder)
+      const response = await fetch('/api/upload?folder=platform-logos', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Upload failed');
+      }
+
+      // Set the Cloudinary URL in the form
+      setNewPlatform((prev) => ({ ...prev, logo: data.url }));
+      setLogoPreview(data.url);
+      toast.success('Logo uploaded successfully!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload logo');
+    } finally {
+      setIsUploadingLogo(false);
+      // Reset file input
+      if (logoFileInputRef.current) {
+        logoFileInputRef.current.value = '';
+      }
+    }
+  };
+
   const createPlatform = async () => {
     if (!newPlatform.name || !newPlatform.name.trim()) {
       toast.error('Platform name is required');
@@ -163,6 +217,7 @@ export default function SuperAdmin() {
         await loadPlatforms();
         setShowCreateModal(false);
         setNewPlatform({ name: '', description: '', logo: '' });
+        setLogoPreview(null);
         toast.success('Platform created successfully!');
       } else {
         toast.error('Failed to create platform');
@@ -1025,7 +1080,10 @@ export default function SuperAdmin() {
               justifyContent: 'center',
               zIndex: 1000,
             }}
-            onClick={() => setShowCreateModal(false)}
+            onClick={() => {
+              setShowCreateModal(false);
+              setLogoPreview(null);
+            }}
           >
             <div
               style={{
@@ -1064,12 +1122,97 @@ export default function SuperAdmin() {
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Logo URL</label>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>
+                  Platform Logo
+                </label>
+                
+                {/* Logo Preview */}
+                {(logoPreview || newPlatform.logo) && (
+                  <div style={{ marginBottom: '1rem' }}>
+                    <img
+                      src={logoPreview || newPlatform.logo}
+                      alt="Logo Preview"
+                      style={{
+                        width: '100%',
+                        maxWidth: '200px',
+                        height: '200px',
+                        objectFit: 'contain',
+                        borderRadius: '8px',
+                        border: '1px solid #374151',
+                        backgroundColor: '#1a1a1a',
+                        padding: '0.5rem',
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* File Upload Button */}
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <input
+                    ref={logoFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleLogoUpload}
+                    disabled={isUploadingLogo}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => logoFileInputRef.current?.click()}
+                    disabled={isUploadingLogo}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      backgroundColor: isUploadingLogo ? '#374151' : '#3b82f6',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: isUploadingLogo ? 'not-allowed' : 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      marginBottom: '0.75rem',
+                      opacity: isUploadingLogo ? 0.6 : 1,
+                    }}
+                  >
+                    {isUploadingLogo ? (
+                      <>
+                        <div style={{ 
+                          width: '16px', 
+                          height: '16px', 
+                          border: '2px solid #ffffff',
+                          borderTop: '2px solid transparent',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={16} />
+                        Upload Logo to Cloudinary
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Or Divider */}
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: '#374151' }}></div>
+                  <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>OR</span>
+                  <div style={{ flex: 1, height: '1px', backgroundColor: '#374151' }}></div>
+                </div>
+
+                {/* Manual URL Input */}
                 <input
                   type="text"
                   value={newPlatform.logo}
-                  onChange={(e) => setNewPlatform({ ...newPlatform, logo: e.target.value })}
-                  placeholder="https://example.com/logo.png or /images/logo.png"
+                  onChange={(e) => {
+                    setNewPlatform({ ...newPlatform, logo: e.target.value });
+                    setLogoPreview(e.target.value || null);
+                  }}
+                  placeholder="Enter logo URL (e.g., https://example.com/logo.png or /images/logo.png)"
                   style={{
                     width: '100%',
                     padding: '0.75rem',
@@ -1080,7 +1223,7 @@ export default function SuperAdmin() {
                   }}
                 />
                 <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem' }}>
-                  Enter a URL or path to the platform logo image (e.g., /images/logo.png)
+                  💡 Upload a logo or paste a URL. Cloudinary upload automatically optimizes your images.
                 </p>
               </div>
 
@@ -1105,7 +1248,10 @@ export default function SuperAdmin() {
 
               <div style={{ display: 'flex', gap: '1rem' }}>
                 <button
-                  onClick={() => setShowCreateModal(false)}
+                  onClick={() => {
+              setShowCreateModal(false);
+              setLogoPreview(null);
+            }}
                   style={{
                     flex: 1,
                     padding: '0.75rem',

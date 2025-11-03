@@ -33,8 +33,11 @@ export default function AdminProducts() {
   const [generatedBarcode, setGeneratedBarcode] = useState('');
   const [importUrl, setImportUrl] = useState('');
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -68,6 +71,57 @@ export default function AdminProducts() {
       loadProducts();
     }
   }, [platform]);
+
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('Image size must be less than 10MB');
+      return;
+    }
+
+    setIsUploadingImage(true);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload to Cloudinary via API
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Upload failed');
+      }
+
+      // Set the Cloudinary URL in the form
+      setFormData((prev) => ({ ...prev, image: data.url }));
+      setImagePreview(data.url);
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to upload image');
+    } finally {
+      setIsUploadingImage(false);
+      // Reset file input
+      if (imageFileInputRef.current) {
+        imageFileInputRef.current.value = '';
+      }
+    }
+  };
 
   const generateBarcode = () => {
     const barcode = 'PRD' + Date.now().toString().slice(-10);
@@ -183,6 +237,7 @@ export default function AdminProducts() {
       setShowEditModal(false);
       setEditingProduct(null);
       setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+      setImagePreview(null);
       loadProducts();
     } catch (error) {
       console.error('Error saving product:', error);
@@ -204,6 +259,7 @@ export default function AdminProducts() {
       note: product.note || '',
     };
     setFormData(formDataObj);
+    setImagePreview(product.image || null);
     
     // If product has barcode, generate barcode display
     if (product.barcode) {
@@ -635,6 +691,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               onClick={() => {
       setEditingProduct(null);
       setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+      setImagePreview(null);
       setGeneratedBarcode('');
       generateBarcode();
       setShowEditModal(true);
@@ -795,14 +852,101 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Image URL</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>
+                Product Image
+              </label>
+              
+              {/* Image Preview */}
+              {(imagePreview || formData.image) && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <img
+                    src={imagePreview || formData.image}
+                    alt="Preview"
+                    style={{
+                      width: '100%',
+                      maxWidth: '300px',
+                      height: '300px',
+                      objectFit: 'cover',
+                      borderRadius: '8px',
+                      border: '1px solid #e5e7eb',
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* File Upload Button */}
+              <div style={{ marginBottom: '0.75rem' }}>
+                <input
+                  ref={imageFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={handleImageUpload}
+                  disabled={isUploadingImage}
+                />
+                <button
+                  type="button"
+                  onClick={() => imageFileInputRef.current?.click()}
+                  disabled={isUploadingImage}
+                  style={{
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: isUploadingImage ? '#9ca3af' : '#3b82f6',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: isUploadingImage ? 'not-allowed' : 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    marginBottom: '0.75rem',
+                    opacity: isUploadingImage ? 0.6 : 1,
+                  }}
+                >
+                  {isUploadingImage ? (
+                    <>
+                      <div style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        border: '2px solid #ffffff',
+                        borderTop: '2px solid transparent',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite'
+                      }} />
+                      Uploading...
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={16} />
+                      Upload Image to Cloudinary
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Or Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
+                <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>OR</span>
+                <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
+              </div>
+
+              {/* Manual URL Input */}
               <input
                 className="input"
                 type="text"
                 value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, image: e.target.value });
+                  setImagePreview(e.target.value || null);
+                }}
+                placeholder="Enter image URL (e.g., https://example.com/image.jpg or /images/logo.png)"
                 required
               />
+              <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                💡 Upload an image or paste a URL. Cloudinary upload automatically optimizes your images.
+              </p>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
               <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600' }}>Barcode</label>
@@ -908,6 +1052,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   setShowEditModal(false);
                   setEditingProduct(null);
                   setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+                  setImagePreview(null);
                 }}
                 style={{
                   padding: '0.875rem 2rem',
