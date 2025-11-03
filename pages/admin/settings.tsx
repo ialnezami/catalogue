@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { Save, DollarSign, Settings } from 'lucide-react';
+import { Save, DollarSign, Settings, Key, X } from 'lucide-react';
 import { useRouter } from 'next/router';
+import toast from 'react-hot-toast';
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
@@ -18,6 +19,14 @@ export default function AdminSettings() {
     heroSubtitleEn: 'Elegant pieces for the modern woman',
   });
 
+  // Password change states
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -27,6 +36,8 @@ export default function AdminSettings() {
         const authResponse = await fetch('/api/auth/check');
         const authData = await authResponse.json();
         
+        const currentPlatform = authData.adminPlatform || new URLSearchParams(window.location.search).get('platform') || 'default';
+        
         if (authData.adminPlatform) {
           setPlatform(authData.adminPlatform);
         } else {
@@ -34,6 +45,18 @@ export default function AdminSettings() {
           const urlParams = new URLSearchParams(window.location.search);
           const platformParam = urlParams.get('platform') || 'default';
           setPlatform(platformParam);
+        }
+
+        // Load admin username for password change
+        try {
+          const adminsResponse = await fetch('/api/platforms/admins');
+          const adminsData = await adminsResponse.json();
+          const admin = adminsData.find((a: any) => a.platform === currentPlatform && a.active);
+          if (admin) {
+            setAdminUsername(admin.username);
+          }
+        } catch (error) {
+          console.error('Error loading admin username:', error);
         }
       } catch (error) {
         console.error('Error fetching admin platform:', error);
@@ -91,6 +114,58 @@ export default function AdminSettings() {
     }
   };
 
+  const handlePasswordChange = async () => {
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      toast.error('All fields are required');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    if (!adminUsername) {
+      toast.error('Admin username not found');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: adminUsername,
+          currentPassword,
+          newPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Password changed successfully!');
+        setShowPasswordModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error(data.message || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('An error occurred while changing password');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -111,20 +186,40 @@ export default function AdminSettings() {
           marginBottom: '2rem' 
         }}>
           <h1 style={{ fontSize: '2.5rem', color: '#ec4899' }}>Settings</h1>
-          <button
-            onClick={() => router.push('/admin/products')}
-            style={{
-              backgroundColor: '#3b82f6',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            Back to Products
-          </button>
+          <div style={{ display: 'flex', gap: '1rem' }}>
+            <button
+              onClick={() => setShowPasswordModal(true)}
+              style={{
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <Key size={18} />
+              Change Password
+            </button>
+            <button
+              onClick={() => router.push('/admin/products')}
+              style={{
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '1rem',
+              }}
+            >
+              Back to Products
+            </button>
+          </div>
         </div>
 
         <div style={{ 
@@ -404,6 +499,126 @@ export default function AdminSettings() {
             </div>
           </form>
         </div>
+
+        {/* Password Change Modal */}
+        {showPasswordModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+            onClick={() => setShowPasswordModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                padding: '2rem',
+                borderRadius: '12px',
+                border: '1px solid #e5e7eb',
+                width: '90%',
+                maxWidth: '500px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', color: '#000000', margin: 0 }}>Change Password</h2>
+                <button
+                  onClick={() => setShowPasswordModal(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#666666',
+                    cursor: 'pointer',
+                    fontSize: '1.5rem',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>Current Password *</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="input"
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>New Password *</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 characters)"
+                  className="input"
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>Confirm New Password *</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  className="input"
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setCurrentPassword('');
+                    setNewPassword('');
+                    setConfirmPassword('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.875rem',
+                    backgroundColor: 'transparent',
+                    color: '#000000',
+                    border: '1px solid #000000',
+                    borderRadius: '0',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePasswordChange}
+                  disabled={changingPassword}
+                  className="btn-primary"
+                  style={{
+                    flex: 1,
+                    padding: '0.875rem',
+                    opacity: changingPassword ? 0.5 : 1,
+                    cursor: changingPassword ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {changingPassword ? 'Changing...' : 'Change Password'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

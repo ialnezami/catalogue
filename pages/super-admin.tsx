@@ -55,6 +55,13 @@ export default function SuperAdmin() {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const logoFileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  
+  // Super admin password change states
+  const [showSuperAdminPasswordModal, setShowSuperAdminPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newSuperAdminPassword, setNewSuperAdminPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -319,6 +326,52 @@ export default function SuperAdmin() {
     router.push('/');
   };
 
+  const handleSuperAdminPasswordChange = async () => {
+    if (!currentPassword || !newSuperAdminPassword || !confirmPassword) {
+      toast.error('All fields are required');
+      return;
+    }
+
+    if (newSuperAdminPassword.length < 6) {
+      toast.error('New password must be at least 6 characters long');
+      return;
+    }
+
+    if (newSuperAdminPassword !== confirmPassword) {
+      toast.error('New passwords do not match');
+      return;
+    }
+
+    setChangingPassword(true);
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword: newSuperAdminPassword,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Password changed successfully!');
+        setShowSuperAdminPasswordModal(false);
+        setCurrentPassword('');
+        setNewSuperAdminPassword('');
+        setConfirmPassword('');
+      } else {
+        toast.error(data.message || 'Failed to change password');
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('An error occurred while changing password');
+    } finally {
+      setChangingPassword(false);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -384,6 +437,23 @@ export default function SuperAdmin() {
             <h1 style={{ fontSize: '2.5rem', color: '#ec4899', marginBottom: '0.5rem' }}>Super Admin Panel</h1>
             <p style={{ color: '#9ca3af' }}>Manage platforms and their admins</p>
           </div>
+          <button
+            onClick={() => setShowSuperAdminPasswordModal(true)}
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#3b82f6',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <Key size={20} />
+            Change Password
+          </button>
           <button
             onClick={handleLogout}
             style={{
@@ -1280,6 +1350,147 @@ export default function SuperAdmin() {
                   }}
                 >
                   Create
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Super Admin Password Change Modal */}
+        {showSuperAdminPasswordModal && (
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 1000,
+            }}
+            onClick={() => setShowSuperAdminPasswordModal(false)}
+          >
+            <div
+              style={{
+                backgroundColor: '#1a1a1a',
+                padding: '2rem',
+                borderRadius: '12px',
+                border: '1px solid #374151',
+                width: '90%',
+                maxWidth: '500px',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                <h2 style={{ fontSize: '1.5rem', color: '#ffffff', margin: 0 }}>Change Super Admin Password</h2>
+                <button
+                  onClick={() => setShowSuperAdminPasswordModal(false)}
+                  style={{
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    color: '#9ca3af',
+                    cursor: 'pointer',
+                    fontSize: '1.5rem',
+                    padding: '0.25rem',
+                  }}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Current Password *</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>New Password *</label>
+                <input
+                  type="password"
+                  value={newSuperAdminPassword}
+                  onChange={(e) => setNewSuperAdminPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 characters)"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                  }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Confirm New Password *</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  onClick={() => {
+                    setShowSuperAdminPasswordModal(false);
+                    setCurrentPassword('');
+                    setNewSuperAdminPassword('');
+                    setConfirmPassword('');
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    backgroundColor: '#374151',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSuperAdminPasswordChange}
+                  disabled={changingPassword}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    backgroundColor: '#ec4899',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: changingPassword ? 'not-allowed' : 'pointer',
+                    opacity: changingPassword ? 0.5 : 1,
+                    fontWeight: 'bold',
+                  }}
+                >
+                  {changingPassword ? 'Changing...' : 'Change Password'}
                 </button>
               </div>
             </div>
