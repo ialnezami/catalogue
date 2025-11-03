@@ -5,6 +5,7 @@ import { useCart } from '@/contexts/CartContext';
 import { formatPrice, getCurrencySettings } from '@/lib/currency';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductCardProps {
   product: Product;
@@ -12,6 +13,7 @@ interface ProductCardProps {
 
 export default function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
@@ -192,7 +194,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               }}
             >
               <ShoppingCart size={14} />
-              إضافة
+              {t('addToCart')}
             </button>
           </div>
         </div>

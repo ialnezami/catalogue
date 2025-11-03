@@ -1,5 +1,6 @@
 import { Product } from '@/types';
 import { Search, Filter } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface ProductFiltersProps {
   products: Product[];
@@ -7,6 +8,8 @@ interface ProductFiltersProps {
 }
 
 export default function ProductFilters({ products, onFilter }: ProductFiltersProps) {
+  const { t, language } = useLanguage();
+  
   const handleSearch = (query: string) => {
     const filtered = products.filter(
       (product) =>
@@ -55,7 +58,8 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
             size={18}
             style={{
               position: 'absolute',
-              right: '12px',
+              right: language === 'ar' ? '12px' : 'auto',
+              left: language === 'en' ? '12px' : 'auto',
               top: '50%',
               transform: 'translateY(-50%)',
               color: 'var(--text-tertiary)',
@@ -64,10 +68,11 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
           <input
             className="input"
             type="text"
-            placeholder="ابحث عن المنتجات..."
+            placeholder={t('searchPlaceholder')}
             onChange={(e) => handleSearch(e.target.value)}
             style={{
-              padding: '0.75rem 2.5rem 0.75rem 1rem',
+              padding: language === 'ar' ? '0.75rem 2.5rem 0.75rem 1rem' : '0.75rem 1rem 0.75rem 2.5rem',
+              direction: language === 'ar' ? 'rtl' : 'ltr',
             }}
           />
         </div>
@@ -84,7 +89,7 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
           >
             {categories.map((category) => (
               <option key={category} value={category}>
-                {category.charAt(0).toUpperCase() + category.slice(1)}
+                {category === 'all' ? t('allCategories') : category.charAt(0).toUpperCase() + category.slice(1)}
               </option>
             ))}
           </select>
