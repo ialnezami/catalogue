@@ -1651,9 +1651,10 @@ export default function SuperAdmin() {
           })}
           </div>
         </div>
+      </div>
 
-        {/* Show Credentials Modal */}
-        {showCredentialsModal && selectedPlatform && (
+      {/* Show Credentials Modal */}
+      {showCredentialsModal && selectedPlatform && (
           <div
             style={{
               position: 'fixed',
@@ -2396,8 +2397,8 @@ export default function SuperAdmin() {
           </div>
         )}
 
-        {/* Delete Admin Confirmation Modal */}
-        <ConfirmationModal
+      {/* Delete Admin Confirmation Modal */}
+      <ConfirmationModal
           isOpen={showDeleteAdminModal}
           onClose={() => {
             setShowDeleteAdminModal(false);
@@ -2410,10 +2411,10 @@ export default function SuperAdmin() {
           cancelText="Cancel"
           type="danger"
           isLoading={deletingAdmin}
-        />
+      />
 
-        {/* Deactivate Platform Confirmation Modal */}
-        <ConfirmationModal
+      {/* Deactivate Platform Confirmation Modal */}
+      <ConfirmationModal
           isOpen={showDeactivatePlatformModal}
           onClose={() => {
             setShowDeactivatePlatformModal(false);
@@ -2426,10 +2427,10 @@ export default function SuperAdmin() {
           cancelText="Cancel"
           type="warning"
           isLoading={deactivatingPlatform}
-        />
+      />
 
-        {/* Delete Platform Confirmation Modal */}
-        <ConfirmationModal
+      {/* Delete Platform Confirmation Modal */}
+      <ConfirmationModal
           isOpen={showDeletePlatformModal}
           onClose={() => {
             setShowDeletePlatformModal(false);
@@ -2442,8 +2443,7 @@ export default function SuperAdmin() {
           cancelText="Cancel"
           type="danger"
           isLoading={deletingPlatform}
-        />
-      </div>
+      />
     </div>
   );
 }
