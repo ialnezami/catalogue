@@ -9,12 +9,14 @@ const platforms = [
     name: 'Roze Collection',
     code: 'roze',
     description: 'Rose Collection - Premium Fashion',
+    logo: '',
     createdAt: new Date()
   },
   {
     name: 'Jador Boutique',
     code: 'jador',
     description: 'Jador - Modern Fashion',
+    logo: '',
     createdAt: new Date()
   }
 ];

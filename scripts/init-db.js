@@ -28,6 +28,7 @@ db.platforms.insertOne({
   name: 'Default',
   code: 'default',
   description: 'Default platform',
+  logo: '',
   createdAt: new Date()
 });
 

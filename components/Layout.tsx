@@ -8,33 +8,66 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+interface PlatformInfo {
+  name: string;
+  logo?: string;
+}
+
 export default function Layout({ children }: LayoutProps) {
   const { getTotalItems } = useCart();
   const router = useRouter();
   const [platform, setPlatform] = useState<string | null>(null);
+  const [platformInfo, setPlatformInfo] = useState<PlatformInfo | null>(null);
 
   useEffect(() => {
     // Get platform from session cookie (for admins) or URL parameter (for public pages)
     const loadPlatform = async () => {
       if (typeof window !== 'undefined') {
+        let platformCode: string | null = null;
+        
         // First, try to get platform from session cookie (for authenticated admins)
         try {
           const authResponse = await fetch('/api/auth/check');
           const authData = await authResponse.json();
           
           if (authData.adminPlatform) {
-            setPlatform(authData.adminPlatform);
-            return;
+            platformCode = authData.adminPlatform;
           }
         } catch (error) {
           console.error('Error fetching auth check:', error);
         }
         
         // Fallback to URL parameter (for public pages)
-        const urlParams = new URLSearchParams(window.location.search);
-        const platformParam = urlParams.get('platform');
-        if (platformParam) {
-          setPlatform(platformParam);
+        if (!platformCode) {
+          const urlParams = new URLSearchParams(window.location.search);
+          const platformParam = urlParams.get('platform');
+          if (platformParam) {
+            platformCode = platformParam;
+          }
+        }
+
+        setPlatform(platformCode);
+
+        // Fetch platform info if we have a platform code
+        if (platformCode) {
+          try {
+            const platformResponse = await fetch(`/api/platforms/${platformCode}`);
+            if (platformResponse.ok) {
+              const platformData = await platformResponse.json();
+              setPlatformInfo({
+                name: platformData.name,
+                logo: platformData.logo || '',
+              });
+            } else {
+              // If platform not found, use defaults
+              setPlatformInfo(null);
+            }
+          } catch (error) {
+            console.error('Error fetching platform info:', error);
+            setPlatformInfo(null);
+          }
+        } else {
+          setPlatformInfo(null);
         }
       }
     };
@@ -88,18 +121,26 @@ export default function Layout({ children }: LayoutProps) {
               textDecoration: 'none'
             }}
           >
-            <img 
-              src="/images/logo.PNG" 
-              alt="stylish" 
-              width={40}
-              height={40}
-              style={{ 
-                objectFit: 'contain',
-                display: 'block'
-              }}
-            />
+            {(platformInfo?.logo || '/images/logo.PNG') && (
+              <img 
+                src={platformInfo?.logo || '/images/logo.PNG'} 
+                alt={platformInfo?.name || 'Logo'} 
+                width={40}
+                height={40}
+                style={{ 
+                  objectFit: 'contain',
+                  display: 'block'
+                }}
+                onError={(e) => {
+                  // Fallback to default logo if platform logo fails to load
+                  if (e.currentTarget.src !== '/images/logo.PNG') {
+                    e.currentTarget.src = '/images/logo.PNG';
+                  }
+                }}
+              />
+            )}
             <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
-              stylish
+              {platformInfo?.name || 'stylish'}
             </span>
           </Link>
           <nav className="main-nav" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>

@@ -8,6 +8,7 @@ interface Platform {
   name: string;
   code: string;
   description?: string;
+  logo?: string;
   createdAt?: Date;
 }
 
@@ -48,7 +49,7 @@ export default function SuperAdmin() {
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [requestFilter, setRequestFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [newPassword, setNewPassword] = useState('');
-  const [newPlatform, setNewPlatform] = useState({ name: '', description: '' });
+  const [newPlatform, setNewPlatform] = useState({ name: '', description: '', logo: '' });
   const router = useRouter();
 
   useEffect(() => {
@@ -154,13 +155,14 @@ export default function SuperAdmin() {
           name: newPlatform.name,
           code: code,
           description: newPlatform.description,
+          logo: newPlatform.logo || '',
         }),
       });
 
       if (response.ok) {
         await loadPlatforms();
         setShowCreateModal(false);
-        setNewPlatform({ name: '', description: '' });
+        setNewPlatform({ name: '', description: '', logo: '' });
         toast.success('Platform created successfully!');
       } else {
         toast.error('Failed to create platform');
@@ -1059,6 +1061,27 @@ export default function SuperAdmin() {
                     Code will be: {newPlatform.name.toLowerCase().replace(/\s+/g, '')}
                   </p>
                 )}
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Logo URL</label>
+                <input
+                  type="text"
+                  value={newPlatform.logo}
+                  onChange={(e) => setNewPlatform({ ...newPlatform, logo: e.target.value })}
+                  placeholder="https://example.com/logo.png or /images/logo.png"
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                  }}
+                />
+                <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                  Enter a URL or path to the platform logo image (e.g., /images/logo.png)
+                </p>
               </div>
 
               <div style={{ marginBottom: '1.5rem' }}>

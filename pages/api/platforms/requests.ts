@@ -92,6 +92,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           name: request.platformName,
           code: code,
           description: request.platformDescription || '',
+          logo: '',
           createdAt: new Date(),
         });
 
