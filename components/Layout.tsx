@@ -24,29 +24,29 @@ export default function Layout({ children }: LayoutProps) {
   const [platformLanguage, setPlatformLanguage] = useState<string>('ar');
 
   useEffect(() => {
-    // Get platform from session cookie (for admins) or URL parameter (for public pages)
+    // Get platform from URL parameter (prioritized) or session cookie (for admins)
     const loadPlatform = async () => {
       if (typeof window !== 'undefined') {
         let platformCode: string | null = null;
         
-        // First, try to get platform from session cookie (for authenticated admins)
-        try {
-          const authResponse = await fetch('/api/auth/check');
-          const authData = await authResponse.json();
-          
-          if (authData.adminPlatform) {
-            platformCode = authData.adminPlatform;
-          }
-        } catch (error) {
-          console.error('Error fetching auth check:', error);
+        // First, check URL parameter (takes priority)
+        const urlParams = new URLSearchParams(window.location.search);
+        const platformParam = urlParams.get('platform');
+        if (platformParam) {
+          platformCode = platformParam;
         }
         
-        // Fallback to URL parameter (for public pages)
+        // Fallback to session cookie (for authenticated admins) only if no URL param
         if (!platformCode) {
-          const urlParams = new URLSearchParams(window.location.search);
-          const platformParam = urlParams.get('platform');
-          if (platformParam) {
-            platformCode = platformParam;
+          try {
+            const authResponse = await fetch('/api/auth/check');
+            const authData = await authResponse.json();
+            
+            if (authData.adminPlatform) {
+              platformCode = authData.adminPlatform;
+            }
+          } catch (error) {
+            console.error('Error fetching auth check:', error);
           }
         }
 

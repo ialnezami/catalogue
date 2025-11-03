@@ -9,8 +9,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const db = client.db(process.env.DB_NAME || 'catalogue');
     const collection = db.collection('products');
 
-    // Get platform from request
-    const platform = getPlatformFromRequest(req);
+    // Get platform from request (public access)
+    let platform = getPlatformFromRequest(req);
 
     if (req.method === 'GET') {
       const products = await collection.find(withPlatformFilter(platform)).toArray();
@@ -21,6 +21,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const isLoggedIn = req.cookies.admin === 'true';
     if (!isLoggedIn) {
       return res.status(401).json({ message: 'Unauthorized - Admin access required' });
+    }
+
+    // For authenticated admins, validate platform access (enforce admin can only modify their own platform)
+    try {
+      const { validateAdminPlatformAccess } = await import('@/lib/platform');
+      platform = validateAdminPlatformAccess(req);
+    } catch (error) {
+      return res.status(403).json({ 
+        message: error instanceof Error ? error.message : 'Forbidden - Platform access denied' 
+      });
     }
 
     if (req.method === 'POST') {

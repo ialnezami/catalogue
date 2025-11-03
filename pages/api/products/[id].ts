@@ -10,7 +10,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const collection = db.collection('products');
 
     const { id } = req.query;
-    const platform = getPlatformFromRequest(req);
+    // Get platform from request (public access)
+    let platform = getPlatformFromRequest(req);
 
     if (req.method === 'GET') {
       const product = await collection.findOne(withPlatformFilter(platform, { _id: new ObjectId(id as string) }));
@@ -24,6 +25,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const isLoggedIn = req.cookies.admin === 'true';
     if (!isLoggedIn) {
       return res.status(401).json({ message: 'Unauthorized - Admin access required' });
+    }
+
+    // For authenticated admins, validate platform access (enforce admin can only modify their own platform)
+    try {
+      const { validateAdminPlatformAccess } = await import('@/lib/platform');
+      platform = validateAdminPlatformAccess(req);
+    } catch (error) {
+      return res.status(403).json({ 
+        message: error instanceof Error ? error.message : 'Forbidden - Platform access denied' 
+      });
+    }
+
+    // Verify the product belongs to the admin's platform
+    const product = await collection.findOne(withPlatformFilter(platform, { _id: new ObjectId(id as string) }));
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found or access denied' });
     }
 
     if (req.method === 'PUT') {
