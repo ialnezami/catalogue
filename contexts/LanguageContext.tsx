@@ -1,97 +1,17 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
+import '../lib/i18n'; // Initialize i18n
 
 type Language = 'ar' | 'en';
 
 interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
-  t: (key: string) => string;
+  t: (key: string, options?: any) => string;
   isLoading: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
-
-// Translations
-const translations = {
-  ar: {
-    // Navigation
-    products: 'المنتجات',
-    cart: 'السلة',
-    admin: 'مدير',
-    // Home page
-    loadingProducts: 'جاري تحميل المنتجات...',
-    discoverCollection: 'اكتشفي مجموعتنا',
-    elegantPieces: 'قطع أنيقة للمرأة العصرية',
-    searchPlaceholder: 'ابحث عن المنتجات...',
-    allCategories: 'الكل',
-    noProducts: 'لم يتم العثور على منتجات تطابق معايير البحث.',
-    addToCart: 'إضافة إلى السلة',
-    price: 'السعر',
-    // Cart page
-    shoppingCart: 'سلة التسوق',
-    emptyCart: 'السلة فارغة',
-    addProducts: 'أضف منتجات من الصفحة الرئيسية',
-    total: 'المجموع',
-    customerName: 'اسم العميل',
-    enterName: 'أدخل اسمك',
-    cancel: 'إلغاء',
-    copyToClipboard: 'نسخ إلى الحافظة',
-    shareWhatsApp: 'مشاركة عبر WhatsApp',
-    print: 'طباعة',
-    copied: 'تم النسخ!',
-    nameRequired: 'الرجاء إدخال اسم العميل',
-    // Product detail
-    backToProducts: 'العودة إلى المنتجات',
-    category: 'الفئة',
-    description: 'الوصف',
-    stock: 'المخزون',
-    inStock: 'متوفر',
-    outOfStock: 'غير متوفر',
-    shareProduct: 'مشاركة المنتج',
-    linkCopied: 'تم نسخ الرابط!',
-    // Language selector
-    selectLanguage: 'اختر اللغة',
-  },
-  en: {
-    // Navigation
-    products: 'Products',
-    cart: 'Cart',
-    admin: 'Admin',
-    // Home page
-    loadingProducts: 'Loading products...',
-    discoverCollection: 'Discover Our Collection',
-    elegantPieces: 'Elegant pieces for the modern woman',
-    searchPlaceholder: 'Search for products...',
-    allCategories: 'All',
-    noProducts: 'No products found matching your search criteria.',
-    addToCart: 'Add to Cart',
-    price: 'Price',
-    // Cart page
-    shoppingCart: 'Shopping Cart',
-    emptyCart: 'Your cart is empty',
-    addProducts: 'Add products from the main page',
-    total: 'Total',
-    customerName: 'Customer Name',
-    enterName: 'Enter your name',
-    cancel: 'Cancel',
-    copyToClipboard: 'Copy to Clipboard',
-    shareWhatsApp: 'Share via WhatsApp',
-    print: 'Print',
-    copied: 'Copied!',
-    nameRequired: 'Please enter customer name',
-    // Product detail
-    backToProducts: 'Back to Products',
-    category: 'Category',
-    description: 'Description',
-    stock: 'Stock',
-    inStock: 'In Stock',
-    outOfStock: 'Out of Stock',
-    shareProduct: 'Share Product',
-    linkCopied: 'Link copied!',
-    // Language selector
-    selectLanguage: 'Select Language',
-  },
-};
 
 interface LanguageProviderProps {
   children: ReactNode;
@@ -99,27 +19,31 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children, defaultLanguage = 'ar' }: LanguageProviderProps) {
+  const { i18n, ready } = useTranslation('common');
   const [language, setLanguageState] = useState<Language>(defaultLanguage);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load customer preference from localStorage
-    if (typeof window !== 'undefined') {
+    // Initialize i18n with default language
+    if (typeof window !== 'undefined' && ready) {
       const savedLanguage = localStorage.getItem('customerLanguage') as Language | null;
-      
-      // If customer has a preference, use it, otherwise use admin default
       const initialLanguage = savedLanguage || defaultLanguage;
+      
+      // Set i18n language
+      i18n.changeLanguage(initialLanguage);
       setLanguageState(initialLanguage);
       
       // Apply RTL direction to document
       document.documentElement.dir = initialLanguage === 'ar' ? 'rtl' : 'ltr';
       document.documentElement.lang = initialLanguage;
+      
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [defaultLanguage]);
+  }, [defaultLanguage, i18n, ready]);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
+    i18n.changeLanguage(lang);
     localStorage.setItem('customerLanguage', lang);
     
     // Apply RTL direction to document
@@ -137,12 +61,24 @@ export function LanguageProvider({ children, defaultLanguage = 'ar' }: LanguageP
     }
   }, [language]);
 
-  const t = (key: string): string => {
-    return translations[language][key as keyof typeof translations[typeof language]] || key;
-  };
+  // Sync i18n language with state
+  useEffect(() => {
+    if (i18n.language !== language && ready) {
+      i18n.changeLanguage(language);
+    }
+  }, [language, i18n, ready]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t, isLoading }}>
+    <LanguageContext.Provider value={{ 
+      language, 
+      setLanguage, 
+      t: (key: string, options?: any) => {
+        // Use i18next translation with namespace
+        const translation = i18n.t(key, { ns: 'common', ...options });
+        return translation !== key ? translation : key;
+      }, 
+      isLoading: isLoading || !ready 
+    }}>
       {children}
     </LanguageContext.Provider>
   );

@@ -194,7 +194,7 @@ export default function ProductCard({ product }: ProductCardProps) {
               }}
             >
               <ShoppingCart size={14} />
-              {t('addToCart')}
+              {t('home.addToCart')}
             </button>
           </div>
         </div>

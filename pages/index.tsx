@@ -20,6 +20,8 @@ export default function Home() {
   const router = useRouter();
   const [showNoPlatform, setShowNoPlatform] = useState(false);
 
+  const { setLanguage } = useLanguage();
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -36,6 +38,25 @@ export default function Home() {
         }
         
         setShowNoPlatform(false);
+        
+        // Load platform default language and set it if customer has no preference
+        try {
+          const settingsResponse = await fetch(`/api/settings?platform=${platform}`);
+          if (settingsResponse.ok) {
+            const settingsData = await settingsResponse.json();
+            const defaultLang = settingsData.language || 'ar';
+            
+            // Check if customer has a saved preference
+            const customerLang = typeof window !== 'undefined' ? localStorage.getItem('customerLanguage') : null;
+            if (!customerLang && typeof window !== 'undefined') {
+              // No customer preference, use platform default
+              setLanguage(defaultLang as 'ar' | 'en');
+              localStorage.setItem('customerLanguage', defaultLang);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading language settings:', error);
+        }
         
         // Load currency settings
         const settings = await getCurrencySettings();
@@ -62,7 +83,7 @@ export default function Home() {
     if (router.isReady) {
       loadData();
     }
-  }, [router.isReady, router.query.platform]);
+  }, [router.isReady, router.query.platform, setLanguage]);
 
   // Show landing page if no platform
   if (showNoPlatform) {
@@ -77,7 +98,7 @@ export default function Home() {
     return (
       <Layout>
         <div style={{ textAlign: 'center', padding: '4rem 2rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>{t('loadingProducts')}</p>
+          <p style={{ fontSize: '1.25rem', color: '#9ca3af' }}>{t('home.loadingProducts')}</p>
         </div>
       </Layout>
     );
@@ -94,14 +115,14 @@ export default function Home() {
           letterSpacing: '-0.03em',
           lineHeight: '1.2'
         }}>
-          {t('discoverCollection')}
+          {t('home.discoverCollection')}
         </h1>
         <p style={{ 
           fontSize: '1rem', 
           color: 'var(--text-secondary)',
           letterSpacing: '-0.01em'
         }}>
-          {t('elegantPieces')}
+          {t('home.elegantPieces')}
         </p>
       </div>
 
@@ -131,7 +152,7 @@ export default function Home() {
           direction: language === 'ar' ? 'rtl' : 'ltr'
         }}>
           <p style={{ fontSize: '1rem', color: 'var(--text-secondary)' }}>
-            {t('noProducts')}
+            {t('home.noProducts')}
           </p>
         </div>
       )}

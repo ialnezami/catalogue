@@ -23,13 +23,16 @@
     "cloudinary": "^2.8.0",
     "formidable": "^3.5.4",
     "html5-qrcode": "^2.3.8",
+    "i18next": "^25.6.0",
     "jsbarcode": "^3.12.1",
     "lucide-react": "^0.294.0",
     "mongodb": "^6.3.0",
     "next": "^14.0.0",
+    "next-i18next": "^15.4.2",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.6.0",
+    "react-i18next": "^16.2.3",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

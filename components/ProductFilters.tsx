@@ -68,7 +68,7 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
           <input
             className="input"
             type="text"
-            placeholder={t('searchPlaceholder')}
+            placeholder={t('home.searchPlaceholder')}
             onChange={(e) => handleSearch(e.target.value)}
             style={{
               padding: language === 'ar' ? '0.75rem 2.5rem 0.75rem 1rem' : '0.75rem 1rem 0.75rem 2.5rem',
@@ -89,7 +89,7 @@ export default function ProductFilters({ products, onFilter }: ProductFiltersPro
           >
             {categories.map((category) => (
               <option key={category} value={category}>
-                {category === 'all' ? t('allCategories') : category.charAt(0).toUpperCase() + category.slice(1)}
+                {category === 'all' ? t('home.allCategories') : category.charAt(0).toUpperCase() + category.slice(1)}
               </option>
             ))}
           </select>

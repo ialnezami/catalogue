@@ -70,10 +70,26 @@ export default function Layout({ children }: LayoutProps) {
                 const defaultLang = settingsData.language || platformData.language || 'ar';
                 setPlatformLanguage(defaultLang);
                 
-                // If customer hasn't set a preference, use platform default
+                // Always respect platform default if customer hasn't explicitly set a preference
+                const customerLang = localStorage.getItem('customerLanguage');
+                if (!customerLang) {
+                  // Set platform default language
+                  setLanguage(defaultLang as 'ar' | 'en');
+                  // Also update localStorage to persist this as customer preference
+                  localStorage.setItem('customerLanguage', defaultLang);
+                } else {
+                  // Customer has a preference, but update document direction
+                  document.documentElement.dir = customerLang === 'ar' ? 'rtl' : 'ltr';
+                  document.documentElement.lang = customerLang;
+                }
+              } else {
+                // If settings don't exist yet, use platform language directly
+                const defaultLang = platformData.language || 'ar';
+                setPlatformLanguage(defaultLang);
                 const customerLang = localStorage.getItem('customerLanguage');
                 if (!customerLang) {
                   setLanguage(defaultLang as 'ar' | 'en');
+                  localStorage.setItem('customerLanguage', defaultLang);
                 }
               }
             } else {
@@ -180,7 +196,7 @@ export default function Layout({ children }: LayoutProps) {
                 e.currentTarget.style.color = 'var(--text-secondary)';
               }}
             >
-              {t('products')}
+              {t('nav.products')}
             </Link>
             <Link href="/cart" className="cart-link" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <ShoppingBag size={22} style={{ color: 'var(--text-secondary)' }} />
@@ -362,7 +378,7 @@ export default function Layout({ children }: LayoutProps) {
                 e.currentTarget.style.color = 'var(--text-primary)';
               }}
             >
-              {t('admin')}
+              {t('nav.admin')}
             </Link>
           </nav>
         </div>

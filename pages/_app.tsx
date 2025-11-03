@@ -3,6 +3,7 @@ import { CartProvider } from '@/contexts/CartContext';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { Toaster } from 'react-hot-toast';
 import '@/styles/globals.css';
+import '../lib/i18n'; // Initialize i18n
 
 export default function App({ Component, pageProps }: AppProps) {
   return (

@@ -12,7 +12,7 @@ export default function AdminProducts() {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [platform, setPlatform] = useState<string | null>(null);
-  const { language, setLanguage, t: langT } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -91,155 +91,9 @@ export default function AdminProducts() {
     }
   };
 
-  // Admin translations
-  const adminT = {
-    ar: {
-      productsManagement: 'إدارة المنتجات',
-      manageCatalog: 'إدارة كتالوج المنتجات ({count} منتج)',
-      addProduct: 'إضافة منتج',
-      pos: 'نقاط البيع',
-      orders: 'الطلبات',
-      settings: 'الإعدادات',
-      logout: 'تسجيل الخروج',
-      totalProducts: 'إجمالي المنتجات',
-      inStock: 'متوفر',
-      outOfStock: 'غير متوفر',
-      totalValue: 'القيمة الإجمالية',
-      searchPlaceholder: 'البحث في المنتجات بالاسم، الفئة، الباركود...',
-      allCategories: 'جميع الفئات',
-      sortName: 'ترتيب: الاسم',
-      sortPrice: 'ترتيب: السعر',
-      sortCategory: 'ترتيب: الفئة',
-      sortStock: 'ترتيب: المخزون',
-      showing: 'عرض',
-      of: 'من',
-      products: 'منتج',
-      matching: 'مطابق لـ',
-      in: 'في',
-      clearFilters: 'مسح المرشحات',
-      noProductsFound: 'لم يتم العثور على منتجات',
-      noProductsYet: 'لا توجد منتجات بعد',
-      tryAdjusting: 'حاول تعديل معايير البحث أو التصفية',
-      getStarted: 'ابدأ بإضافة منتجك الأول',
-      addFirstProduct: 'أضف منتجك الأول',
-      category: 'الفئة',
-      price: 'السعر',
-      stock: 'المخزون',
-      units: 'وحدة',
-      edit: 'تعديل',
-      delete: 'حذف',
-      barcode: 'الباركود',
-      downloadTemplate: 'تنزيل القالب',
-      importCSV: 'استيراد CSV',
-      costPricePlaceholder: 'سعر التكلفة',
-      barcodePlaceholder: 'باركود المنتج',
-    },
-    en: {
-      productsManagement: 'Products Management',
-      manageCatalog: 'Manage your product catalog ({count} products)',
-      addProduct: 'Add Product',
-      pos: 'POS',
-      orders: 'Orders',
-      settings: 'Settings',
-      logout: 'Logout',
-      totalProducts: 'Total Products',
-      inStock: 'In Stock',
-      outOfStock: 'Out of Stock',
-      totalValue: 'Total Value',
-      searchPlaceholder: 'Search products by name, category, barcode...',
-      allCategories: 'All Categories',
-      sortName: 'Sort: Name',
-      sortPrice: 'Sort: Price',
-      sortCategory: 'Sort: Category',
-      sortStock: 'Sort: Stock',
-      showing: 'Showing',
-      of: 'of',
-      products: 'products',
-      matching: 'matching',
-      in: 'in',
-      clearFilters: 'Clear Filters',
-      noProductsFound: 'No products found',
-      noProductsYet: 'No products yet',
-      tryAdjusting: 'Try adjusting your search or filter criteria',
-      getStarted: 'Get started by adding your first product',
-      addFirstProduct: 'Add Your First Product',
-      category: 'Category',
-      price: 'Price',
-      stock: 'Stock',
-      units: 'units',
-      edit: 'Edit',
-      delete: 'Delete',
-      barcode: 'Barcode',
-      downloadTemplate: 'Download Template',
-      importCSV: 'Import CSV',
-      costPricePlaceholder: 'Cost price',
-      barcodePlaceholder: 'Product barcode',
-    },
-  };
-  
-  const t = adminT[language] || adminT.ar;
+  // Use i18n t function - translations are in JSON files
 
-  // Modal translations
-  const modalT = {
-    ar: {
-      editProduct: 'تعديل المنتج',
-      addNewProduct: 'إضافة منتج جديد',
-      title: 'العنوان',
-      category: 'الفئة',
-      description: 'الوصف',
-      sellingPrice: 'سعر البيع',
-      buyPrice: 'سعر الشراء (للمدير فقط)',
-      productImage: 'صورة المنتج',
-      uploadImage: 'رفع صورة إلى Cloudinary',
-      uploading: 'جاري الرفع...',
-      or: 'أو',
-      imageUrlPlaceholder: 'أدخل رابط الصورة (مثل: https://example.com/image.jpg أو /images/logo.png)',
-      imageUploadHint: '💡 ارفع صورة أو الصق رابط. رفع Cloudinary يحسن الصور تلقائياً.',
-      barcode: 'الباركود',
-      generate: 'إنشاء',
-      print: 'طباعة',
-      quantity: 'الكمية',
-      note: 'ملاحظة (للمدير فقط)',
-      notePlaceholder: 'ملاحظات خاصة حول هذا المنتج',
-      save: 'حفظ',
-      cancel: 'إلغاء',
-      costPricePlaceholder: 'سعر التكلفة',
-      barcodePlaceholder: 'باركود المنتج',
-      updateProduct: 'تحديث المنتج',
-      createProduct: 'إنشاء منتج',
-      stockQuantity: 'الكمية في المخزن',
-    },
-    en: {
-      editProduct: 'Edit Product',
-      addNewProduct: 'Add New Product',
-      title: 'Title',
-      category: 'Category',
-      description: 'Description',
-      sellingPrice: 'Selling Price',
-      buyPrice: 'Buy Price (Admin Only)',
-      productImage: 'Product Image',
-      uploadImage: 'Upload Image to Cloudinary',
-      uploading: 'Uploading...',
-      or: 'OR',
-      imageUrlPlaceholder: 'Enter image URL (e.g., https://example.com/image.jpg or /images/logo.png)',
-      imageUploadHint: '💡 Upload an image or paste a URL. Cloudinary upload automatically optimizes your images.',
-      barcode: 'Barcode',
-      generate: 'Generate',
-      print: 'Print',
-      quantity: 'Quantity',
-      note: 'Internal Notes (Admin Only)',
-      notePlaceholder: 'Private notes about this product',
-      save: 'Save',
-      cancel: 'Cancel',
-      costPricePlaceholder: 'Cost price',
-      barcodePlaceholder: 'Product barcode',
-      updateProduct: 'Update Product',
-      createProduct: 'Create Product',
-      stockQuantity: 'Stock quantity',
-    },
-  };
-  
-  const modalTranslations = modalT[language] || modalT.ar;
+  // Modal translations now use i18n - keys are in JSON files
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -815,7 +669,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             borderRadius: '50%',
             animation: 'spin 1s linear infinite'
           }} />
-          <p style={{ color: '#6b7280', fontSize: '1.125rem', fontWeight: '500' }}>Loading products...</p>
+          <p style={{ color: '#6b7280', fontSize: '1.125rem', fontWeight: '500' }}>{language === 'ar' ? 'جاري تحميل المنتجات...' : 'Loading products...'}</p>
         </div>
       </Layout>
     );
@@ -840,16 +694,18 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               fontWeight: '800', 
               letterSpacing: '-0.04em',
               marginBottom: '0.5rem',
-              lineHeight: '1.1'
+              lineHeight: '1.1',
+              direction: language === 'ar' ? 'rtl' : 'ltr'
             }}>
-              Products Management
+              {t('admin.productsManagement')}
             </h1>
             <p style={{ 
               color: '#6b7280', 
               fontSize: '1rem',
-              fontWeight: '400'
+              fontWeight: '400',
+              direction: language === 'ar' ? 'rtl' : 'ltr'
             }}>
-              Manage your product catalog ({stats.total} products)
+              {t('admin.manageCatalog', { count: stats.total })}
             </p>
           </div>
           
@@ -890,7 +746,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               }}
             >
               <Plus size={20} />
-              Add Product
+              {t('admin.addProduct')}
             </button>
             
             <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -920,7 +776,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 }}
               >
                 <ShoppingCart size={18} />
-                POS
+                {t('admin.pos')}
               </button>
               <button
                 onClick={() => router.push('/admin/orders')}
@@ -948,7 +804,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 }}
               >
                 <FileText size={18} />
-                Orders
+                {t('admin.orders')}
               </button>
               <button
                 onClick={() => router.push('/admin/settings')}
@@ -1024,7 +880,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>Total Products</div>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>{t('admin.totalProducts')}</div>
               <Package size={20} color="#3b82f6" />
             </div>
             <div style={{ fontSize: '2rem', fontWeight: '800', color: '#111827' }}>{stats.total}</div>
@@ -1038,7 +894,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>In Stock</div>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>{t('admin.inStock')}</div>
               <TrendingUp size={20} color="#10b981" />
             </div>
             <div style={{ fontSize: '2rem', fontWeight: '800', color: '#10b981' }}>{stats.inStock}</div>
@@ -1052,7 +908,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>Out of Stock</div>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>{t('admin.outOfStock')}</div>
               <Package size={20} color="#ef4444" />
             </div>
             <div style={{ fontSize: '2rem', fontWeight: '800', color: '#ef4444' }}>{stats.outOfStock}</div>
@@ -1066,7 +922,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>Total Value</div>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>{t('admin.totalValue')}</div>
               <DollarSign size={20} color="#f59e0b" />
             </div>
             <div style={{ fontSize: '2rem', fontWeight: '800', color: '#f59e0b' }}>
@@ -1102,7 +958,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search products by name, category, barcode..."
+                placeholder={t('admin.searchPlaceholder')}
                 style={{
                   width: '100%',
                   padding: '0.875rem 1rem 0.875rem 3rem',
@@ -1150,7 +1006,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   e.target.style.boxShadow = 'none';
                 }}
               >
-                <option value="all">All Categories</option>
+                <option value="all">{t('admin.allCategories')}</option>
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
@@ -1182,10 +1038,10 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 e.target.style.boxShadow = 'none';
               }}
             >
-              <option value="name">Sort: Name</option>
-              <option value="price">Sort: Price</option>
-              <option value="category">Sort: Category</option>
-              <option value="stock">Sort: Stock</option>
+              <option value="name">{t('admin.sortName')}</option>
+              <option value="price">{t('admin.sortPrice')}</option>
+              <option value="category">{t('admin.sortCategory')}</option>
+              <option value="stock">{t('admin.sortStock')}</option>
             </select>
 
             {/* Secondary Actions */}
@@ -1261,9 +1117,9 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               fontSize: '0.875rem',
               fontWeight: '500'
             }}>
-              Showing <strong style={{ color: '#111827' }}>{filteredProducts.length}</strong> of <strong style={{ color: '#111827' }}>{stats.total}</strong> products
-              {searchQuery && ` matching "${searchQuery}"`}
-              {selectedCategory !== 'all' && ` in "${selectedCategory}"`}
+              {t('admin.showing')} <strong style={{ color: '#111827' }}>{filteredProducts.length}</strong> {t('admin.of')} <strong style={{ color: '#111827' }}>{stats.total}</strong> {t('admin.products')}
+              {searchQuery && ` ${t('admin.matching')} "${searchQuery}"`}
+              {selectedCategory !== 'all' && ` ${t('admin.in')} "${selectedCategory}"`}
             </p>
             {(searchQuery || selectedCategory !== 'all') && (
               <button
@@ -1289,7 +1145,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   e.currentTarget.style.backgroundColor = 'transparent';
                 }}
               >
-                Clear Filters
+                {t('admin.clearFilters')}
               </button>
             )}
           </div>
@@ -1312,16 +1168,17 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             color: '#111827',
             marginBottom: '0.5rem'
           }}>
-            {searchQuery || selectedCategory !== 'all' ? 'No products found' : 'No products yet'}
+            {searchQuery || selectedCategory !== 'all' ? t('admin.noProductsFound') : t('admin.noProductsYet')}
           </h3>
           <p style={{ 
             color: '#6b7280', 
             fontSize: '1rem',
-            marginBottom: '2rem'
+            marginBottom: '2rem',
+            direction: language === 'ar' ? 'rtl' : 'ltr'
           }}>
             {searchQuery || selectedCategory !== 'all' 
-              ? 'Try adjusting your search or filter criteria'
-              : 'Get started by adding your first product'}
+              ? t('admin.tryAdjusting')
+              : t('admin.getStarted')}
           </p>
           {(!searchQuery && selectedCategory === 'all') && (
             <button
@@ -1357,7 +1214,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               }}
             >
               <Plus size={20} />
-              Add Your First Product
+              {t('admin.addFirstProduct')}
             </button>
           )}
         </div>
@@ -1594,41 +1451,41 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                       e.currentTarget.style.borderColor = '#e5e7eb';
                     }}
                   >
-                    <Edit2 size={18} />
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    style={{
-                      flex: 1,
-                      background: '#ffffff',
-                      color: '#ef4444',
-                      padding: '0.75rem 1rem',
-                      borderRadius: '12px',
-                      border: '1.5px solid #fee2e2',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '0.5rem',
-                      cursor: 'pointer',
-                      fontSize: '0.875rem',
-                      fontWeight: '600',
-                      transition: 'all 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = '#ef4444';
-                      e.currentTarget.style.color = '#ffffff';
-                      e.currentTarget.style.borderColor = '#ef4444';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = '#ffffff';
-                      e.currentTarget.style.color = '#ef4444';
-                      e.currentTarget.style.borderColor = '#fee2e2';
-                    }}
-                  >
-                    <Trash2 size={18} />
-                    Delete
-                  </button>
+                  <Edit2 size={18} />
+                  {t('admin.edit')}
+                </button>
+                <button
+                  onClick={() => handleDelete(product.id)}
+                  style={{
+                    flex: 1,
+                    background: '#ffffff',
+                    color: '#ef4444',
+                    padding: '0.75rem 1rem',
+                    borderRadius: '12px',
+                    border: '1.5px solid #fee2e2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#ef4444';
+                    e.currentTarget.style.color = '#ffffff';
+                    e.currentTarget.style.borderColor = '#ef4444';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.color = '#ef4444';
+                    e.currentTarget.style.borderColor = '#fee2e2';
+                  }}
+                >
+                  <Trash2 size={18} />
+                  {t('admin.delete')}
+                </button>
                 </div>
               </div>
             </div>
@@ -1668,7 +1525,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
               <h2 style={{ fontSize: '1.75rem', color: '#000000', fontWeight: '600', letterSpacing: '-0.02em', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                {getModalTitle()}
+                {editingProduct ? t('admin.editProduct') : t('admin.addNewProduct')}
               </h2>
               <button
                 onClick={() => {
@@ -1690,7 +1547,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.title}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.title')}</label>
                 <input
                   className="input"
                   type="text"
@@ -1701,7 +1558,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.category}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.category')}</label>
                 <input
                   className="input"
                   type="text"
@@ -1713,7 +1570,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.description}</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.description')}</label>
               <textarea
                 className="input"
                 value={formData.description}
@@ -1725,7 +1582,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.sellingPrice}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.sellingPrice')}</label>
                 <input
                   className="input"
                   type="number"
@@ -1737,21 +1594,21 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.buyPrice}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.buyPrice')}</label>
                 <input
                   className="input"
                   type="number"
                   step="0.01"
                   value={formData.buyPrice}
                   onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
-                  placeholder={modalTranslations.costPricePlaceholder}
+                  placeholder={t('admin.costPricePlaceholder')}
                   style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
               <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                {modalTranslations.productImage}
+                {t('admin.productImage')}
               </label>
               
               {/* Image Preview */}
@@ -1812,12 +1669,12 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite'
                       }} />
-                      {modalTranslations.uploading}
+                      {t('admin.uploading')}
                     </>
                   ) : (
                     <>
                       <Upload size={16} />
-                      {modalTranslations.uploadImage}
+                      {t('admin.uploadImage')}
                     </>
                   )}
                 </button>
@@ -1826,7 +1683,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               {/* Or Divider */}
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
                 <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
-                <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>{modalTranslations.or}</span>
+                <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>{t('admin.or')}</span>
                 <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
               </div>
 
@@ -1839,16 +1696,16 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   setFormData({ ...formData, image: e.target.value });
                   setImagePreview(e.target.value || null);
                 }}
-                placeholder={modalTranslations.imageUrlPlaceholder}
+                placeholder={t('admin.imageUrlPlaceholder')}
                 required
                 style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
               />
               <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                {modalTranslations.imageUploadHint}
+                {t('admin.imageUploadHint')}
               </p>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.barcode}</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.barcode')}</label>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <input
@@ -1856,7 +1713,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                     type="text"
                     value={formData.barcode}
                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    placeholder={modalTranslations.barcodePlaceholder}
+                    placeholder={t('admin.barcodePlaceholder')}
                     readOnly
                     style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                   />
@@ -1888,7 +1745,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   }}
                 >
                   <Barcode size={16} style={{ display: 'inline', marginRight: language === 'ar' ? '0' : '0.5rem', marginLeft: language === 'ar' ? '0.5rem' : '0' }} />
-                  {modalTranslations.generate}
+                  {t('admin.generate')}
                 </button>
                 {generatedBarcode && formData.barcode && (
                   <button
@@ -1916,7 +1773,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                     }}
                   >
                     <Printer size={16} style={{ display: 'inline', marginRight: language === 'ar' ? '0' : '0.5rem', marginLeft: language === 'ar' ? '0.5rem' : '0' }} />
-                    {modalTranslations.print}
+                    {t('admin.print')}
                   </button>
                 )}
               </div>
@@ -1928,25 +1785,25 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.quantity}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.quantity')}</label>
                 <input
                   className="input"
                   type="number"
                   value={formData.qty}
                   onChange={(e) => setFormData({ ...formData, qty: e.target.value })}
-                  placeholder={language === 'ar' ? 'الكمية في المخزن' : 'Stock quantity'}
+                  placeholder={t('admin.stockQuantity')}
                   style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.note}</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('admin.note')}</label>
               <textarea
                 className="input"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                 rows={3}
-                placeholder={modalTranslations.notePlaceholder}
+                placeholder={t('admin.notePlaceholder')}
                 style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
               />
             </div>
@@ -1981,7 +1838,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   e.currentTarget.style.color = '#000000';
                 }}
               >
-                {modalTranslations.cancel}
+                {t('cart.cancel')}
               </button>
               <button
                 type="submit"
@@ -1991,7 +1848,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   direction: language === 'ar' ? 'rtl' : 'ltr',
                 }}
               >
-                {editingProduct ? (language === 'ar' ? 'تحديث المنتج' : 'Update Product') : (language === 'ar' ? 'إنشاء منتج' : 'Create Product')}
+                {editingProduct ? t('admin.updateProduct') : t('admin.createProduct')}
               </button>
             </div>
           </form>
