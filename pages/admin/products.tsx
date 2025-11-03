@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
-import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X, Settings, Barcode, Printer } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X, Settings, Barcode, Printer, Search, Filter, Package, TrendingUp, DollarSign } from 'lucide-react';
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
 import JsBarcode from 'jsbarcode';
@@ -36,6 +36,10 @@ export default function AdminProducts() {
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'category' | 'stock'>('name');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const barcodeCanvasRef = useRef<HTMLCanvasElement>(null);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
   const imageFileInputRef = useRef<HTMLInputElement>(null);
@@ -285,6 +289,58 @@ export default function AdminProducts() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Filter and sort products
+  const getFilteredAndSortedProducts = () => {
+    let filtered = [...products];
+
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (product) =>
+          product.title.toLowerCase().includes(query) ||
+          product.description?.toLowerCase().includes(query) ||
+          product.category.toLowerCase().includes(query) ||
+          product.barcode?.toLowerCase().includes(query)
+      );
+    }
+
+    // Category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter((product) => product.category === selectedCategory);
+    }
+
+    // Sort
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.title.localeCompare(b.title);
+        case 'price':
+          return a.price - b.price;
+        case 'category':
+          return a.category.localeCompare(b.category);
+        case 'stock':
+          return (b.qty || 0) - (a.qty || 0);
+        default:
+          return 0;
+      }
+    });
+
+    return filtered;
+  };
+
+  const filteredProducts = getFilteredAndSortedProducts();
+  const categories = Array.from(new Set(products.map((p) => p.category)));
+
+  // Calculate statistics
+  const stats = {
+    total: products.length,
+    inStock: products.filter((p) => (p.qty || 0) > 0).length,
+    outOfStock: products.filter((p) => (p.qty || 0) === 0).length,
+    totalValue: products.reduce((sum, p) => sum + (p.price * (p.qty || 0)), 0),
+    avgPrice: products.length > 0 ? products.reduce((sum, p) => sum + p.price, 0) / products.length : 0,
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -652,8 +708,23 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
   if (loading) {
     return (
       <Layout>
-        <div style={{ textAlign: 'center', padding: '4rem' }}>
-          <p style={{ color: '#9ca3af' }}>Loading products...</p>
+        <div style={{ 
+          textAlign: 'center', 
+          padding: '6rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '1.5rem'
+        }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            border: '4px solid #f3f4f6',
+            borderTop: '4px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{ color: '#6b7280', fontSize: '1.125rem', fontWeight: '500' }}>Loading products...</p>
         </div>
       </Layout>
     );
@@ -661,160 +732,818 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
   return (
     <Layout>
-      <div className="admin-header" style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        marginBottom: '2rem',
-        flexWrap: 'wrap',
-        gap: '1rem'
-      }}>
-        <h1 style={{ fontSize: '2.5rem', color: '#000000', fontWeight: '700', letterSpacing: '-0.03em' }}>Products Management</h1>
-        <div style={{ display: 'flex', gap: '1rem' }}>
-          <button
-            onClick={() => router.push('/pos')}
-            style={{
-              backgroundColor: '#3b82f6',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
+      {/* Improved Header Section */}
+      <div style={{ marginBottom: '2.5rem' }}>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'flex-start', 
+          marginBottom: '2rem',
+          flexWrap: 'wrap',
+          gap: '1.5rem'
+        }}>
+          <div>
+            <h1 style={{ 
+              fontSize: '2.75rem', 
+              color: '#111827', 
+              fontWeight: '800', 
+              letterSpacing: '-0.04em',
+              marginBottom: '0.5rem',
+              lineHeight: '1.1'
+            }}>
+              Products Management
+            </h1>
+            <p style={{ 
+              color: '#6b7280', 
               fontSize: '1rem',
-            }}
-          >
-            <ShoppingCart size={20} />
-            POS
-          </button>
-          <button
-            onClick={() => router.push('/admin/orders')}
-            style={{
-              backgroundColor: '#10b981',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            <FileText size={20} />
-            Orders
-          </button>
-          <button
-            onClick={() => router.push('/admin/settings')}
-            style={{
-              backgroundColor: '#8b5cf6',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            <Settings size={20} />
-            Settings
-          </button>
-          <button
-            onClick={downloadTemplate}
-            style={{
-              backgroundColor: '#f59e0b',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            <Download size={20} />
-            Download Template
-          </button>
-          <button
-            onClick={() => setShowImportModal(true)}
-            style={{
-              backgroundColor: '#8b5cf6',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            <Upload size={20} />
-            Import CSV
-          </button>
-          <button
+              fontWeight: '400'
+            }}>
+              Manage your product catalog ({stats.total} products)
+            </p>
+          </div>
+          
+          {/* Action Buttons - Reorganized */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <button
               onClick={() => {
-      setEditingProduct(null);
-      setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
-      setImagePreview(null);
-      setGeneratedBarcode('');
-      generateBarcode();
-      setShowEditModal(true);
-            }}
-            style={{
-              backgroundColor: '#ec4899',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              fontSize: '1rem',
-            }}
-          >
-            <Plus size={20} />
-            Add Product
-          </button>
-          <button
-            onClick={handleLogout}
-            style={{
-              backgroundColor: '#ef4444',
-              color: '#ffffff',
-              padding: '0.75rem 1.5rem',
-              borderRadius: '8px',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#dc2626';
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#ef4444';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <LogOut size={20} />
-            Logout
-          </button>
+                setEditingProduct(null);
+                setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+                setImagePreview(null);
+                setGeneratedBarcode('');
+                setShowEditModal(true);
+              }}
+              style={{
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                padding: '0.875rem 1.75rem',
+                borderRadius: '12px',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.9375rem',
+                fontWeight: '600',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#3b82f6';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.3)';
+              }}
+            >
+              <Plus size={20} />
+              Add Product
+            </button>
+            
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={() => router.push('/pos')}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#3b82f6',
+                  padding: '0.875rem 1.25rem',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#3b82f6';
+                  e.currentTarget.style.backgroundColor = '#eff6ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                }}
+              >
+                <ShoppingCart size={18} />
+                POS
+              </button>
+              <button
+                onClick={() => router.push('/admin/orders')}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#10b981',
+                  padding: '0.875rem 1.25rem',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#10b981';
+                  e.currentTarget.style.backgroundColor = '#f0fdf4';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                }}
+              >
+                <FileText size={18} />
+                Orders
+              </button>
+              <button
+                onClick={() => router.push('/admin/settings')}
+                style={{
+                  backgroundColor: '#ffffff',
+                  color: '#8b5cf6',
+                  padding: '0.875rem 1.25rem',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.9375rem',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = '#8b5cf6';
+                  e.currentTarget.style.backgroundColor = '#faf5ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                  e.currentTarget.style.backgroundColor = '#ffffff';
+                }}
+              >
+                <Settings size={18} />
+              </button>
+            </div>
+            
+            <button
+              onClick={handleLogout}
+              style={{
+                backgroundColor: '#ffffff',
+                color: '#ef4444',
+                padding: '0.875rem 1.25rem',
+                borderRadius: '12px',
+                border: '1.5px solid #fee2e2',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '0.9375rem',
+                fontWeight: '600',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#fee2e2';
+                e.currentTarget.style.borderColor = '#ef4444';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.borderColor = '#fee2e2';
+              }}
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '1rem',
+          marginBottom: '2rem'
+        }}>
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '16px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>Total Products</div>
+              <Package size={20} color="#3b82f6" />
+            </div>
+            <div style={{ fontSize: '2rem', fontWeight: '800', color: '#111827' }}>{stats.total}</div>
+          </div>
+          
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '16px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>In Stock</div>
+              <TrendingUp size={20} color="#10b981" />
+            </div>
+            <div style={{ fontSize: '2rem', fontWeight: '800', color: '#10b981' }}>{stats.inStock}</div>
+          </div>
+          
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '16px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>Out of Stock</div>
+              <Package size={20} color="#ef4444" />
+            </div>
+            <div style={{ fontSize: '2rem', fontWeight: '800', color: '#ef4444' }}>{stats.outOfStock}</div>
+          </div>
+          
+          <div style={{
+            backgroundColor: '#ffffff',
+            padding: '1.5rem',
+            borderRadius: '16px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+              <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>Total Value</div>
+              <DollarSign size={20} color="#f59e0b" />
+            </div>
+            <div style={{ fontSize: '2rem', fontWeight: '800', color: '#f59e0b' }}>
+              ${stats.totalValue.toFixed(2)}
+            </div>
+          </div>
+        </div>
+
+        {/* Search and Filter Bar */}
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '1.5rem',
+          borderRadius: '16px',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Search Input */}
+            <div style={{ flex: '1', minWidth: '280px', position: 'relative' }}>
+              <Search 
+                size={20} 
+                style={{ 
+                  position: 'absolute',
+                  left: '1rem',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: '#9ca3af',
+                  pointerEvents: 'none'
+                }} 
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search products by name, category, barcode..."
+                style={{
+                  width: '100%',
+                  padding: '0.875rem 1rem 0.875rem 3rem',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e5e7eb',
+                  fontSize: '0.9375rem',
+                  color: '#111827',
+                  transition: 'all 0.2s ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.boxShadow = 'none';
+                }}
+              />
+            </div>
+
+            {/* Category Filter */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <Filter size={18} color="#6b7280" />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                style={{
+                  padding: '0.875rem 1.25rem',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e5e7eb',
+                  backgroundColor: '#ffffff',
+                  fontSize: '0.9375rem',
+                  color: '#111827',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  minWidth: '150px',
+                  transition: 'all 0.2s ease',
+                }}
+                onFocus={(e) => {
+                  e.target.style.borderColor = '#3b82f6';
+                  e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+                }}
+                onBlur={(e) => {
+                  e.target.style.borderColor = '#e5e7eb';
+                  e.target.style.boxShadow = 'none';
+                }}
+              >
+                <option value="all">All Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Sort */}
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+              style={{
+                padding: '0.875rem 1.25rem',
+                borderRadius: '12px',
+                border: '1.5px solid #e5e7eb',
+                backgroundColor: '#ffffff',
+                fontSize: '0.9375rem',
+                color: '#111827',
+                fontWeight: '500',
+                cursor: 'pointer',
+                minWidth: '140px',
+                transition: 'all 0.2s ease',
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = '#3b82f6';
+                e.target.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = '#e5e7eb';
+                e.target.style.boxShadow = 'none';
+              }}
+            >
+              <option value="name">Sort: Name</option>
+              <option value="price">Sort: Price</option>
+              <option value="category">Sort: Category</option>
+              <option value="stock">Sort: Stock</option>
+            </select>
+
+            {/* Secondary Actions */}
+            <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
+              <button
+                onClick={downloadTemplate}
+                style={{
+                  padding: '0.875rem 1rem',
+                  backgroundColor: '#f9fafb',
+                  color: '#6b7280',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f3f4f6';
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f9fafb';
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                }}
+              >
+                <Download size={16} />
+              </button>
+              <button
+                onClick={() => setShowImportModal(true)}
+                style={{
+                  padding: '0.875rem 1rem',
+                  backgroundColor: '#f9fafb',
+                  color: '#6b7280',
+                  borderRadius: '12px',
+                  border: '1.5px solid #e5e7eb',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f3f4f6';
+                  e.currentTarget.style.borderColor = '#d1d5db';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#f9fafb';
+                  e.currentTarget.style.borderColor = '#e5e7eb';
+                }}
+              >
+                <Upload size={16} />
+              </button>
+            </div>
+          </div>
+
+          {/* Results Count */}
+          <div style={{ 
+            marginTop: '1rem', 
+            paddingTop: '1rem',
+            borderTop: '1px solid #e5e7eb',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <p style={{ 
+              color: '#6b7280', 
+              fontSize: '0.875rem',
+              fontWeight: '500'
+            }}>
+              Showing <strong style={{ color: '#111827' }}>{filteredProducts.length}</strong> of <strong style={{ color: '#111827' }}>{stats.total}</strong> products
+              {searchQuery && ` matching "${searchQuery}"`}
+              {selectedCategory !== 'all' && ` in "${selectedCategory}"`}
+            </p>
+            {(searchQuery || selectedCategory !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'transparent',
+                  color: '#3b82f6',
+                  borderRadius: '8px',
+                  border: '1px solid #3b82f6',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#eff6ff';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                }}
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Products Grid */}
+      {filteredProducts.length === 0 ? (
+        <div style={{
+          backgroundColor: '#ffffff',
+          padding: '4rem 2rem',
+          borderRadius: '16px',
+          border: '1px solid #e5e7eb',
+          textAlign: 'center'
+        }}>
+          <Package size={64} color="#d1d5db" style={{ margin: '0 auto 1.5rem' }} />
+          <h3 style={{ 
+            fontSize: '1.5rem', 
+            fontWeight: '700', 
+            color: '#111827',
+            marginBottom: '0.5rem'
+          }}>
+            {searchQuery || selectedCategory !== 'all' ? 'No products found' : 'No products yet'}
+          </h3>
+          <p style={{ 
+            color: '#6b7280', 
+            fontSize: '1rem',
+            marginBottom: '2rem'
+          }}>
+            {searchQuery || selectedCategory !== 'all' 
+              ? 'Try adjusting your search or filter criteria'
+              : 'Get started by adding your first product'}
+          </p>
+          {(!searchQuery && selectedCategory === 'all') && (
+            <button
+              onClick={() => {
+                setEditingProduct(null);
+                setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+                setImagePreview(null);
+                setGeneratedBarcode('');
+                setShowEditModal(true);
+              }}
+              style={{
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                padding: '0.875rem 2rem',
+                borderRadius: '12px',
+                border: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+                fontSize: '1rem',
+                fontWeight: '600',
+                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#2563eb';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = '#3b82f6';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }}
+            >
+              <Plus size={20} />
+              Add Your First Product
+            </button>
+          )}
+        </div>
+      ) : (
+        <div 
+          className="responsive-grid"
+          style={{ 
+            display: 'grid', 
+            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(300px, 1fr))' : '1fr',
+            gap: '1.5rem' 
+          }}
+        >
+          {filteredProducts.map((product) => (
+            <div
+              key={product.id}
+              className="product-card"
+              style={{
+                backgroundColor: '#ffffff',
+                border: '1px solid #e5e7eb',
+                borderRadius: '16px',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+                overflow: 'hidden',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                display: 'flex',
+                flexDirection: 'column',
+                position: 'relative',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.boxShadow = '0 12px 24px rgba(0, 0, 0, 0.12)';
+                e.currentTarget.style.transform = 'translateY(-4px)';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = '#e5e7eb';
+              }}
+            >
+              {/* Stock Badge */}
+              {(product.qty || 0) === 0 && (
+                <div style={{
+                  position: 'absolute',
+                  top: '1rem',
+                  right: '1rem',
+                  backgroundColor: '#ef4444',
+                  color: '#ffffff',
+                  padding: '0.375rem 0.75rem',
+                  borderRadius: '8px',
+                  fontSize: '0.75rem',
+                  fontWeight: '700',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  zIndex: 10,
+                  boxShadow: '0 2px 8px rgba(239, 68, 68, 0.3)',
+                }}>
+                  Out of Stock
+                </div>
+              )}
+              
+              <div style={{ 
+                width: '100%', 
+                aspectRatio: '1', 
+                backgroundColor: '#fafafa',
+                overflow: 'hidden',
+                position: 'relative',
+                background: `linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)`
+              }}>
+                <img
+                  src={product.image.startsWith('http') ? product.image : `/images/${product.image}`}
+                  alt={product.title}
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover',
+                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.08)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }}
+                />
+              </div>
+              <div style={{ 
+                padding: '1.5rem',
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                backgroundColor: '#ffffff'
+              }}>
+                <div style={{ 
+                  color: '#8b5cf6', 
+                  fontSize: '0.75rem', 
+                  fontWeight: '700', 
+                  textTransform: 'uppercase', 
+                  marginBottom: '0.75rem', 
+                  letterSpacing: '0.1em',
+                  backgroundColor: '#faf5ff',
+                  padding: '0.375rem 0.75rem',
+                  borderRadius: '8px',
+                  display: 'inline-block',
+                  width: 'fit-content'
+                }}>
+                  {product.category}
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.125rem', 
+                  fontWeight: '600', 
+                  marginBottom: '0.5rem', 
+                  color: '#111827', 
+                  lineHeight: '1.4',
+                  letterSpacing: '-0.02em',
+                  minHeight: '3rem',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden'
+                }}>
+                  {product.title}
+                </h3>
+                <div style={{ 
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: '0.5rem'
+                }}>
+                  <p style={{ 
+                    fontSize: '1.5rem', 
+                    fontWeight: '800', 
+                    color: '#111827', 
+                    letterSpacing: '-0.03em',
+                    margin: 0
+                  }}>
+                    ${product.price.toFixed(2)}
+                  </p>
+                  {product.buyPrice && (
+                    <span style={{
+                      fontSize: '0.875rem',
+                      color: '#10b981',
+                      fontWeight: '600'
+                    }}>
+                      (${(product.price - product.buyPrice).toFixed(2)} profit)
+                    </span>
+                  )}
+                </div>
+                
+                {/* Admin Info Section - Improved */}
+                <div style={{ 
+                  marginTop: 'auto',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid #e5e7eb',
+                  fontSize: '0.8125rem',
+                  color: '#6b7280',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.5rem'
+                }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    {product.barcode && (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        gap: '0.25rem'
+                      }}>
+                        <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Barcode</span>
+                        <strong style={{ color: '#111827', fontSize: '0.875rem' }}>{product.barcode}</strong>
+                      </div>
+                    )}
+                    {product.qty !== undefined && (
+                      <div style={{ 
+                        display: 'flex', 
+                        flexDirection: 'column',
+                        gap: '0.25rem'
+                      }}>
+                        <span style={{ fontSize: '0.75rem', color: '#9ca3af' }}>Stock</span>
+                        <strong style={{ 
+                          color: product.qty > 0 ? '#10b981' : '#ef4444',
+                          fontSize: '0.875rem'
+                        }}>
+                          {product.qty > 0 ? `${product.qty} units` : 'Out of Stock'}
+                        </strong>
+                      </div>
+                    )}
+                  </div>
+                  {product.note && (
+                    <div style={{ 
+                      marginTop: '0.25rem',
+                      padding: '0.75rem',
+                      backgroundColor: '#f9fafb',
+                      borderRadius: '8px',
+                      fontSize: '0.8125rem',
+                      fontStyle: 'italic',
+                      color: '#6b7280',
+                      borderLeft: '3px solid #8b5cf6'
+                    }}>
+                      {product.note}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Action Buttons - Improved */}
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '0.75rem',
+                  marginTop: '1.25rem'
+                }}>
+                  <button
+                    onClick={() => handleEdit(product)}
+                    style={{
+                      flex: 1,
+                      background: '#ffffff',
+                      color: '#111827',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '12px',
+                      border: '1.5px solid #e5e7eb',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#111827';
+                      e.currentTarget.style.color = '#ffffff';
+                      e.currentTarget.style.borderColor = '#111827';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.color = '#111827';
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                    }}
+                  >
+                    <Edit2 size={18} />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    style={{
+                      flex: 1,
+                      background: '#ffffff',
+                      color: '#ef4444',
+                      padding: '0.75rem 1rem',
+                      borderRadius: '12px',
+                      border: '1.5px solid #fee2e2',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#ef4444';
+                      e.currentTarget.style.color = '#ffffff';
+                      e.currentTarget.style.borderColor = '#ef4444';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.color = '#ef4444';
+                      e.currentTarget.style.borderColor = '#fee2e2';
+                    }}
+                  >
+                    <Trash2 size={18} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Edit Product Modal */}
       {showEditModal && (
@@ -1178,218 +1907,6 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
           </div>
         </div>
       )}
-
-      <div 
-        className="responsive-grid"
-        style={{ 
-          display: 'grid', 
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-          gap: '1.5rem' 
-        }}
-      >
-        {products.map((product) => (
-          <div
-            key={product.id}
-            className="product-card"
-            style={{
-              backgroundColor: '#ffffff',
-              border: 'none',
-              borderRadius: '0',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
-              overflow: 'hidden',
-              transition: 'all 0.3s ease',
-              display: 'flex',
-              flexDirection: 'column',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
-              e.currentTarget.style.transform = 'translateY(-2px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.05)';
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
-          >
-            <div style={{ 
-              width: '100%', 
-              aspectRatio: '1', 
-              backgroundColor: '#fafafa',
-              overflow: 'hidden',
-              position: 'relative'
-            }}>
-              <img
-                src={product.image.startsWith('http') ? product.image : `/images/${product.image}`}
-                alt={product.title}
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: 'cover',
-                  transition: 'transform 0.3s ease'
-                }}
-              />
-            </div>
-            <div style={{ 
-              padding: '1.5rem 1.25rem',
-              flexGrow: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              backgroundColor: '#ffffff'
-            }}>
-              <div style={{ 
-                color: 'var(--text-tertiary)', 
-                fontSize: '0.6875rem', 
-                fontWeight: '700', 
-                textTransform: 'uppercase', 
-                marginBottom: '0.75rem', 
-                letterSpacing: '0.1em' 
-              }}>
-                {product.category}
-              </div>
-              <h3 style={{ 
-                fontSize: '1rem', 
-                fontWeight: '400', 
-                marginBottom: '0.5rem', 
-                color: '#000000', 
-                lineHeight: '1.5',
-                letterSpacing: '-0.01em' 
-              }}>
-                {product.title}
-              </h3>
-              <div style={{ marginBottom: '1rem' }}>
-                <p style={{ 
-                  fontSize: '1.125rem', 
-                  fontWeight: '600', 
-                  color: '#000000', 
-                  letterSpacing: '-0.03em',
-                  margin: 0
-                }}>
-                  ${product.price}
-                </p>
-              </div>
-              
-              {/* Admin Info Section */}
-              <div style={{ 
-                marginTop: 'auto',
-                paddingTop: '1rem',
-                borderTop: '1px solid rgba(0, 0, 0, 0.08)',
-                fontSize: '0.75rem',
-                color: 'var(--text-secondary)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '0.375rem'
-              }}>
-                {product.barcode && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Barcode:</span>
-                    <strong>{product.barcode}</strong>
-                  </div>
-                )}
-                {product.buyPrice && (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', color: '#10b981' }}>
-                    <span>Profit:</span>
-                    <strong>${(product.price - product.buyPrice).toFixed(2)}</strong>
-                  </div>
-                )}
-                {product.qty !== undefined && (
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between',
-                    color: product.qty > 0 ? '#10b981' : '#ef4444',
-                    fontWeight: 'bold'
-                  }}>
-                    <span>Stock:</span>
-                    <strong>{product.qty > 0 ? `${product.qty}` : 'Out of Stock'}</strong>
-                  </div>
-                )}
-                {product.note && (
-                  <div style={{ 
-                    marginTop: '0.5rem',
-                    padding: '0.5rem',
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '4px',
-                    fontSize: '0.7rem',
-                    fontStyle: 'italic',
-                    color: '#666666'
-                  }}>
-                    📝 {product.note}
-                  </div>
-                )}
-              </div>
-              
-              <div style={{ 
-                display: 'flex', 
-                gap: '0.5rem',
-                marginTop: '1rem'
-              }}>
-                <button
-                  onClick={() => handleEdit(product)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    color: '#000000',
-                    padding: '0.625rem 1rem',
-                    borderRadius: '0',
-                    border: '1px solid #000000',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    cursor: 'pointer',
-                    fontSize: '0.8125rem',
-                    fontWeight: '600',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#000000';
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#000000';
-                  }}
-                >
-                  <Edit2 size={16} />
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(product.id)}
-                  style={{
-                    flex: 1,
-                    background: 'transparent',
-                    color: '#ef4444',
-                    padding: '0.625rem 1rem',
-                    borderRadius: '0',
-                    border: '1px solid #ef4444',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem',
-                    cursor: 'pointer',
-                    fontSize: '0.8125rem',
-                    fontWeight: '600',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#ef4444';
-                    e.currentTarget.style.color = '#ffffff';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = '#ef4444';
-                  }}
-                >
-                  <Trash2 size={16} />
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
 
       {/* Import CSV Modal */}
       {showImportModal && (
