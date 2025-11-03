@@ -104,11 +104,17 @@ export function LanguageProvider({ children, defaultLanguage = 'ar' }: LanguageP
 
   useEffect(() => {
     // Load customer preference from localStorage
-    const savedLanguage = localStorage.getItem('customerLanguage') as Language | null;
-    
-    // If customer has a preference, use it, otherwise use admin default
-    const initialLanguage = savedLanguage || defaultLanguage;
-    setLanguageState(initialLanguage);
+    if (typeof window !== 'undefined') {
+      const savedLanguage = localStorage.getItem('customerLanguage') as Language | null;
+      
+      // If customer has a preference, use it, otherwise use admin default
+      const initialLanguage = savedLanguage || defaultLanguage;
+      setLanguageState(initialLanguage);
+      
+      // Apply RTL direction to document
+      document.documentElement.dir = initialLanguage === 'ar' ? 'rtl' : 'ltr';
+      document.documentElement.lang = initialLanguage;
+    }
     setIsLoading(false);
   }, [defaultLanguage]);
 
