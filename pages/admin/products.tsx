@@ -1,17 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
-import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X, Settings, Barcode, Printer, Search, Filter, Package, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, ShoppingCart, FileText, Download, Upload, X, Settings, Barcode, Printer, Search, Filter, Package, TrendingUp, DollarSign, Globe } from 'lucide-react';
 import { Product } from '@/types';
 import { useRouter } from 'next/router';
 import JsBarcode from 'jsbarcode';
 import toast from 'react-hot-toast';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function AdminProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [platform, setPlatform] = useState<string | null>(null);
-  const [language, setLanguage] = useState<string>('ar');
+  const { language, setLanguage, t: langT } = useLanguage();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -82,7 +83,7 @@ export default function AdminProducts() {
     try {
       const response = await fetch('/api/settings');
       const data = await response.json();
-      if (data.language) {
+      if (data.language && data.language !== language) {
         setLanguage(data.language);
       }
     } catch (error) {
@@ -90,16 +91,99 @@ export default function AdminProducts() {
     }
   };
 
-  // Translations object
-  const getModalTitle = () => {
-    if (language === 'ar') {
-      return editingProduct ? 'تعديل المنتج' : 'إضافة منتج جديد';
-    }
-    return editingProduct ? 'Edit Product' : 'Add New Product';
-  };
-
-  const t = {
+  // Admin translations
+  const adminT = {
     ar: {
+      productsManagement: 'إدارة المنتجات',
+      manageCatalog: 'إدارة كتالوج المنتجات ({count} منتج)',
+      addProduct: 'إضافة منتج',
+      pos: 'نقاط البيع',
+      orders: 'الطلبات',
+      settings: 'الإعدادات',
+      logout: 'تسجيل الخروج',
+      totalProducts: 'إجمالي المنتجات',
+      inStock: 'متوفر',
+      outOfStock: 'غير متوفر',
+      totalValue: 'القيمة الإجمالية',
+      searchPlaceholder: 'البحث في المنتجات بالاسم، الفئة، الباركود...',
+      allCategories: 'جميع الفئات',
+      sortName: 'ترتيب: الاسم',
+      sortPrice: 'ترتيب: السعر',
+      sortCategory: 'ترتيب: الفئة',
+      sortStock: 'ترتيب: المخزون',
+      showing: 'عرض',
+      of: 'من',
+      products: 'منتج',
+      matching: 'مطابق لـ',
+      in: 'في',
+      clearFilters: 'مسح المرشحات',
+      noProductsFound: 'لم يتم العثور على منتجات',
+      noProductsYet: 'لا توجد منتجات بعد',
+      tryAdjusting: 'حاول تعديل معايير البحث أو التصفية',
+      getStarted: 'ابدأ بإضافة منتجك الأول',
+      addFirstProduct: 'أضف منتجك الأول',
+      category: 'الفئة',
+      price: 'السعر',
+      stock: 'المخزون',
+      units: 'وحدة',
+      edit: 'تعديل',
+      delete: 'حذف',
+      barcode: 'الباركود',
+      downloadTemplate: 'تنزيل القالب',
+      importCSV: 'استيراد CSV',
+      costPricePlaceholder: 'سعر التكلفة',
+      barcodePlaceholder: 'باركود المنتج',
+    },
+    en: {
+      productsManagement: 'Products Management',
+      manageCatalog: 'Manage your product catalog ({count} products)',
+      addProduct: 'Add Product',
+      pos: 'POS',
+      orders: 'Orders',
+      settings: 'Settings',
+      logout: 'Logout',
+      totalProducts: 'Total Products',
+      inStock: 'In Stock',
+      outOfStock: 'Out of Stock',
+      totalValue: 'Total Value',
+      searchPlaceholder: 'Search products by name, category, barcode...',
+      allCategories: 'All Categories',
+      sortName: 'Sort: Name',
+      sortPrice: 'Sort: Price',
+      sortCategory: 'Sort: Category',
+      sortStock: 'Sort: Stock',
+      showing: 'Showing',
+      of: 'of',
+      products: 'products',
+      matching: 'matching',
+      in: 'in',
+      clearFilters: 'Clear Filters',
+      noProductsFound: 'No products found',
+      noProductsYet: 'No products yet',
+      tryAdjusting: 'Try adjusting your search or filter criteria',
+      getStarted: 'Get started by adding your first product',
+      addFirstProduct: 'Add Your First Product',
+      category: 'Category',
+      price: 'Price',
+      stock: 'Stock',
+      units: 'units',
+      edit: 'Edit',
+      delete: 'Delete',
+      barcode: 'Barcode',
+      downloadTemplate: 'Download Template',
+      importCSV: 'Import CSV',
+      costPricePlaceholder: 'Cost price',
+      barcodePlaceholder: 'Product barcode',
+    },
+  };
+  
+  const t = adminT[language] || adminT.ar;
+
+  // Modal translations
+  const modalT = {
+    ar: {
+      editProduct: 'تعديل المنتج',
+      addNewProduct: 'إضافة منتج جديد',
       title: 'العنوان',
       category: 'الفئة',
       description: 'الوصف',
@@ -121,9 +205,13 @@ export default function AdminProducts() {
       cancel: 'إلغاء',
       costPricePlaceholder: 'سعر التكلفة',
       barcodePlaceholder: 'باركود المنتج',
+      updateProduct: 'تحديث المنتج',
+      createProduct: 'إنشاء منتج',
+      stockQuantity: 'الكمية في المخزن',
     },
     en: {
-      modalTitle: editingProduct ? 'Edit Product' : 'Add New Product',
+      editProduct: 'Edit Product',
+      addNewProduct: 'Add New Product',
       title: 'Title',
       category: 'Category',
       description: 'Description',
@@ -145,10 +233,13 @@ export default function AdminProducts() {
       cancel: 'Cancel',
       costPricePlaceholder: 'Cost price',
       barcodePlaceholder: 'Product barcode',
+      updateProduct: 'Update Product',
+      createProduct: 'Create Product',
+      stockQuantity: 'Stock quantity',
     },
   };
   
-  const translations = t[language as keyof typeof t] || t.ar;
+  const modalTranslations = modalT[language] || modalT.ar;
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -1599,7 +1690,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.title}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.title}</label>
                 <input
                   className="input"
                   type="text"
@@ -1610,7 +1701,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.category}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.category}</label>
                 <input
                   className="input"
                   type="text"
@@ -1622,7 +1713,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.description}</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.description}</label>
               <textarea
                 className="input"
                 value={formData.description}
@@ -1634,7 +1725,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.sellingPrice}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.sellingPrice}</label>
                 <input
                   className="input"
                   type="number"
@@ -1646,21 +1737,21 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 />
               </div>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.buyPrice}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.buyPrice}</label>
                 <input
                   className="input"
                   type="number"
                   step="0.01"
                   value={formData.buyPrice}
                   onChange={(e) => setFormData({ ...formData, buyPrice: e.target.value })}
-                  placeholder={translations.costPricePlaceholder}
+                  placeholder={modalTranslations.costPricePlaceholder}
                   style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                 />
               </div>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
               <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                {translations.productImage}
+                {modalTranslations.productImage}
               </label>
               
               {/* Image Preview */}
@@ -1721,12 +1812,12 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                         borderRadius: '50%',
                         animation: 'spin 1s linear infinite'
                       }} />
-                      {translations.uploading}
+                      {modalTranslations.uploading}
                     </>
                   ) : (
                     <>
                       <Upload size={16} />
-                      {translations.uploadImage}
+                      {modalTranslations.uploadImage}
                     </>
                   )}
                 </button>
@@ -1735,7 +1826,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               {/* Or Divider */}
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
                 <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
-                <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>{translations.or}</span>
+                <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>{modalTranslations.or}</span>
                 <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
               </div>
 
@@ -1748,16 +1839,16 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   setFormData({ ...formData, image: e.target.value });
                   setImagePreview(e.target.value || null);
                 }}
-                placeholder={translations.imageUrlPlaceholder}
+                placeholder={modalTranslations.imageUrlPlaceholder}
                 required
                 style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
               />
               <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                {translations.imageUploadHint}
+                {modalTranslations.imageUploadHint}
               </p>
             </div>
             <div style={{ marginBottom: '1.25rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.barcode}</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.barcode}</label>
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
                   <input
@@ -1765,7 +1856,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                     type="text"
                     value={formData.barcode}
                     onChange={(e) => setFormData({ ...formData, barcode: e.target.value })}
-                    placeholder={translations.barcodePlaceholder}
+                    placeholder={modalTranslations.barcodePlaceholder}
                     readOnly
                     style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                   />
@@ -1797,7 +1888,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   }}
                 >
                   <Barcode size={16} style={{ display: 'inline', marginRight: language === 'ar' ? '0' : '0.5rem', marginLeft: language === 'ar' ? '0.5rem' : '0' }} />
-                  {translations.generate}
+                  {modalTranslations.generate}
                 </button>
                 {generatedBarcode && formData.barcode && (
                   <button
@@ -1825,7 +1916,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                     }}
                   >
                     <Printer size={16} style={{ display: 'inline', marginRight: language === 'ar' ? '0' : '0.5rem', marginLeft: language === 'ar' ? '0.5rem' : '0' }} />
-                    {translations.print}
+                    {modalTranslations.print}
                   </button>
                 )}
               </div>
@@ -1837,7 +1928,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.25rem', marginBottom: '1.25rem' }}>
               <div>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.quantity}</label>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.quantity}</label>
                 <input
                   className="input"
                   type="number"
@@ -1849,13 +1940,13 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               </div>
             </div>
             <div style={{ marginBottom: '1.5rem' }}>
-              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{translations.note}</label>
+              <label style={{ display: 'block', color: '#333333', marginBottom: '0.625rem', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{modalTranslations.note}</label>
               <textarea
                 className="input"
                 value={formData.note}
                 onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                 rows={3}
-                placeholder={translations.notePlaceholder}
+                placeholder={modalTranslations.notePlaceholder}
                 style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
               />
             </div>
@@ -1890,7 +1981,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   e.currentTarget.style.color = '#000000';
                 }}
               >
-                {translations.cancel}
+                {modalTranslations.cancel}
               </button>
               <button
                 type="submit"
