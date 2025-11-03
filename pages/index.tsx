@@ -19,6 +19,8 @@ export default function Home() {
   const [displayCurrency, setDisplayCurrency] = useState('SP');
   const router = useRouter();
   const [showNoPlatform, setShowNoPlatform] = useState(false);
+  const [heroTitle, setHeroTitle] = useState('');
+  const [heroSubtitle, setHeroSubtitle] = useState('');
 
   const { setLanguage } = useLanguage();
 
@@ -39,12 +41,13 @@ export default function Home() {
         
         setShowNoPlatform(false);
         
-        // Load platform default language and set it if customer has no preference
+        // Load platform default language, settings, and hero text
+        let defaultLang = 'ar';
         try {
           const settingsResponse = await fetch(`/api/settings?platform=${platform}`);
           if (settingsResponse.ok) {
             const settingsData = await settingsResponse.json();
-            const defaultLang = settingsData.language || 'ar';
+            defaultLang = settingsData.language || 'ar';
             
             // Check if customer has a saved preference
             const customerLang = typeof window !== 'undefined' ? localStorage.getItem('customerLanguage') : null;
@@ -52,6 +55,22 @@ export default function Home() {
               // No customer preference, use platform default
               setLanguage(defaultLang as 'ar' | 'en');
               localStorage.setItem('customerLanguage', defaultLang);
+            }
+            
+            // Load platform-specific hero text
+            const currentLang = customerLang || defaultLang;
+            if (settingsData.heroTitle && settingsData.heroSubtitle) {
+              if (currentLang === 'ar') {
+                setHeroTitle(settingsData.heroTitle);
+                setHeroSubtitle(settingsData.heroSubtitle);
+              } else {
+                setHeroTitle(settingsData.heroTitleEn || settingsData.heroTitle);
+                setHeroSubtitle(settingsData.heroSubtitleEn || settingsData.heroSubtitle);
+              }
+            } else {
+              // Fallback to defaults
+              setHeroTitle(currentLang === 'ar' ? 'اكتشفي مجموعتنا' : 'Discover Our Collection');
+              setHeroSubtitle(currentLang === 'ar' ? 'قطع أنيقة للمرأة العصرية' : 'Elegant pieces for the modern woman');
             }
           }
         } catch (error) {
@@ -85,6 +104,38 @@ export default function Home() {
     }
   }, [router.isReady, router.query.platform, setLanguage]);
 
+  // Update hero text when language changes
+  useEffect(() => {
+    const updateHeroText = async () => {
+      const platform = router.query.platform as string;
+      if (!platform) return;
+      
+      try {
+        const settingsResponse = await fetch(`/api/settings?platform=${platform}`);
+        if (settingsResponse.ok) {
+          const settingsData = await settingsResponse.json();
+          const currentLang = typeof window !== 'undefined' ? localStorage.getItem('customerLanguage') || settingsData.language || 'ar' : 'ar';
+          
+          if (settingsData.heroTitle && settingsData.heroSubtitle) {
+            if (currentLang === 'ar') {
+              setHeroTitle(settingsData.heroTitle);
+              setHeroSubtitle(settingsData.heroSubtitle);
+            } else {
+              setHeroTitle(settingsData.heroTitleEn || settingsData.heroTitle);
+              setHeroSubtitle(settingsData.heroSubtitleEn || settingsData.heroSubtitle);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error updating hero text:', error);
+      }
+    };
+    
+    if (router.isReady && router.query.platform) {
+      updateHeroText();
+    }
+  }, [language, router.isReady, router.query.platform]);
+
   // Show landing page if no platform
   if (showNoPlatform) {
     return <LandingPage />;
@@ -115,14 +166,14 @@ export default function Home() {
           letterSpacing: '-0.03em',
           lineHeight: '1.2'
         }}>
-          {t('home.discoverCollection')}
+          {heroTitle || t('home.discoverCollection')}
         </h1>
         <p style={{ 
           fontSize: '1rem', 
           color: 'var(--text-secondary)',
           letterSpacing: '-0.01em'
         }}>
-          {t('home.elegantPieces')}
+          {heroSubtitle || t('home.elegantPieces')}
         </p>
       </div>
 

@@ -220,8 +220,9 @@ export default function AdminProducts() {
 
   const loadProducts = async () => {
     try {
-      // API automatically uses admin's platform from cookie
-      const response = await fetch('/api/products');
+      // Pass platform as query parameter to ensure correct platform filtering
+      const platformParam = platform ? `?platform=${platform}` : '';
+      const response = await fetch(`/api/products${platformParam}`);
       const data = await response.json();
       // Convert MongoDB _id to id for Product type
       const formattedData = data.map((item: any) => ({
@@ -680,11 +681,11 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       {/* Improved Header Section */}
       <div style={{ marginBottom: '2.5rem' }}>
         <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
+        display: 'flex', 
+        justifyContent: 'space-between', 
           alignItems: 'flex-start', 
-          marginBottom: '2rem',
-          flexWrap: 'wrap',
+        marginBottom: '2rem',
+        flexWrap: 'wrap',
           gap: '1.5rem'
         }}>
           <div>
@@ -711,7 +712,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
           
           {/* Action Buttons - Reorganized */}
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button
+          <button
               onClick={() => {
                 setEditingProduct(null);
                 setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
@@ -719,16 +720,16 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 setGeneratedBarcode('');
                 setShowEditModal(true);
               }}
-              style={{
-                backgroundColor: '#3b82f6',
-                color: '#ffffff',
+            style={{
+              backgroundColor: '#3b82f6',
+              color: '#ffffff',
                 padding: '0.875rem 1.75rem',
                 borderRadius: '12px',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                cursor: 'pointer',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
                 fontSize: '0.9375rem',
                 fontWeight: '600',
                 boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
@@ -777,19 +778,19 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               >
                 <ShoppingCart size={18} />
                 {t('admin.pos')}
-              </button>
-              <button
-                onClick={() => router.push('/admin/orders')}
-                style={{
+          </button>
+          <button
+            onClick={() => router.push('/admin/orders')}
+            style={{
                   backgroundColor: '#ffffff',
                   color: '#10b981',
                   padding: '0.875rem 1.25rem',
                   borderRadius: '12px',
                   border: '1.5px solid #e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
                   fontSize: '0.9375rem',
                   fontWeight: '600',
                   transition: 'all 0.2s ease',
@@ -805,19 +806,19 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               >
                 <FileText size={18} />
                 {t('admin.orders')}
-              </button>
-              <button
-                onClick={() => router.push('/admin/settings')}
-                style={{
+          </button>
+          <button
+            onClick={() => router.push('/admin/settings')}
+            style={{
                   backgroundColor: '#ffffff',
                   color: '#8b5cf6',
                   padding: '0.875rem 1.25rem',
                   borderRadius: '12px',
                   border: '1.5px solid #e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
                   fontSize: '0.9375rem',
                   fontWeight: '600',
                   transition: 'all 0.2s ease',
@@ -832,7 +833,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 }}
               >
                 <Settings size={18} />
-              </button>
+          </button>
             </div>
             
             <button
@@ -1046,18 +1047,18 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
             {/* Secondary Actions */}
             <div style={{ display: 'flex', gap: '0.5rem', marginLeft: 'auto' }}>
-              <button
-                onClick={downloadTemplate}
-                style={{
+          <button
+            onClick={downloadTemplate}
+            style={{
                   padding: '0.875rem 1rem',
                   backgroundColor: '#f9fafb',
                   color: '#6b7280',
                   borderRadius: '12px',
                   border: '1.5px solid #e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
                   fontSize: '0.875rem',
                   fontWeight: '600',
                   transition: 'all 0.2s ease',
@@ -1072,19 +1073,19 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 }}
               >
                 <Download size={16} />
-              </button>
-              <button
-                onClick={() => setShowImportModal(true)}
-                style={{
+          </button>
+          <button
+            onClick={() => setShowImportModal(true)}
+            style={{
                   padding: '0.875rem 1rem',
                   backgroundColor: '#f9fafb',
                   color: '#6b7280',
                   borderRadius: '12px',
                   border: '1.5px solid #e5e7eb',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
                   fontSize: '0.875rem',
                   fontWeight: '600',
                   transition: 'all 0.2s ease',
@@ -1099,7 +1100,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 }}
               >
                 <Upload size={16} />
-              </button>
+          </button>
             </div>
           </div>
 
@@ -1181,25 +1182,25 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               : t('admin.getStarted')}
           </p>
           {(!searchQuery && selectedCategory === 'all') && (
-            <button
+          <button
               onClick={() => {
-                setEditingProduct(null);
-                setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
+      setEditingProduct(null);
+      setFormData({ title: '', description: '', price: '', category: '', image: '', barcode: '', buyPrice: '', qty: '', note: '' });
                 setImagePreview(null);
-                setGeneratedBarcode('');
-                setShowEditModal(true);
-              }}
-              style={{
+      setGeneratedBarcode('');
+      setShowEditModal(true);
+            }}
+            style={{
                 backgroundColor: '#3b82f6',
-                color: '#ffffff',
+              color: '#ffffff',
                 padding: '0.875rem 2rem',
                 borderRadius: '12px',
-                border: 'none',
+              border: 'none',
                 display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.5rem',
-                cursor: 'pointer',
-                fontSize: '1rem',
+              alignItems: 'center',
+              gap: '0.5rem',
+              cursor: 'pointer',
+              fontSize: '1rem',
                 fontWeight: '600',
                 boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
                 transition: 'all 0.2s ease',
@@ -1211,17 +1212,17 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = '#3b82f6';
                 e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <Plus size={20} />
+            }}
+          >
+            <Plus size={20} />
               {t('admin.addFirstProduct')}
-            </button>
+          </button>
           )}
         </div>
       ) : (
         <div 
           className="responsive-grid"
-          style={{ 
+            style={{
             display: 'grid', 
             gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(300px, 1fr))' : '1fr',
             gap: '1.5rem' 
@@ -1259,10 +1260,10 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   position: 'absolute',
                   top: '1rem',
                   right: '1rem',
-                  backgroundColor: '#ef4444',
-                  color: '#ffffff',
+              backgroundColor: '#ef4444',
+              color: '#ffffff',
                   padding: '0.375rem 0.75rem',
-                  borderRadius: '8px',
+              borderRadius: '8px',
                   fontSize: '0.75rem',
                   fontWeight: '700',
                   textTransform: 'uppercase',
@@ -1431,21 +1432,21 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                       padding: '0.75rem 1rem',
                       borderRadius: '12px',
                       border: '1.5px solid #e5e7eb',
-                      display: 'flex',
-                      alignItems: 'center',
+              display: 'flex',
+              alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '0.5rem',
-                      cursor: 'pointer',
+              gap: '0.5rem',
+              cursor: 'pointer',
                       fontSize: '0.875rem',
                       fontWeight: '600',
-                      transition: 'all 0.2s ease',
-                    }}
-                    onMouseEnter={(e) => {
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
                       e.currentTarget.style.background = '#111827';
                       e.currentTarget.style.color = '#ffffff';
                       e.currentTarget.style.borderColor = '#111827';
-                    }}
-                    onMouseLeave={(e) => {
+            }}
+            onMouseLeave={(e) => {
                       e.currentTarget.style.background = '#ffffff';
                       e.currentTarget.style.color = '#111827';
                       e.currentTarget.style.borderColor = '#e5e7eb';
@@ -1485,9 +1486,9 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 >
                   <Trash2 size={18} />
                   {t('admin.delete')}
-                </button>
-                </div>
-              </div>
+          </button>
+        </div>
+      </div>
             </div>
           ))}
         </div>

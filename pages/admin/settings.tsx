@@ -12,6 +12,10 @@ export default function AdminSettings() {
     exchangeRate: 1,
     displayCurrency: 'SP',
     language: 'ar',
+    heroTitle: 'اكتشفي مجموعتنا',
+    heroSubtitle: 'قطع أنيقة للمرأة العصرية',
+    heroTitleEn: 'Discover Our Collection',
+    heroSubtitleEn: 'Elegant pieces for the modern woman',
   });
 
   const router = useRouter();
@@ -50,8 +54,9 @@ export default function AdminSettings() {
 
   const loadSettings = async () => {
     try {
-      // API automatically uses admin's platform from cookie
-      const response = await fetch('/api/settings');
+      // Pass platform as query parameter to ensure correct platform settings
+      const platformParam = platform ? `?platform=${platform}` : '';
+      const response = await fetch(`/api/settings${platformParam}`);
       const data = await response.json();
       setSettings(data);
     } catch (error) {
@@ -66,7 +71,8 @@ export default function AdminSettings() {
     setSaving(true);
 
     try {
-      const response = await fetch('/api/settings', {
+      const platformParam = platform ? `?platform=${platform}` : '';
+      const response = await fetch(`/api/settings${platformParam}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(settings),
@@ -231,6 +237,111 @@ export default function AdminSettings() {
               <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
                 This will set the language for the product creation modal and other admin interfaces
               </p>
+            </div>
+
+            <div style={{ 
+              marginBottom: '2rem',
+              padding: '1.5rem',
+              backgroundColor: '#f9fafb',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                <Settings size={24} color="#ec4899" />
+                <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#000000' }}>
+                  Homepage Hero Text
+                </h2>
+              </div>
+              
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#333333', 
+                  marginBottom: '0.5rem', 
+                  fontSize: '0.875rem', 
+                  fontWeight: '600' 
+                }}>
+                  Hero Title (Arabic)
+                </label>
+                <input
+                  className="input"
+                  type="text"
+                  value={settings.heroTitle}
+                  onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
+                  placeholder="اكتشفي مجموعتنا"
+                  style={{ direction: 'rtl' }}
+                />
+                <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
+                  Main heading displayed on homepage for Arabic language
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#333333', 
+                  marginBottom: '0.5rem', 
+                  fontSize: '0.875rem', 
+                  fontWeight: '600' 
+                }}>
+                  Hero Subtitle (Arabic)
+                </label>
+                <input
+                  className="input"
+                  type="text"
+                  value={settings.heroSubtitle}
+                  onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
+                  placeholder="قطع أنيقة للمرأة العصرية"
+                  style={{ direction: 'rtl' }}
+                />
+                <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
+                  Subtitle displayed below the main heading for Arabic language
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#333333', 
+                  marginBottom: '0.5rem', 
+                  fontSize: '0.875rem', 
+                  fontWeight: '600' 
+                }}>
+                  Hero Title (English)
+                </label>
+                <input
+                  className="input"
+                  type="text"
+                  value={settings.heroTitleEn}
+                  onChange={(e) => setSettings({ ...settings, heroTitleEn: e.target.value })}
+                  placeholder="Discover Our Collection"
+                />
+                <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
+                  Main heading displayed on homepage for English language
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '0' }}>
+                <label style={{ 
+                  display: 'block', 
+                  color: '#333333', 
+                  marginBottom: '0.5rem', 
+                  fontSize: '0.875rem', 
+                  fontWeight: '600' 
+                }}>
+                  Hero Subtitle (English)
+                </label>
+                <input
+                  className="input"
+                  type="text"
+                  value={settings.heroSubtitleEn}
+                  onChange={(e) => setSettings({ ...settings, heroSubtitleEn: e.target.value })}
+                  placeholder="Elegant pieces for the modern woman"
+                />
+                <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
+                  Subtitle displayed below the main heading for English language
+                </p>
+              </div>
             </div>
 
             <div style={{ 

@@ -19,12 +19,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const platformDoc = await platformsCollection.findOne({ code: platform });
         const platformLanguage = platformDoc?.language || 'ar';
         
-        // Return default settings
+        // Return default settings with default hero text
         return res.status(200).json({
           currency: 'USD',
           exchangeRate: 1,
           displayCurrency: 'USD',
           language: platformLanguage,
+          heroTitle: 'اكتشفي مجموعتنا', // Arabic default
+          heroSubtitle: 'قطع أنيقة للمرأة العصرية', // Arabic default
+          heroTitleEn: 'Discover Our Collection', // English default
+          heroSubtitleEn: 'Elegant pieces for the modern woman', // English default
         });
       }
       // Ensure language is included even if not in settings
@@ -32,6 +36,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const platformsCollection = db.collection('platforms');
         const platformDoc = await platformsCollection.findOne({ code: platform });
         settings.language = platformDoc?.language || 'ar';
+      }
+      // Ensure hero text fields exist with defaults
+      if (!settings.heroTitle) {
+        settings.heroTitle = 'اكتشفي مجموعتنا';
+      }
+      if (!settings.heroSubtitle) {
+        settings.heroSubtitle = 'قطع أنيقة للمرأة العصرية';
+      }
+      if (!settings.heroTitleEn) {
+        settings.heroTitleEn = 'Discover Our Collection';
+      }
+      if (!settings.heroSubtitleEn) {
+        settings.heroSubtitleEn = 'Elegant pieces for the modern woman';
       }
       return res.status(200).json(settings);
     }
@@ -43,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { exchangeRate, displayCurrency, currency, language } = req.body;
+      const { exchangeRate, displayCurrency, currency, language, heroTitle, heroSubtitle, heroTitleEn, heroSubtitleEn } = req.body;
       
       const settings = withPlatform(platform, {
         type: 'app_settings',
@@ -51,6 +68,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         exchangeRate: parseFloat(exchangeRate) || 1,
         displayCurrency: displayCurrency || 'SP',
         language: language || 'ar',
+        heroTitle: heroTitle || 'اكتشفي مجموعتنا',
+        heroSubtitle: heroSubtitle || 'قطع أنيقة للمرأة العصرية',
+        heroTitleEn: heroTitleEn || 'Discover Our Collection',
+        heroSubtitleEn: heroSubtitleEn || 'Elegant pieces for the modern woman',
         updatedAt: new Date(),
       });
 
