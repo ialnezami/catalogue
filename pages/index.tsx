@@ -77,8 +77,8 @@ export default function Home() {
           console.error('Error loading language settings:', error);
         }
         
-        // Load currency settings
-        const settings = await getCurrencySettings();
+        // Load currency settings for this platform
+        const settings = await getCurrencySettings(platform);
         setExchangeRate(settings.exchangeRate);
         setDisplayCurrency(settings.displayCurrency);
         

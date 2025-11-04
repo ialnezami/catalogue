@@ -56,7 +56,11 @@ export default function POSNew() {
   }, []);
 
   const loadCurrencySettings = async () => {
-    const settings = await getCurrencySettings();
+    // Get platform from URL parameter
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const platform = urlParams?.get('platform') || undefined;
+    
+    const settings = await getCurrencySettings(platform);
     setExchangeRate(settings.exchangeRate);
     setDisplayCurrency(settings.displayCurrency);
   };

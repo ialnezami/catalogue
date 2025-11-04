@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { useCart } from '@/contexts/CartContext';
 import { ShoppingBag, Trash2, Share2, Plus, Minus, Printer } from 'lucide-react';
@@ -6,19 +7,31 @@ import { getCurrencySettings, formatPrice } from '@/lib/currency';
 
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
+  const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [showNameModal, setShowNameModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'clipboard' | 'whatsapp' | 'print' | null>(null);
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
+  const [currency, setCurrency] = useState('USD');
 
   useEffect(() => {
-    getCurrencySettings().then(settings => {
+    const loadCurrencySettings = async () => {
+      // Get platform from URL parameter or cookie
+      const platform = (router.query.platform as string) || 
+        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('platform') : null);
+      
+      const settings = await getCurrencySettings(platform || undefined);
       setExchangeRate(settings.exchangeRate);
       setDisplayCurrency(settings.displayCurrency);
-    });
-  }, []);
+      setCurrency(settings.currency);
+    };
+    
+    if (router.isReady) {
+      loadCurrencySettings();
+    }
+  }, [router.isReady, router.query.platform]);
 
   const exportToJson = (name: string) => {
     const cartData = {
@@ -46,8 +59,9 @@ export default function Cart() {
         break;
       case 'whatsapp':
         const whatsappJsonData = exportToJson(customerName);
+        const totalFormatted = formatPrice(getTotalPrice(), exchangeRate, displayCurrency);
         const whatsappMessage = encodeURIComponent(
-          `🛍️ Shopping Cart - ${customerName}\n\n${whatsappJsonData}\n\nTotal: $${getTotalPrice().toFixed(2)}`
+          `🛍️ Shopping Cart - ${customerName}\n\n${whatsappJsonData}\n\nTotal: ${totalFormatted}`
         );
         window.open(`https://wa.me/?text=${whatsappMessage}`, '_blank');
         break;
@@ -387,7 +401,7 @@ export default function Cart() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                 <span style={{ color: '#d1d5db' }}>الضريبة</span>
-                <span style={{ color: '#ffffff' }}>$0.00</span>
+                <span style={{ color: '#ffffff' }}>{formatPrice(0, exchangeRate, displayCurrency)}</span>
               </div>
               <div style={{ borderTop: '1px solid #374151', margin: '1rem 0', paddingTop: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>

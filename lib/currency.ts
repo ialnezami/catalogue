@@ -15,25 +15,36 @@ let cachedSettings: CurrencySettings | null = null;
 let settingsCacheTime = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
-export async function getCurrencySettings(): Promise<CurrencySettings> {
+export async function getCurrencySettings(platform?: string): Promise<CurrencySettings> {
   const now = Date.now();
   
-  // Return cached settings if still fresh
-  if (cachedSettings && (now - settingsCacheTime) < CACHE_DURATION) {
+  // Create cache key based on platform
+  const cacheKey = platform || 'default';
+  
+  // Return cached settings if still fresh and for the same platform
+  if (cachedSettings && (now - settingsCacheTime) < CACHE_DURATION && cacheKey === 'default') {
     return cachedSettings;
   }
 
   try {
-    const response = await fetch('/api/settings');
+    // Fetch settings with platform parameter if provided
+    const url = platform ? `/api/settings?platform=${platform}` : '/api/settings';
+    const response = await fetch(url);
     if (response.ok) {
       const data = await response.json();
-      cachedSettings = {
+      const settings = {
         exchangeRate: data.exchangeRate || 15000,
         displayCurrency: data.displayCurrency || 'SP',
         currency: data.currency || 'USD',
       };
-      settingsCacheTime = now;
-      return cachedSettings;
+      
+      // Only cache if no platform specified (legacy behavior)
+      if (!platform) {
+        cachedSettings = settings;
+        settingsCacheTime = now;
+      }
+      
+      return settings;
     }
   } catch (error) {
     console.error('Error fetching currency settings:', error);
