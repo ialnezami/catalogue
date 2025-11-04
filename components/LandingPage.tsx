@@ -13,7 +13,10 @@ import {
   ShoppingBag,
   Shield,
   Zap,
-  Globe
+  Globe,
+  Search,
+  Grid,
+  List
 } from 'lucide-react';
 import { useRouter } from 'next/router';
 import toast, { Toaster } from 'react-hot-toast';
@@ -24,18 +27,36 @@ interface Platform {
   name: string;
   code: string;
   description?: string;
+  active?: boolean;
 }
 
 export default function LandingPage() {
   const router = useRouter();
   const { t, language, setLanguage } = useLanguage();
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [filteredPlatforms, setFilteredPlatforms] = useState<Platform[]>([]);
   const [showLogin, setShowLogin] = useState(false);
   const [showSignup, setShowSignup] = useState(false);
   const [showContact, setShowContact] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isMobile, setIsMobile] = useState(false);
+  const platformsPerPage = 12;
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // Set default language on mount (Arabic)
   useEffect(() => {
@@ -91,10 +112,15 @@ export default function LandingPage() {
 
   const loadPlatforms = async () => {
     try {
-      const response = await fetch('/api/platforms');
+      setLoading(true);
+      const response = await fetch('/api/platforms?active=true');
       if (response.ok) {
         const data = await response.json();
-        setPlatforms(data.filter((p: Platform) => p.code !== 'default'));
+        const filtered = data.filter((p: Platform) => p.code !== 'default' && p.active !== false);
+        // Sort by name alphabetically
+        filtered.sort((a: Platform, b: Platform) => a.name.localeCompare(b.name));
+        setPlatforms(filtered);
+        setFilteredPlatforms(filtered);
       }
     } catch (error) {
       console.error('Error loading platforms:', error);
@@ -102,6 +128,31 @@ export default function LandingPage() {
       setLoading(false);
     }
   };
+
+  // Filter platforms based on search query
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredPlatforms(platforms);
+      setCurrentPage(1);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = platforms.filter(
+      (platform) =>
+        platform.name.toLowerCase().includes(query) ||
+        platform.code.toLowerCase().includes(query) ||
+        (platform.description && platform.description.toLowerCase().includes(query))
+    );
+    setFilteredPlatforms(filtered);
+    setCurrentPage(1);
+  }, [searchQuery, platforms]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPlatforms.length / platformsPerPage);
+  const startIndex = (currentPage - 1) * platformsPerPage;
+  const endIndex = startIndex + platformsPerPage;
+  const displayedPlatforms = filteredPlatforms.slice(startIndex, endIndex);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -706,12 +757,186 @@ export default function LandingPage() {
               <p style={{ color: '#6b7280', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('landing.noPlatformsYet')}</p>
             </div>
           ) : (
+            <>
+              {/* Search and View Controls */}
             <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
-              gap: '2rem' 
-            }}>
-              {platforms.map((platform, idx) => (
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: '1rem',
+                marginBottom: '2rem',
+                alignItems: 'stretch'
+              }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                {/* Search Bar */}
+                <div style={{ flex: 1, position: 'relative' }}>
+                  <Search 
+                    size={20} 
+                    style={{ 
+                      position: 'absolute', 
+                      left: language === 'ar' ? 'auto' : '1rem',
+                      right: language === 'ar' ? '1rem' : 'auto',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      color: '#9ca3af',
+                      pointerEvents: 'none'
+                    }} 
+                  />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t('landing.searchPlatforms')}
+                    style={{
+                      width: '100%',
+                      padding: '1rem 1rem 1rem 3rem',
+                      paddingRight: language === 'ar' ? '3rem' : '1rem',
+                      paddingLeft: language === 'ar' ? '1rem' : '3rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '14px',
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      transition: 'all 0.3s ease',
+                      background: '#ffffff',
+                      color: '#1a1a1a',
+                      fontFamily: 'inherit'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.12)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  />
+                </div>
+
+                {/* View Mode Toggle */}
+                <div style={{
+                  display: 'flex',
+                  gap: '0.5rem',
+                  backgroundColor: '#f3f4f6',
+                  padding: '0.5rem',
+                  borderRadius: '14px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      borderRadius: '10px',
+                      border: 'none',
+                      backgroundColor: viewMode === 'grid' ? '#667eea' : 'transparent',
+                      color: viewMode === 'grid' ? '#ffffff' : '#6b7280',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      transition: 'all 0.2s ease',
+                      fontWeight: viewMode === 'grid' ? '600' : '500'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (viewMode !== 'grid') {
+                        e.currentTarget.style.backgroundColor = '#e5e7eb';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (viewMode !== 'grid') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <Grid size={18} />
+                    {!isMobile && (
+                      <span style={{ fontSize: '0.875rem' }}>{t('landing.gridView')}</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    style={{
+                      padding: '0.75rem 1rem',
+                      borderRadius: '10px',
+                      border: 'none',
+                      backgroundColor: viewMode === 'list' ? '#667eea' : 'transparent',
+                      color: viewMode === 'list' ? '#ffffff' : '#6b7280',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      transition: 'all 0.2s ease',
+                      fontWeight: viewMode === 'list' ? '600' : '500'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (viewMode !== 'list') {
+                        e.currentTarget.style.backgroundColor = '#e5e7eb';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (viewMode !== 'list') {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }
+                    }}
+                  >
+                    <List size={18} />
+                    {!isMobile && (
+                      <span style={{ fontSize: '0.875rem' }}>{t('landing.listView')}</span>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Results Count */}
+              {filteredPlatforms.length > 0 && (
+                <div style={{
+                  marginBottom: '1.5rem',
+                  color: '#6b7280',
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr'
+                }}>
+                  <span>
+                    {t('landing.showingPlatforms')} {startIndex + 1}-{Math.min(endIndex, filteredPlatforms.length)} {t('landing.of')} {filteredPlatforms.length} {t('landing.platforms')}
+                    {searchQuery && ` (${filteredPlatforms.length} ${t('landing.platforms')})`}
+                  </span>
+                </div>
+              )}
+
+              {/* Platforms Grid/List */}
+              {filteredPlatforms.length === 0 ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '4rem 2rem',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '16px',
+                  border: '1px solid #e5e7eb'
+                }}>
+                  <Search size={48} style={{ color: '#9ca3af', margin: '0 auto 1rem', opacity: 0.5 }} />
+                  <p style={{ 
+                    color: '#1a1a1a', 
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
+                    marginBottom: '0.5rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                  }}>
+                    {t('landing.noPlatformsFound')}
+                  </p>
+                  <p style={{ 
+                    color: '#6b7280', 
+                    fontSize: '0.9375rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                  }}>
+                    {t('landing.tryDifferentSearch')}
+                  </p>
+                </div>
+              ) : (
+                <div style={{ 
+                  display: viewMode === 'grid' ? 'grid' : 'flex',
+                  flexDirection: viewMode === 'list' ? 'column' : 'unset',
+                  gridTemplateColumns: viewMode === 'grid' 
+                    ? 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))' 
+                    : 'unset',
+                  gap: '1.5rem',
+                  marginBottom: '2rem'
+                }}>
+                  {displayedPlatforms.map((platform, idx) => (
                 <Link 
                   key={platform._id || idx}
                   href={`/?platform=${platform.code}`}
@@ -719,7 +944,7 @@ export default function LandingPage() {
                 >
                   <div
                     style={{
-                      padding: '2.5rem',
+                      padding: viewMode === 'list' ? '1.5rem 2rem' : '2.5rem',
                       background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
                       borderRadius: '24px',
                       boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
@@ -727,10 +952,18 @@ export default function LandingPage() {
                       border: '1px solid rgba(102, 126, 234, 0.1)',
                       cursor: 'pointer',
                       position: 'relative',
-                      overflow: 'hidden'
+                      overflow: 'hidden',
+                      display: viewMode === 'list' ? 'flex' : 'block',
+                      alignItems: viewMode === 'list' ? 'center' : 'unset',
+                      gap: viewMode === 'list' ? '2rem' : '0',
+                      justifyContent: viewMode === 'list' ? 'space-between' : 'unset'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      if (viewMode === 'grid') {
+                        e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      } else {
+                        e.currentTarget.style.transform = language === 'ar' ? 'translateX(8px)' : 'translateX(-8px)';
+                      }
                       e.currentTarget.style.boxShadow = '0 20px 50px rgba(102, 126, 234, 0.2), 0 8px 24px rgba(0,0,0,0.12)';
                       e.currentTarget.style.borderColor = '#667eea';
                     }}
@@ -743,12 +976,13 @@ export default function LandingPage() {
                     <div style={{ 
                       display: 'flex', 
                       alignItems: 'flex-start', 
-                      gap: '1.25rem', 
-                      marginBottom: '1.25rem' 
+                      gap: '1.25rem',
+                      flex: viewMode === 'list' ? 1 : 'unset',
+                      marginBottom: viewMode === 'list' ? 0 : '1.25rem'
                     }}>
                       <div style={{
-                        width: '56px',
-                        height: '56px',
+                        width: viewMode === 'list' ? '64px' : '56px',
+                        height: viewMode === 'list' ? '64px' : '56px',
                         borderRadius: '14px',
                         background: 'linear-gradient(135deg, #667eea15 0%, #764ba208 100%)',
                         display: 'flex',
@@ -757,11 +991,11 @@ export default function LandingPage() {
                         border: '1px solid rgba(102, 126, 234, 0.15)',
                         flexShrink: 0
                       }}>
-                        <Store size={28} style={{ color: '#667eea' }} strokeWidth={2} />
+                        <Store size={viewMode === 'list' ? 32 : 28} style={{ color: '#667eea' }} strokeWidth={2} />
                       </div>
-                      <div style={{ flex: 1 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <h3 style={{ 
-                          fontSize: '1.375rem', 
+                          fontSize: viewMode === 'list' ? '1.25rem' : '1.375rem', 
                           fontWeight: '700', 
                           color: '#1a1a1a', 
                           margin: '0 0 0.375rem 0',
@@ -772,50 +1006,251 @@ export default function LandingPage() {
                         <p style={{ 
                           fontSize: '0.875rem', 
                           color: '#6b7280', 
-                          margin: 0,
+                          margin: '0 0 0.5rem 0',
                           fontWeight: '500'
                         }}>
                           {platform.code}
                         </p>
-                      </div>
-                    </div>
-                    {platform.description && (
-                      <p style={{ 
-                        color: '#6b7280', 
-                        fontSize: '0.9375rem', 
-                        lineHeight: '1.7', 
-                        marginBottom: '1.5rem' 
-                      }}>
+                        {platform.description && viewMode === 'list' && (
+                          <p style={{ 
+                            color: '#6b7280', 
+                            fontSize: '0.9375rem', 
+                            lineHeight: '1.6', 
+                            margin: 0,
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}>
                         {platform.description}
                       </p>
                     )}
-                    <div style={{ 
-                      display: 'inline-flex', 
-                      alignItems: 'center', 
-                      color: '#667eea', 
-                      fontSize: '0.9375rem', 
-                      fontWeight: '600',
-                      direction: language === 'ar' ? 'rtl' : 'ltr',
-                      padding: '0.5rem 1rem',
-                      borderRadius: '8px',
-                      background: 'rgba(102, 126, 234, 0.08)',
-                      transition: 'all 0.2s ease'
-                    }}>
-                      {t('landing.visitPlatform')} 
-                      <ArrowRight 
-                        size={18} 
-                        style={{ 
-                          marginLeft: language === 'ar' ? 0 : '0.5rem', 
-                          marginRight: language === 'ar' ? '0.5rem' : 0, 
-                          transform: language === 'ar' ? 'scaleX(-1)' : 'none',
-                          transition: 'transform 0.2s ease'
-                        }} 
-                      />
+                        {platform.description && viewMode === 'grid' && (
+                          <p style={{ 
+                            color: '#6b7280', 
+                            fontSize: '0.9375rem', 
+                            lineHeight: '1.7', 
+                            marginTop: '1rem',
+                            marginBottom: '1.5rem' 
+                          }}>
+                            {platform.description}
+                          </p>
+                        )}
                     </div>
+                    </div>
+                    {viewMode === 'list' && (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '1rem',
+                        flexShrink: 0
+                      }}>
+                        <div style={{ 
+                          display: 'inline-flex', 
+                          alignItems: 'center', 
+                          color: '#667eea', 
+                          fontSize: '0.9375rem', 
+                          fontWeight: '600',
+                          direction: language === 'ar' ? 'rtl' : 'ltr',
+                          padding: '0.75rem 1.25rem',
+                          borderRadius: '12px',
+                          background: 'rgba(102, 126, 234, 0.08)',
+                          transition: 'all 0.2s ease',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {t('landing.visitPlatform')} 
+                          <ArrowRight 
+                            size={18} 
+                            style={{ 
+                              marginLeft: language === 'ar' ? 0 : '0.5rem', 
+                              marginRight: language === 'ar' ? '0.5rem' : 0, 
+                              transform: language === 'ar' ? 'scaleX(-1)' : 'none',
+                              transition: 'transform 0.2s ease'
+                            }} 
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {viewMode === 'grid' && (
+                      <div style={{ 
+                        display: 'inline-flex', 
+                        alignItems: 'center', 
+                        color: '#667eea', 
+                        fontSize: '0.9375rem', 
+                        fontWeight: '600',
+                        direction: language === 'ar' ? 'rtl' : 'ltr',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '8px',
+                        background: 'rgba(102, 126, 234, 0.08)',
+                        transition: 'all 0.2s ease'
+                      }}>
+                        {t('landing.visitPlatform')} 
+                        <ArrowRight 
+                          size={18} 
+                          style={{ 
+                            marginLeft: language === 'ar' ? 0 : '0.5rem', 
+                            marginRight: language === 'ar' ? '0.5rem' : 0, 
+                            transform: language === 'ar' ? 'scaleX(-1)' : 'none',
+                            transition: 'transform 0.2s ease'
+                          }} 
+                        />
+                      </div>
+                    )}
                   </div>
                 </Link>
               ))}
             </div>
+          )}
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  gap: '1rem',
+                  marginTop: '3rem',
+                  flexWrap: 'wrap'
+                }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '12px',
+                      border: '2px solid #e5e7eb',
+                      backgroundColor: currentPage === 1 ? '#f3f4f6' : '#ffffff',
+                      color: currentPage === 1 ? '#9ca3af' : '#1a1a1a',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      fontSize: '0.9375rem',
+                      fontWeight: '600',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage > 1) {
+                        e.currentTarget.style.borderColor = '#667eea';
+                        e.currentTarget.style.backgroundColor = '#f8f9ff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage > 1) {
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.backgroundColor = '#ffffff';
+                      }
+                    }}
+                  >
+                    <ArrowRight 
+                      size={18} 
+                      style={{ 
+                        transform: language === 'ar' ? 'scaleX(1)' : 'scaleX(-1)',
+                        marginLeft: language === 'ar' ? '0.5rem' : '0',
+                        marginRight: language === 'ar' ? '0' : '0.5rem'
+                      }} 
+                    />
+                    {t('landing.previousPage')}
+                  </button>
+
+                  {/* Page Numbers */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '0.5rem',
+                    alignItems: 'center'
+                  }}>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          style={{
+                            minWidth: '44px',
+                            height: '44px',
+                            padding: '0.5rem',
+                            borderRadius: '12px',
+                            border: '2px solid',
+                            borderColor: currentPage === pageNum ? '#667eea' : '#e5e7eb',
+                            backgroundColor: currentPage === pageNum ? '#667eea' : '#ffffff',
+                            color: currentPage === pageNum ? '#ffffff' : '#1a1a1a',
+                            cursor: 'pointer',
+                            fontSize: '0.9375rem',
+                            fontWeight: currentPage === pageNum ? '700' : '600',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (currentPage !== pageNum) {
+                              e.currentTarget.style.borderColor = '#667eea';
+                              e.currentTarget.style.backgroundColor = '#f8f9ff';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (currentPage !== pageNum) {
+                              e.currentTarget.style.borderColor = '#e5e7eb';
+                              e.currentTarget.style.backgroundColor = '#ffffff';
+                            }
+                          }}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    style={{
+                      padding: '0.75rem 1.5rem',
+                      borderRadius: '12px',
+                      border: '2px solid #e5e7eb',
+                      backgroundColor: currentPage === totalPages ? '#f3f4f6' : '#ffffff',
+                      color: currentPage === totalPages ? '#9ca3af' : '#1a1a1a',
+                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                      fontSize: '0.9375rem',
+                      fontWeight: '600',
+                      transition: 'all 0.2s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (currentPage < totalPages) {
+                        e.currentTarget.style.borderColor = '#667eea';
+                        e.currentTarget.style.backgroundColor = '#f8f9ff';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (currentPage < totalPages) {
+                        e.currentTarget.style.borderColor = '#e5e7eb';
+                        e.currentTarget.style.backgroundColor = '#ffffff';
+                      }
+                    }}
+                  >
+                    {t('landing.nextPage')}
+                    <ArrowRight 
+                      size={18} 
+                      style={{ 
+                        transform: language === 'ar' ? 'scaleX(-1)' : 'scaleX(1)',
+                        marginLeft: language === 'ar' ? '0' : '0.5rem',
+                        marginRight: language === 'ar' ? '0.5rem' : '0'
+                      }} 
+                    />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
