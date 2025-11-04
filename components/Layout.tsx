@@ -34,9 +34,23 @@ export default function Layout({ children }: LayoutProps) {
         const platformParam = urlParams.get('platform');
         if (platformParam) {
           platformCode = platformParam;
+          // Store platform in sessionStorage to help with back navigation
+          sessionStorage.setItem('currentPlatform', platformParam);
+        } else {
+          // If no URL param, check sessionStorage (for back navigation)
+          const storedPlatform = sessionStorage.getItem('currentPlatform');
+          if (storedPlatform && (router.pathname === '/' || router.pathname === '/cart')) {
+            // Only restore if we're on a page that requires platform
+            platformCode = storedPlatform;
+            // Silently update URL without causing a reload
+            const newUrl = `${router.pathname}?platform=${storedPlatform}`;
+            if (window.location.href !== newUrl && window.location.pathname + window.location.search !== newUrl) {
+              window.history.replaceState({ ...window.history.state, as: newUrl, url: newUrl }, '', newUrl);
+            }
+          }
         }
         
-        // Fallback to session cookie (for authenticated admins) only if no URL param
+        // Fallback to session cookie (for authenticated admins) only if no URL param and no stored platform
         if (!platformCode) {
           try {
             const authResponse = await fetch('/api/auth/check');
@@ -115,6 +129,13 @@ export default function Layout({ children }: LayoutProps) {
       return `/?platform=${platform}`;
     }
     return '/';
+  };
+
+  const getCartHref = () => {
+    if (platform) {
+      return `/cart?platform=${platform}`;
+    }
+    return '/cart';
   };
 
   const getAdminHref = () => {
@@ -198,7 +219,7 @@ export default function Layout({ children }: LayoutProps) {
             >
               {t('nav.products')}
             </Link>
-            <Link href="/cart" className="cart-link" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+            <Link href={getCartHref()} className="cart-link" style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
               <ShoppingBag size={22} style={{ color: 'var(--text-secondary)' }} />
               {getTotalItems() > 0 && (
                 <span
