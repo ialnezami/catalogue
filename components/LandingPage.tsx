@@ -119,11 +119,11 @@ export default function LandingPage() {
         });
         // Small delay to show the success message before redirect
         setTimeout(() => {
-          if (data.role === 'super_admin') {
-            router.push('/super-admin');
-          } else {
-            router.push('/admin/products');
-          }
+        if (data.role === 'super_admin') {
+          router.push('/super-admin');
+        } else {
+          router.push('/admin/products');
+        }
         }, 500);
       } else {
         toast.error(data.message || 'Login failed', {
@@ -1337,162 +1337,218 @@ export default function LandingPage() {
       {/* Contact Modal */}
       {showContact && (
         <Modal onClose={() => setShowContact(false)}>
-          <div style={{ width: '100%', maxWidth: '500px' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: '700', marginBottom: '1.5rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-              {t('landing.contactUsTitle')}
+          <div style={{ 
+            width: '100%', 
+            maxWidth: '800px',
+            padding: '0 1rem'
+          }}>
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '2.5rem',
+              direction: language === 'ar' ? 'rtl' : 'ltr'
+            }}>
+              <h2 style={{ 
+                fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', 
+                fontWeight: '700', 
+                marginBottom: '0.75rem',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                direction: language === 'ar' ? 'rtl' : 'ltr'
+              }}>
+                {t('landing.contactUsTitle')}
             </h2>
+              <p style={{
+                color: '#6b7280',
+                fontSize: '1rem',
+                marginTop: '0.5rem'
+              }}>
+                {language === 'ar' 
+                  ? 'نحن هنا للمساعدة! املأ النموذج أدناه وسنعود إليك قريباً.' 
+                  : 'We\'re here to help! Fill out the form below and we\'ll get back to you soon.'}
+              </p>
+            </div>
             <form onSubmit={handleContact}>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.625rem', 
-                  color: '#1a1a1a', 
-                  fontWeight: '600', 
-                  fontSize: '0.9375rem',
-                  direction: language === 'ar' ? 'rtl' : 'ltr' 
-                }}>
-                  {t('landing.name')} *
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                gap: '1.5rem',
+                marginBottom: '1.5rem'
+              }}>
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.75rem', 
+                    color: '#1a1a1a', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                  }}>
+                    {t('landing.name')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="text"
                   value={contactData.name}
                   onChange={(e) => setContactData({ ...contactData, name: e.target.value })}
                   required
+                    placeholder={language === 'ar' ? 'أدخل اسمك الكامل' : 'Enter your full name'}
                   style={{
                     width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '12px',
-                    fontSize: '1rem',
-                    direction: language === 'ar' ? 'rtl' : 'ltr',
-                    transition: 'all 0.2s ease',
-                    background: '#fafafa'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#667eea';
-                    e.currentTarget.style.background = '#ffffff';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#e5e7eb';
-                    e.currentTarget.style.background = '#fafafa';
-                    e.currentTarget.style.boxShadow = 'none';
+                      padding: '1rem 1.25rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '14px',
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      background: '#fafafa',
+                      color: '#1a1a1a',
+                      fontFamily: 'inherit'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.12)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.background = '#fafafa';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ 
-                  display: 'block', 
-                  marginBottom: '0.625rem', 
-                  color: '#1a1a1a', 
-                  fontWeight: '600', 
-                  fontSize: '0.9375rem',
-                  direction: language === 'ar' ? 'rtl' : 'ltr' 
-                }}>
-                  {t('landing.email')} *
+                <div>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.75rem', 
+                    color: '#1a1a1a', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                  }}>
+                    {t('landing.email')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="email"
                   value={contactData.email}
                   onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
                   required
+                    placeholder={language === 'ar' ? 'example@email.com' : 'example@email.com'}
                   style={{
                     width: '100%',
-                    padding: '0.875rem 1rem',
-                    border: '2px solid #e5e7eb',
-                    borderRadius: '12px',
-                    fontSize: '1rem',
-                    direction: language === 'ar' ? 'rtl' : 'ltr',
-                    transition: 'all 0.2s ease',
-                    background: '#fafafa'
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.borderColor = '#667eea';
-                    e.currentTarget.style.background = '#ffffff';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.borderColor = '#e5e7eb';
-                    e.currentTarget.style.background = '#fafafa';
-                    e.currentTarget.style.boxShadow = 'none';
+                      padding: '1rem 1.25rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '14px',
+                      fontSize: '1rem',
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      background: '#fafafa',
+                      color: '#1a1a1a',
+                      fontFamily: 'inherit'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.12)';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.background = '#fafafa';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 />
+              </div>
               </div>
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ 
                   display: 'block', 
-                  marginBottom: '0.625rem', 
+                  marginBottom: '0.75rem', 
                   color: '#1a1a1a', 
                   fontWeight: '600', 
                   fontSize: '0.9375rem',
-                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                  direction: language === 'ar' ? 'rtl' : 'ltr'
                 }}>
-                  {t('landing.subject')} *
+                  {t('landing.subject')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
                   type="text"
                   value={contactData.subject}
                   onChange={(e) => setContactData({ ...contactData, subject: e.target.value })}
                   required
+                  placeholder={language === 'ar' ? 'ما هو موضوع استفسارك؟' : 'What is your inquiry about?'}
                   style={{
                     width: '100%',
-                    padding: '0.875rem 1rem',
+                    padding: '1rem 1.25rem',
                     border: '2px solid #e5e7eb',
-                    borderRadius: '12px',
+                    borderRadius: '14px',
                     fontSize: '1rem',
                     direction: language === 'ar' ? 'rtl' : 'ltr',
-                    transition: 'all 0.2s ease',
-                    background: '#fafafa'
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    background: '#fafafa',
+                    color: '#1a1a1a',
+                    fontFamily: 'inherit'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = '#667eea';
                     e.currentTarget.style.background = '#ffffff';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    e.currentTarget.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.12)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = '#e5e7eb';
                     e.currentTarget.style.background = '#fafafa';
                     e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 />
               </div>
               <div style={{ marginBottom: '2rem' }}>
                 <label style={{ 
                   display: 'block', 
-                  marginBottom: '0.625rem', 
+                  marginBottom: '0.75rem', 
                   color: '#1a1a1a', 
                   fontWeight: '600', 
                   fontSize: '0.9375rem',
-                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                  direction: language === 'ar' ? 'rtl' : 'ltr'
                 }}>
-                  {t('landing.message')} *
+                  {t('landing.message')} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <textarea
                   value={contactData.message}
                   onChange={(e) => setContactData({ ...contactData, message: e.target.value })}
                   required
-                  rows={5}
+                  rows={6}
+                  placeholder={language === 'ar' ? 'اكتب رسالتك هنا...' : 'Write your message here...'}
                   style={{
                     width: '100%',
-                    padding: '0.875rem 1rem',
+                    padding: '1rem 1.25rem',
                     border: '2px solid #e5e7eb',
-                    borderRadius: '12px',
+                    borderRadius: '14px',
                     fontSize: '1rem',
                     resize: 'vertical',
+                    minHeight: '140px',
                     direction: language === 'ar' ? 'rtl' : 'ltr',
-                    transition: 'all 0.2s ease',
+                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     background: '#fafafa',
-                    fontFamily: 'inherit'
+                    color: '#1a1a1a',
+                    fontFamily: 'inherit',
+                    lineHeight: '1.6'
                   }}
                   onFocus={(e) => {
                     e.currentTarget.style.borderColor = '#667eea';
                     e.currentTarget.style.background = '#ffffff';
-                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    e.currentTarget.style.boxShadow = '0 0 0 4px rgba(102, 126, 234, 0.12)';
+                    e.currentTarget.style.transform = 'translateY(-1px)';
                   }}
                   onBlur={(e) => {
                     e.currentTarget.style.borderColor = '#e5e7eb';
                     e.currentTarget.style.background = '#fafafa';
                     e.currentTarget.style.boxShadow = 'none';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 />
               </div>
@@ -1500,29 +1556,31 @@ export default function LandingPage() {
                 type="submit"
                 style={{
                   width: '100%',
-                  padding: '1rem',
+                  padding: '1.125rem 2rem',
                   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '12px',
+                  borderRadius: '14px',
                   fontSize: '1.0625rem',
                   fontWeight: '700',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.625rem',
+                  gap: '0.75rem',
                   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                   direction: language === 'ar' ? 'rtl' : 'ltr',
-                  boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
+                  boxShadow: '0 6px 20px rgba(102, 126, 234, 0.35)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
+                  e.currentTarget.style.boxShadow = '0 10px 30px rgba(102, 126, 234, 0.45)';
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.35)';
                 }}
               >
                 <Send size={22} style={{ strokeWidth: 2.5 }} />
