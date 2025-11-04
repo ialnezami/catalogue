@@ -19,6 +19,7 @@ export default function Cart() {
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
   const [currency, setCurrency] = useState('USD');
+  const [isMobile, setIsMobile] = useState(false);
   const shareDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,6 +38,17 @@ export default function Cart() {
       loadCurrencySettings();
     }
   }, [router.isReady, router.query.platform]);
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -341,10 +353,22 @@ export default function Cart() {
   return (
     <Layout>
       <div 
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}
+        style={{ 
+          display: 'flex', 
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between', 
+          alignItems: isMobile ? 'flex-start' : 'center',
+          gap: isMobile ? '1rem' : '0',
+          marginBottom: '2rem' 
+        }}
         dir={language === 'ar' ? 'rtl' : 'ltr'}
       >
-        <h1 style={{ fontSize: '2.5rem', color: '#ec4899', margin: 0 }}>
+        <h1 style={{ 
+          fontSize: isMobile ? '1.75rem' : '2.5rem', 
+          color: '#ec4899', 
+          margin: 0,
+          flex: 1
+        }}>
           {t('cart.shoppingCart')}
         </h1>
         <button
@@ -360,7 +384,9 @@ export default function Cart() {
             gap: '0.5rem',
             cursor: 'pointer',
             transition: 'background-color 0.3s',
-            fontSize: '1rem',
+            fontSize: isMobile ? '0.875rem' : '1rem',
+            width: isMobile ? '100%' : 'auto',
+            justifyContent: 'center',
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#dc2626';
@@ -377,27 +403,28 @@ export default function Cart() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 350px',
-          gap: '2rem',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 350px',
+          gap: isMobile ? '1.5rem' : '2rem',
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', order: isMobile ? 2 : 1 }}>
           {cartItems.map((item) => (
             <div
               key={item.product.id}
               style={{
                 backgroundColor: '#1a1a1a',
-                padding: '1.5rem',
+                padding: isMobile ? '1rem' : '1.5rem',
                 borderRadius: '12px',
                 border: '1px solid #374151',
                 display: 'flex',
-                gap: '1.5rem',
+                flexDirection: isMobile ? 'column' : 'row',
+                gap: isMobile ? '1rem' : '1.5rem',
               }}
             >
               <div
                 style={{
-                  width: '120px',
-                  height: '120px',
+                  width: isMobile ? '100%' : '120px',
+                  height: isMobile ? '200px' : '120px',
                   backgroundColor: '#2a2a2a',
                   borderRadius: '8px',
                   flexShrink: 0,
@@ -409,14 +436,49 @@ export default function Cart() {
                   style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
                 />
               </div>
-              <div style={{ flexGrow: 1 }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '0.5rem', color: '#ffffff' }}>
-                  {item.product.title}
-                </h3>
-                <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '1rem' }}>
+              <div style={{ flexGrow: 1, width: '100%' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
+                  <h3 style={{ 
+                    fontSize: isMobile ? '1rem' : '1.25rem', 
+                    marginBottom: '0.5rem', 
+                    color: '#ffffff',
+                    flex: 1,
+                    paddingRight: isMobile ? '0.5rem' : '0'
+                  }}>
+                    {item.product.title}
+                  </h3>
+                  {!isMobile && (
+                    <button
+                      onClick={() => removeFromCart(item.product.id)}
+                      style={{
+                        backgroundColor: 'transparent',
+                        border: '1px solid #374151',
+                        color: '#ef4444',
+                        padding: '0.5rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  )}
+                </div>
+                <p style={{ 
+                  color: '#9ca3af', 
+                  fontSize: isMobile ? '0.8125rem' : '0.875rem', 
+                  marginBottom: '1rem',
+                  display: isMobile ? 'none' : 'block'
+                }}>
                   {item.product.description}
                 </p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem'
+                }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                     <button
                       onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
@@ -456,34 +518,51 @@ export default function Cart() {
                       <Plus size={18} />
                     </button>
                   </div>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ec4899' }}>
-                    {formatPrice(item.product.price * item.quantity, exchangeRate, displayCurrency)}
-                  </span>
+                  <div style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '1rem', 
+                    flex: isMobile ? '1' : '0', 
+                    justifyContent: isMobile ? 'space-between' : 'flex-end', 
+                    width: isMobile ? '100%' : 'auto', 
+                    marginTop: isMobile ? '0.5rem' : '0' 
+                  }}>
+                    <span style={{ fontSize: isMobile ? '1.125rem' : '1.25rem', fontWeight: 'bold', color: '#ec4899' }}>
+                      {formatPrice(item.product.price * item.quantity, exchangeRate, displayCurrency)}
+                    </span>
+                    {isMobile && (
+                      <button
+                        onClick={() => removeFromCart(item.product.id)}
+                        style={{
+                          backgroundColor: 'transparent',
+                          border: '1px solid #374151',
+                          color: '#ef4444',
+                          padding: '0.5rem',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-              <button
-                onClick={() => removeFromCart(item.product.id)}
-                style={{
-                  backgroundColor: 'transparent',
-                  border: '1px solid #374151',
-                  color: '#ef4444',
-                  padding: '0.5rem',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  alignSelf: 'flex-start',
-                }}
-              >
-                <Trash2 size={20} />
-              </button>
             </div>
           ))}
         </div>
 
-        <div style={{ position: 'sticky', top: '100px', alignSelf: 'start' }}>
+        <div style={{ 
+          position: isMobile ? 'relative' : 'sticky', 
+          top: isMobile ? 'auto' : '100px', 
+          alignSelf: 'start',
+          order: isMobile ? 1 : 2,
+          width: '100%'
+        }}>
           <div
             style={{
               backgroundColor: '#1a1a1a',
-              padding: '2rem',
+              padding: isMobile ? '1.5rem' : '2rem',
               borderRadius: '12px',
               border: '1px solid #374151',
             }}
