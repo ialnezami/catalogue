@@ -25,6 +25,7 @@ interface Order {
   total: number;
   totalProfit?: number;
   status?: 'pending' | 'accepted' | 'rejected';
+  source?: 'pos' | 'cart'; // Track where order came from
   exchangeRate?: number;
   displayCurrency?: string;
   currency?: string;

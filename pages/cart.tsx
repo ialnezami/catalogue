@@ -72,6 +72,7 @@ export default function Cart() {
         discount: 0,
         tax: 0,
         total: getTotalPrice(),
+        source: 'cart', // Mark as cart order (needs admin approval)
         exchangeRate,
         displayCurrency,
         currency,

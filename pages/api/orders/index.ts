@@ -32,7 +32,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (req.method === 'POST') {
       // POST is for public order creation, use platform from URL param
-      const { items, customerName, subtotal, discount, tax, total, exchangeRate, displayCurrency, currency } = req.body;
+      const { items, customerName, subtotal, discount, tax, total, exchangeRate, displayCurrency, currency, source } = req.body;
+      
+      // Determine order status based on source
+      // POS orders are automatically accepted, cart orders need admin approval
+      const orderStatus = source === 'pos' ? 'accepted' : 'pending';
       
       // Fetch full product details including buyPrice for profit calculation
       const productsCollection = db.collection('products');
@@ -73,11 +77,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         tax: tax || 0,
         total: total || calculatedTotal,
         totalProfit: totalProfit,
-        status: 'pending', // New orders start as pending
+        status: orderStatus, // POS orders are accepted, cart orders are pending
+        source: source || 'cart', // Track where order came from
         exchangeRate: exchangeRate || 15000,
         displayCurrency: displayCurrency || 'SP',
         currency: currency || 'USD',
-        paymentAmount: 0,
+        paymentAmount: source === 'pos' ? (total || calculatedTotal) : 0, // POS orders have payment, cart orders don't yet
         change: 0,
         timestamp: new Date(),
         createdAt: new Date(),

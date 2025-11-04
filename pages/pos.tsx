@@ -200,6 +200,10 @@ export default function POSNew() {
       return;
     }
 
+    // Get platform from URL parameter
+    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const platform = urlParams?.get('platform') || 'default';
+
     const orderTotal = getTotal();
     const orderData = {
       items: items.map(item => ({
@@ -216,11 +220,15 @@ export default function POSNew() {
       total: orderTotal,
       paymentAmount: orderTotal,
       change: 0,
+      source: 'pos', // Mark as POS order (auto-accepted)
+      exchangeRate: exchangeRate,
+      displayCurrency: displayCurrency,
+      currency: 'USD',
       timestamp: new Date(),
     };
 
     try {
-      const response = await fetch('/api/orders', {
+      const response = await fetch(`/api/orders?platform=${platform}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderData),
