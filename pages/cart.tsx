@@ -177,7 +177,7 @@ export default function Cart() {
   };
 
   const generateBillHtml = () => {
-    const total = getTotalPrice();
+        const total = getTotalPrice();
     const isArabic = language === 'ar';
     
     return `
@@ -301,19 +301,19 @@ export default function Cart() {
     if (!printWindow) return;
 
     const billHtml = generateBillHtml();
-    printWindow.document.write(billHtml);
-    printWindow.document.close();
-    
-    setTimeout(() => {
-      printWindow.print();
-      // Clear cart after printing
-      setTimeout(() => {
-        clearCart();
+        printWindow.document.write(billHtml);
+        printWindow.document.close();
+        
+        setTimeout(() => {
+          printWindow.print();
+          // Clear cart after printing
+          setTimeout(() => {
+            clearCart();
         setShowConfirmationModal(false);
         setCustomerName('');
-        printWindow.close();
-      }, 1000);
-    }, 500);
+            printWindow.close();
+          }, 1000);
+        }, 500);
   };
 
   if (cartItems.length === 0) {
@@ -327,7 +327,7 @@ export default function Cart() {
           dir={language === 'ar' ? 'rtl' : 'ltr'}
         >
           <ShoppingBag size={80} color="#9ca3af" style={{ margin: '0 auto 2rem' }} />
-          <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#ffffff' }}>
+          <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#ec4899' }}>
             {t('cart.emptyCart')}
           </h2>
           <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
@@ -513,22 +513,22 @@ export default function Cart() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
               {/* Share Dropdown */}
               <div ref={shareDropdownRef} style={{ position: 'relative' }}>
-                <button
+              <button
                   onClick={() => setShowShareDropdown(!showShareDropdown)}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
                     backgroundColor: '#2a2a2a',
-                    border: '1px solid #374151',
-                    borderRadius: '8px',
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
+                  border: '1px solid #374151',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: '0.5rem',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.3s',
-                  }}
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s',
+                }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#374151';
                   }}
@@ -537,7 +537,7 @@ export default function Cart() {
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <Share2 size={18} />
+                <Share2 size={18} />
                     {t('cart.share')}
                   </div>
                   <ChevronDown size={18} style={{ transform: showShareDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
@@ -585,20 +585,20 @@ export default function Cart() {
                     >
                       <Share2 size={16} />
                       {copied ? t('cart.copied') : t('cart.copyJson')}
-                    </button>
-                    <button
-                      onClick={shareOnWhatsApp}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
+              </button>
+              <button
+                onClick={shareOnWhatsApp}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem 1rem',
                         backgroundColor: 'transparent',
-                        border: 'none',
+                  border: 'none',
                         borderRadius: '6px',
-                        color: '#ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        cursor: 'pointer',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
                         textAlign: language === 'ar' ? 'right' : 'left',
                         transition: 'background-color 0.3s',
                       }}
@@ -611,7 +611,7 @@ export default function Cart() {
                     >
                       <Share2 size={16} />
                       {t('cart.shareWhatsApp')}
-                    </button>
+              </button>
                   </div>
                 )}
               </div>
@@ -745,7 +745,7 @@ export default function Cart() {
                   if (customerName.trim()) {
                     setShowNameModal(false);
                     if (pendingAction) {
-                      executeAction();
+                    executeAction();
                     } else {
                       handlePayOnDelivery();
                     }
