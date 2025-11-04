@@ -1,20 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Layout from '@/components/Layout';
 import { useCart } from '@/contexts/CartContext';
-import { ShoppingBag, Trash2, Share2, Plus, Minus, Printer } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { ShoppingBag, Trash2, Share2, Plus, Minus, Printer, ChevronDown, CheckCircle } from 'lucide-react';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
 
 export default function Cart() {
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice, clearCart } = useCart();
+  const { t, language } = useLanguage();
   const router = useRouter();
   const [copied, setCopied] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [showNameModal, setShowNameModal] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'clipboard' | 'whatsapp' | 'print' | null>(null);
+  const [showConfirmationModal, setShowConfirmationModal] = useState(false);
+  const [showShareDropdown, setShowShareDropdown] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'clipboard' | 'whatsapp' | null>(null);
   const [exchangeRate, setExchangeRate] = useState(15000);
   const [displayCurrency, setDisplayCurrency] = useState('SP');
   const [currency, setCurrency] = useState('USD');
+  const shareDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const loadCurrencySettings = async () => {
@@ -32,6 +37,23 @@ export default function Cart() {
       loadCurrencySettings();
     }
   }, [router.isReady, router.query.platform]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (shareDropdownRef.current && !shareDropdownRef.current.contains(event.target as Node)) {
+        setShowShareDropdown(false);
+      }
+    };
+
+    if (showShareDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showShareDropdown]);
 
   const exportToJson = (name: string) => {
     const cartData = {
@@ -106,6 +128,7 @@ export default function Cart() {
         navigator.clipboard.writeText(jsonData);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+        setShowShareDropdown(false);
         break;
       case 'whatsapp':
         const whatsappJsonData = exportToJson(customerName);
@@ -114,24 +137,62 @@ export default function Cart() {
           `🛍️ Shopping Cart - ${customerName}\n\n${whatsappJsonData}\n\nTotal: ${totalFormatted}`
         );
         window.open(`https://wa.me/?text=${whatsappMessage}`, '_blank');
+        setShowShareDropdown(false);
         break;
-      case 'print':
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
+    }
+  };
 
-        const total = getTotalPrice();
-        const billHtml = `
+  const copyToClipboard = () => {
+    if (!customerName) {
+      setPendingAction('clipboard');
+      setShowNameModal(true);
+      return;
+    }
+    setPendingAction('clipboard');
+    executeAction();
+  };
+
+  const shareOnWhatsApp = () => {
+    if (!customerName) {
+      setPendingAction('whatsapp');
+      setShowNameModal(true);
+      return;
+    }
+    setPendingAction('whatsapp');
+    executeAction();
+  };
+
+  const handlePayOnDelivery = async () => {
+    if (!customerName) {
+      setShowNameModal(true);
+      setPendingAction(null);
+      return;
+    }
+
+    // Create order first
+    await createOrder();
+    
+    // Show confirmation modal with printable bill
+    setShowConfirmationModal(true);
+  };
+
+  const generateBillHtml = () => {
+    const total = getTotalPrice();
+    const isArabic = language === 'ar';
+    
+    return `
       <!DOCTYPE html>
-      <html>
+      <html dir="${isArabic ? 'rtl' : 'ltr'}" lang="${language}">
         <head>
           <meta charset="utf-8">
-          <title>Bill - ${customerName}</title>
+          <title>${t('cart.confirmationBill')} - ${customerName}</title>
           <style>
             body {
               font-family: Arial, sans-serif;
               padding: 20px;
               max-width: 600px;
               margin: 0 auto;
+              direction: ${isArabic ? 'rtl' : 'ltr'};
             }
             .header {
               text-align: center;
@@ -185,16 +246,17 @@ export default function Cart() {
         </head>
         <body>
           <div class="header">
-            <h1>سلة المشتريات</h1>
+            <h1>${t('cart.confirmationBill')}</h1>
+            <p style="color: #10b981; font-weight: bold; margin-top: 10px;">${t('cart.orderConfirmed')}</p>
           </div>
           
           <div class="customer-info">
-            <strong>العميل:</strong> ${customerName}<br>
-            <strong>التاريخ:</strong> ${new Date().toLocaleDateString('ar-SA')}
+            <strong>${t('cart.customer')}:</strong> ${customerName}<br>
+            <strong>${t('cart.date')}:</strong> ${new Date().toLocaleDateString(isArabic ? 'ar-SA' : 'en-US')}
           </div>
           
           <div class="items">
-            <h3>المنتجات:</h3>
+            <h3>${t('cart.products')}:</h3>
             ${cartItems.map(item => `
               <div class="item">
                 <div>
@@ -212,71 +274,46 @@ export default function Cart() {
           
           <div class="totals">
             <div class="total-row">
-              <span>المجموع الفرعي:</span>
+              <span>${t('cart.subtotal')}:</span>
               <span>${formatPrice(total, exchangeRate, displayCurrency)}</span>
             </div>
             <div class="total-row">
-              <span>الضريبة:</span>
+              <span>${t('cart.tax')}:</span>
               <span>${formatPrice(0, exchangeRate, displayCurrency)}</span>
             </div>
             <div class="total-row grand-total">
-              <span>الإجمالي:</span>
+              <span>${t('cart.total')}:</span>
               <span>${formatPrice(total, exchangeRate, displayCurrency)}</span>
             </div>
           </div>
           
           <div style="text-align: center; margin-top: 30px; color: #666; font-size: 0.9em;">
-            <p>شكراً لكم لاختياركم منتجاتنا!</p>
-            <p>Thank you for choosing our products!</p>
+            <p>${t('cart.thankYou')}</p>
+            <p>${t('cart.thankYouEn')}</p>
           </div>
         </body>
       </html>
     `;
-
-        printWindow.document.write(billHtml);
-        printWindow.document.close();
-        
-        setTimeout(() => {
-          printWindow.print();
-          // Clear cart after printing
-          setTimeout(() => {
-            clearCart();
-            printWindow.close();
-          }, 1000);
-        }, 500);
-        break;
-    }
-  };
-
-  const copyToClipboard = () => {
-    if (!customerName) {
-      setPendingAction('clipboard');
-      setShowNameModal(true);
-      return;
-    }
-    setPendingAction('clipboard');
-    executeAction();
-  };
-
-  const shareOnWhatsApp = () => {
-    if (!customerName) {
-      setPendingAction('whatsapp');
-      setShowNameModal(true);
-      return;
-    }
-    setPendingAction('whatsapp');
-    executeAction();
   };
 
   const printBill = () => {
-    if (!customerName) {
-      setPendingAction('print');
-      setShowNameModal(true);
-      return;
-    }
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const billHtml = generateBillHtml();
+    printWindow.document.write(billHtml);
+    printWindow.document.close();
     
-    setPendingAction('print');
-    executeAction();
+    setTimeout(() => {
+      printWindow.print();
+      // Clear cart after printing
+      setTimeout(() => {
+        clearCart();
+        setShowConfirmationModal(false);
+        setCustomerName('');
+        printWindow.close();
+      }, 1000);
+    }, 500);
   };
 
   if (cartItems.length === 0) {
@@ -287,11 +324,14 @@ export default function Cart() {
             textAlign: 'center',
             padding: '4rem 2rem',
           }}
+          dir={language === 'ar' ? 'rtl' : 'ltr'}
         >
           <ShoppingBag size={80} color="#9ca3af" style={{ margin: '0 auto 2rem' }} />
-          <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#ffffff' }}>سلة المشتريات فارغة</h2>
+          <h2 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#ffffff' }}>
+            {t('cart.emptyCart')}
+          </h2>
           <p style={{ color: '#9ca3af', marginBottom: '2rem' }}>
-            ابدأي بإضافة المنتجات الجميلة إلى السلة!
+            {t('cart.addProducts')}
           </p>
         </div>
       </Layout>
@@ -300,8 +340,13 @@ export default function Cart() {
 
   return (
     <Layout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.5rem', color: '#ec4899', margin: 0 }}>سلة المشتريات</h1>
+      <div 
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}
+        dir={language === 'ar' ? 'rtl' : 'ltr'}
+      >
+        <h1 style={{ fontSize: '2.5rem', color: '#ec4899', margin: 0 }}>
+          {t('cart.shoppingCart')}
+        </h1>
         <button
           onClick={clearCart}
           style={{
@@ -325,7 +370,7 @@ export default function Cart() {
           }}
         >
           <Trash2 size={20} />
-          مسح السلة
+          {t('cart.clearCart')}
         </button>
       </div>
       
@@ -390,7 +435,7 @@ export default function Cart() {
                     >
                       <Minus size={18} />
                     </button>
-                    <span style={{ fontSize: '1.125rem', minWidth: '40px', textAlign: 'center' }}>
+                    <span style={{ fontSize: '1.125rem', minWidth: '40px', textAlign: 'center', color: '#ffffff' }}>
                       {item.quantity}
                     </span>
                     <button
@@ -442,34 +487,143 @@ export default function Cart() {
               borderRadius: '12px',
               border: '1px solid #374151',
             }}
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
           >
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#ffffff' }}>ملخص الطلب</h2>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#ffffff' }}>
+              {t('cart.orderSummary')}
+            </h2>
             <div style={{ marginBottom: '1rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: '#d1d5db' }}>المجموع الفرعي</span>
+                <span style={{ color: '#d1d5db' }}>{t('cart.subtotal')}</span>
                 <span style={{ color: '#ffffff' }}>{formatPrice(getTotalPrice(), exchangeRate, displayCurrency)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>الضريبة</span>
+                <span style={{ color: '#d1d5db' }}>{t('cart.tax')}</span>
                 <span style={{ color: '#ffffff' }}>{formatPrice(0, exchangeRate, displayCurrency)}</span>
               </div>
               <div style={{ borderTop: '1px solid #374151', margin: '1rem 0', paddingTop: '1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>الإجمالي</span>
+                  <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>{t('cart.total')}</span>
                   <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
                     {formatPrice(getTotalPrice(), exchangeRate, displayCurrency)}
                   </span>
                 </div>
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', position: 'relative' }}>
+              {/* Share Dropdown */}
+              <div ref={shareDropdownRef} style={{ position: 'relative' }}>
+                <button
+                  onClick={() => setShowShareDropdown(!showShareDropdown)}
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    backgroundColor: '#2a2a2a',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.5rem',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.3s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#374151';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2a2a2a';
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <Share2 size={18} />
+                    {t('cart.share')}
+                  </div>
+                  <ChevronDown size={18} style={{ transform: showShareDropdown ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.3s' }} />
+                </button>
+                
+                {showShareDropdown && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: language === 'ar' ? 'auto' : 0,
+                      right: language === 'ar' ? 0 : 'auto',
+                      marginTop: '0.5rem',
+                      backgroundColor: '#2a2a2a',
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      padding: '0.5rem',
+                      minWidth: '200px',
+                      zIndex: 1000,
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <button
+                      onClick={copyToClipboard}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        backgroundColor: copied ? '#10b981' : 'transparent',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        cursor: 'pointer',
+                        textAlign: language === 'ar' ? 'right' : 'left',
+                        transition: 'background-color 0.3s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!copied) e.currentTarget.style.backgroundColor = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!copied) e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <Share2 size={16} />
+                      {copied ? t('cart.copied') : t('cart.copyJson')}
+                    </button>
+                    <button
+                      onClick={shareOnWhatsApp}
+                      style={{
+                        width: '100%',
+                        padding: '0.75rem 1rem',
+                        backgroundColor: 'transparent',
+                        border: 'none',
+                        borderRadius: '6px',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        cursor: 'pointer',
+                        textAlign: language === 'ar' ? 'right' : 'left',
+                        transition: 'background-color 0.3s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#374151';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <Share2 size={16} />
+                      {t('cart.shareWhatsApp')}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Pay on Delivery Button */}
               <button
-                onClick={copyToClipboard}
+                onClick={handlePayOnDelivery}
                 style={{
                   width: '100%',
                   padding: '0.75rem 1rem',
-                  backgroundColor: copied ? '#10b981' : '#2a2a2a',
-                  border: '1px solid #374151',
+                  backgroundColor: '#10b981',
+                  border: 'none',
                   borderRadius: '8px',
                   color: '#ffffff',
                   display: 'flex',
@@ -477,57 +631,26 @@ export default function Cart() {
                   justifyContent: 'center',
                   gap: '0.5rem',
                   cursor: 'pointer',
+                  fontWeight: 'bold',
+                  fontSize: '1rem',
                   transition: 'background-color 0.3s',
                 }}
-              >
-                <Share2 size={18} />
-                {copied ? 'تم النسخ!' : 'نسخ JSON'}
-              </button>
-              <button
-                onClick={shareOnWhatsApp}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  backgroundColor: '#ec4899',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = '#059669';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = '#10b981';
                 }}
               >
-                <Share2 size={18} />
-                مشاركة على واتساب
-              </button>
-              <button
-                onClick={printBill}
-                style={{
-                  width: '100%',
-                  padding: '0.75rem 1rem',
-                  backgroundColor: '#3b82f6',
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.5rem',
-                  cursor: 'pointer',
-                  fontWeight: 'bold',
-                }}
-              >
-                <Printer size={18} />
-                طباعة الفاتورة
+                <CheckCircle size={18} />
+                {t('cart.payOnDelivery')}
               </button>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Name Input Modal */}
       {showNameModal && (
         <div
           style={{
@@ -542,6 +665,10 @@ export default function Cart() {
             justifyContent: 'center',
             zIndex: 1000,
           }}
+          onClick={() => {
+            setShowNameModal(false);
+            setPendingAction(null);
+          }}
         >
           <div
             style={{
@@ -552,29 +679,50 @@ export default function Cart() {
               maxWidth: '400px',
               width: '90%',
             }}
+            onClick={(e) => e.stopPropagation()}
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
           >
-            <h3 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '1rem' }}>Enter Customer Name</h3>
+            <h3 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '1rem' }}>
+              {t('cart.customerName')}
+            </h3>
             <p style={{ color: '#9ca3af', marginBottom: '1.5rem' }}>
-              Please enter the customer name to share the cart.
+              {t('cart.enterCustomerName')}
             </p>
             <input
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              placeholder="Customer Name"
+              placeholder={t('cart.enterName')}
               autoFocus
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' && customerName.trim()) {
+                  setShowNameModal(false);
+                  if (pendingAction) {
+                    executeAction();
+                  } else {
+                    handlePayOnDelivery();
+                  }
+                }
+              }}
               style={{
                 width: '100%',
                 padding: '0.75rem',
                 backgroundColor: '#2a2a2a',
-                border: '1px solid #374151',
+                border: '2px solid #374151',
                 borderRadius: '8px',
                 color: '#ffffff',
                 fontSize: '1rem',
                 marginBottom: '1.5rem',
+                transition: 'border-color 0.3s',
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#ec4899';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#374151';
               }}
             />
-            <div style={{ display: 'flex', gap: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', flexDirection: language === 'ar' ? 'row-reverse' : 'row' }}>
               <button
                 onClick={() => {
                   setShowNameModal(false);
@@ -590,13 +738,17 @@ export default function Cart() {
                   cursor: 'pointer',
                 }}
               >
-                Cancel
+                {t('cart.cancel')}
               </button>
               <button
                 onClick={() => {
                   if (customerName.trim()) {
                     setShowNameModal(false);
-                    executeAction();
+                    if (pendingAction) {
+                      executeAction();
+                    } else {
+                      handlePayOnDelivery();
+                    }
                   }
                 }}
                 style={{
@@ -610,7 +762,156 @@ export default function Cart() {
                   fontWeight: 'bold',
                 }}
               >
-                Continue
+                {t('cart.continue')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Bill Modal */}
+      {showConfirmationModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '2rem',
+          }}
+          onClick={() => setShowConfirmationModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '12px',
+              border: '1px solid #374151',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+            dir={language === 'ar' ? 'rtl' : 'ltr'}
+          >
+            <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+              <CheckCircle size={48} color="#10b981" style={{ margin: '0 auto 1rem' }} />
+              <h2 style={{ fontSize: '1.5rem', color: '#10b981', marginBottom: '0.5rem' }}>
+                {t('cart.orderConfirmed')}
+              </h2>
+              <h3 style={{ fontSize: '1.25rem', color: '#ffffff', marginBottom: '1rem' }}>
+                {t('cart.confirmationBill')}
+              </h3>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <div style={{ marginBottom: '1rem' }}>
+                <strong style={{ color: '#d1d5db' }}>{t('cart.customer')}:</strong>
+                <span style={{ color: '#ffffff', marginLeft: '0.5rem' }}>{customerName}</span>
+              </div>
+              <div>
+                <strong style={{ color: '#d1d5db' }}>{t('cart.date')}:</strong>
+                <span style={{ color: '#ffffff', marginLeft: '0.5rem' }}>
+                  {new Date().toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h4 style={{ color: '#ffffff', marginBottom: '0.75rem' }}>{t('cart.products')}:</h4>
+              {cartItems.map((item, index) => (
+                <div
+                  key={index}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    padding: '0.75rem 0',
+                    borderBottom: '1px solid #374151',
+                  }}
+                >
+                  <div>
+                    <div style={{ color: '#ffffff', fontWeight: 'bold' }}>{item.product.title}</div>
+                    <div style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+                      {formatPrice(item.product.price, exchangeRate, displayCurrency)} × {item.quantity}
+                    </div>
+                  </div>
+                  <div style={{ color: '#ec4899', fontWeight: 'bold' }}>
+                    {formatPrice(item.product.price * item.quantity, exchangeRate, displayCurrency)}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ borderTop: '2px solid #ec4899', paddingTop: '1rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ color: '#d1d5db' }}>{t('cart.subtotal')}:</span>
+                <span style={{ color: '#ffffff' }}>
+                  {formatPrice(getTotalPrice(), exchangeRate, displayCurrency)}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ color: '#d1d5db' }}>{t('cart.tax')}:</span>
+                <span style={{ color: '#ffffff' }}>
+                  {formatPrice(0, exchangeRate, displayCurrency)}
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>{t('cart.total')}:</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
+                  {formatPrice(getTotalPrice(), exchangeRate, displayCurrency)}
+                </span>
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem', color: '#9ca3af' }}>
+              <p>{t('cart.thankYou')}</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', flexDirection: language === 'ar' ? 'row-reverse' : 'row' }}>
+              <button
+                onClick={() => {
+                  setShowConfirmationModal(false);
+                  clearCart();
+                  setCustomerName('');
+                }}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  backgroundColor: '#374151',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                }}
+              >
+                {t('cart.cancel')}
+              </button>
+              <button
+                onClick={printBill}
+                style={{
+                  flex: 1,
+                  padding: '0.75rem',
+                  backgroundColor: '#10b981',
+                  border: 'none',
+                  borderRadius: '8px',
+                  color: '#ffffff',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Printer size={18} />
+                {t('cart.printBill')}
               </button>
             </div>
           </div>
@@ -619,4 +920,3 @@ export default function Cart() {
     </Layout>
   );
 }
-
