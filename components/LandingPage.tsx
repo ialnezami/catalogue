@@ -114,17 +114,26 @@ export default function LandingPage() {
 
       const data = await response.json();
       if (response.ok) {
-        toast.success('Login successful!');
-        if (data.role === 'super_admin') {
-          router.push('/super-admin');
-        } else {
-          router.push('/admin/products');
-        }
+        toast.success('Login successful!', {
+          duration: 2000,
+        });
+        // Small delay to show the success message before redirect
+        setTimeout(() => {
+          if (data.role === 'super_admin') {
+            router.push('/super-admin');
+          } else {
+            router.push('/admin/products');
+          }
+        }, 500);
       } else {
-        toast.error(data.message || 'Login failed');
+        toast.error(data.message || 'Login failed', {
+          duration: 3000,
+        });
       }
     } catch (error) {
-      toast.error('Login failed. Please try again.');
+      toast.error('Login failed. Please try again.', {
+        duration: 3000,
+      });
     }
   };
 
@@ -142,7 +151,9 @@ export default function LandingPage() {
       });
 
       if (response.ok) {
-        toast.success('Platform request submitted successfully! We will review it and contact you soon.');
+        toast.success('Platform request submitted successfully! We will review it and contact you soon.', {
+          duration: 3000,
+        });
         setShowSignup(false);
         setSignupData({
           platformName: '',
@@ -154,10 +165,14 @@ export default function LandingPage() {
           message: ''
         });
       } else {
-        toast.error('Failed to submit request. Please try again.');
+        toast.error('Failed to submit request. Please try again.', {
+          duration: 3000,
+        });
       }
     } catch (error) {
-      toast.error('Failed to submit request. Please try again.');
+      toast.error('Failed to submit request. Please try again.', {
+        duration: 3000,
+      });
     }
   };
 
@@ -171,14 +186,20 @@ export default function LandingPage() {
       });
 
       if (response.ok) {
-        toast.success('Message sent successfully!');
+        toast.success('Message sent successfully!', {
+          duration: 2000,
+        });
         setShowContact(false);
         setContactData({ name: '', email: '', subject: '', message: '' });
       } else {
-        toast.error('Failed to send message. Please try again.');
+        toast.error('Failed to send message. Please try again.', {
+          duration: 3000,
+        });
       }
     } catch (error) {
-      toast.error('Failed to send message. Please try again.');
+      toast.error('Failed to send message. Please try again.', {
+        duration: 3000,
+      });
     }
   };
 
@@ -187,24 +208,37 @@ export default function LandingPage() {
       <Toaster 
         position="top-center"
         toastOptions={{
-          duration: 4000,
+          duration: 2500,
           style: {
             background: '#1a1a1a',
             color: '#ffffff',
             border: '1px solid #374151',
             borderRadius: '12px',
             padding: '1rem',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
           },
           success: {
+            duration: 2000,
             iconTheme: {
               primary: '#10b981',
               secondary: '#ffffff',
             },
+            style: {
+              background: '#1a1a1a',
+              color: '#ffffff',
+              border: '1px solid #10b981',
+            },
           },
           error: {
+            duration: 3000,
             iconTheme: {
               primary: '#ef4444',
               secondary: '#ffffff',
+            },
+            style: {
+              background: '#1a1a1a',
+              color: '#ffffff',
+              border: '1px solid #ef4444',
             },
           },
         }}

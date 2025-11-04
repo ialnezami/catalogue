@@ -12,23 +12,37 @@ export default function App({ Component, pageProps }: AppProps) {
         <Toaster 
           position="top-right"
           toastOptions={{
-            duration: 4000,
+            duration: 2500,
             style: {
               background: '#1a1a1a',
               color: '#ffffff',
               border: '1px solid #374151',
-              borderRadius: '8px',
+              borderRadius: '12px',
+              padding: '1rem',
+              boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
             },
             success: {
+              duration: 2000,
               iconTheme: {
                 primary: '#10b981',
                 secondary: '#ffffff',
               },
+              style: {
+                background: '#1a1a1a',
+                color: '#ffffff',
+                border: '1px solid #10b981',
+              },
             },
             error: {
+              duration: 3000,
               iconTheme: {
                 primary: '#ef4444',
                 secondary: '#ffffff',
+              },
+              style: {
+                background: '#1a1a1a',
+                color: '#ffffff',
+                border: '1px solid #ef4444',
               },
             },
           }}

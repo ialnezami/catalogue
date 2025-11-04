@@ -42,21 +42,30 @@ export default function Login() {
       if (response.ok) {
         const data = await response.json();
         
-        toast.success('Login successful!');
+        toast.success('Login successful!', {
+          duration: 2000,
+        });
         
-        // Redirect based on role
-        if (data.role === 'super_admin') {
-          router.push('/super-admin');
-        } else {
-          router.push('/admin/products');
-        }
+        // Small delay to show the success message before redirect
+        setTimeout(() => {
+          // Redirect based on role
+          if (data.role === 'super_admin') {
+            router.push('/super-admin');
+          } else {
+            router.push('/admin/products');
+          }
+        }, 500);
       } else {
         setError('Invalid credentials');
-        toast.error('Invalid credentials');
+        toast.error('Invalid credentials', {
+          duration: 3000,
+        });
       }
     } catch (err) {
       setError('Login failed. Please try again.');
-      toast.error('Login failed. Please try again.');
+      toast.error('Login failed. Please try again.', {
+        duration: 3000,
+      });
     } finally {
       setLoading(false);
     }
