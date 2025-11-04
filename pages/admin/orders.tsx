@@ -1,24 +1,32 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { FileText, Calendar, DollarSign, ShoppingBag, LogOut, Home, X } from 'lucide-react';
+import { FileText, Calendar, DollarSign, ShoppingBag, LogOut, Home, X, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useRouter } from 'next/router';
+import { getCurrencySettings, formatPrice, CURRENCY_SYMBOLS } from '@/lib/currency';
 
 interface OrderItem {
   productId: string;
   title: string;
-  price: number;
+  price: number; // USD price
+  buyPrice?: number; // Cost price in USD
   quantity: number;
-  discount: number;
-  subtotal: number;
+  subtotal: number; // USD subtotal
+  profit?: number; // Profit in USD
 }
 
 interface Order {
   _id: string;
+  customerName?: string;
   items: OrderItem[];
   subtotal: number;
   discount: number;
   tax?: number;
   total: number;
+  totalProfit?: number;
+  status?: 'pending' | 'accepted' | 'rejected';
+  exchangeRate?: number;
+  displayCurrency?: string;
+  currency?: string;
   paymentAmount: number;
   change: number;
   timestamp: Date;
@@ -29,6 +37,10 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [platform, setPlatform] = useState<string | null>(null);
+  const [exchangeRate, setExchangeRate] = useState(15000);
+  const [displayCurrency, setDisplayCurrency] = useState('SP');
+  const [currency, setCurrency] = useState('USD');
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -60,8 +72,20 @@ export default function AdminOrders() {
   useEffect(() => {
     if (platform) {
       loadOrders();
+      loadCurrencySettings();
     }
   }, [platform]);
+
+  const loadCurrencySettings = async () => {
+    try {
+      const settings = await getCurrencySettings(platform || undefined);
+      setExchangeRate(settings.exchangeRate);
+      setDisplayCurrency(settings.displayCurrency);
+      setCurrency(settings.currency);
+    } catch (error) {
+      console.error('Error loading currency settings:', error);
+    }
+  };
 
   const loadOrders = async () => {
     try {
@@ -86,9 +110,43 @@ export default function AdminOrders() {
     return d.toLocaleString();
   };
 
+  const updateOrderStatus = async (orderId: string, status: 'accepted' | 'rejected') => {
+    setUpdatingStatus(orderId);
+    try {
+      const response = await fetch('/api/orders', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ orderId, status }),
+      });
+
+      if (response.ok) {
+        await loadOrders();
+        if (selectedOrder && selectedOrder._id === orderId) {
+          setSelectedOrder({ ...selectedOrder, status });
+        }
+      } else {
+        console.error('Failed to update order status');
+      }
+    } catch (error) {
+      console.error('Error updating order status:', error);
+    } finally {
+      setUpdatingStatus(null);
+    }
+  };
+
   const getTotalOrders = () => orders.length;
   
-  const getTotalRevenue = () => orders.reduce((sum, order) => sum + order.total, 0);
+  const getPendingOrders = () => orders.filter(o => o.status === 'pending').length;
+  
+  const getTotalRevenue = () => orders
+    .filter(o => o.status === 'accepted')
+    .reduce((sum, order) => sum + order.total, 0);
+  
+  const getTotalProfit = () => orders
+    .filter(o => o.status === 'accepted')
+    .reduce((sum, order) => sum + (order.totalProfit || 0), 0);
   
   const getTotalItems = () => orders.reduce((sum, order) => sum + order.items.reduce((s, item) => s + item.quantity, 0), 0);
 
@@ -164,7 +222,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <FileText size={32} color="#3b82f6" />
@@ -175,10 +233,40 @@ export default function AdminOrders() {
         
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+            <Clock size={32} color="#f59e0b" />
+            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Pending</h3>
+          </div>
+          <p style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold' }}>{getPendingOrders()}</p>
+        </div>
+        
+        <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <DollarSign size={32} color="#10b981" />
             <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Total Revenue</h3>
           </div>
-          <p style={{ color: '#ec4899', fontSize: '2rem', fontWeight: 'bold' }}>${getTotalRevenue().toFixed(2)}</p>
+          <p style={{ color: '#ec4899', fontSize: '2rem', fontWeight: 'bold' }}>
+            ${getTotalRevenue().toFixed(2)}
+            {displayCurrency !== 'USD' && (
+              <span style={{ fontSize: '1rem', color: '#9ca3af', display: 'block', marginTop: '0.25rem' }}>
+                {formatPrice(getTotalRevenue(), exchangeRate, displayCurrency)}
+              </span>
+            )}
+          </p>
+        </div>
+        
+        <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+            <DollarSign size={32} color="#10b981" />
+            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Total Profit</h3>
+          </div>
+          <p style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold' }}>
+            ${getTotalProfit().toFixed(2)}
+            {displayCurrency !== 'USD' && (
+              <span style={{ fontSize: '1rem', color: '#9ca3af', display: 'block', marginTop: '0.25rem' }}>
+                {formatPrice(getTotalProfit(), exchangeRate, displayCurrency)}
+              </span>
+            )}
+          </p>
         </div>
         
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
@@ -191,7 +279,42 @@ export default function AdminOrders() {
       </div>
 
       <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
-        <h2 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '1.5rem' }}>Recent Orders</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h2 style={{ fontSize: '1.5rem', color: '#ffffff', margin: 0 }}>Recent Orders</h2>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button
+              onClick={() => {
+                const filtered = orders.filter(o => o.status === 'pending');
+                setOrders(filtered.length > 0 ? filtered : orders);
+              }}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#f59e0b',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              Pending Only
+            </button>
+            <button
+              onClick={() => loadOrders()}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              All Orders
+            </button>
+          </div>
+        </div>
         
         {orders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem' }}>
@@ -199,44 +322,86 @@ export default function AdminOrders() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {orders.map((order) => (
-              <div
-                key={order._id}
-                onClick={() => setSelectedOrder(order)}
-                style={{
-                  backgroundColor: '#2a2a2a',
-                  padding: '1.5rem',
-                  borderRadius: '8px',
-                  border: '1px solid #374151',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#374151';
-                  e.currentTarget.style.borderColor = '#ec4899';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#2a2a2a';
-                  e.currentTarget.style.borderColor = '#374151';
-                }}
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <Calendar size={20} color="#9ca3af" />
-                    <span style={{ color: '#d1d5db' }}>{formatDate(order.timestamp)}</span>
+            {orders.map((order) => {
+              const orderExchangeRate = order.exchangeRate || exchangeRate;
+              const orderDisplayCurrency = order.displayCurrency || displayCurrency;
+              const statusColor = 
+                order.status === 'accepted' ? '#10b981' :
+                order.status === 'rejected' ? '#ef4444' :
+                '#f59e0b';
+              const statusIcon = 
+                order.status === 'accepted' ? <CheckCircle size={20} /> :
+                order.status === 'rejected' ? <XCircle size={20} /> :
+                <Clock size={20} />;
+              
+              return (
+                <div
+                  key={order._id}
+                  onClick={() => setSelectedOrder(order)}
+                  style={{
+                    backgroundColor: '#2a2a2a',
+                    padding: '1.5rem',
+                    borderRadius: '8px',
+                    border: `1px solid ${order.status === 'pending' ? '#f59e0b' : '#374151'}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#374151';
+                    e.currentTarget.style.borderColor = '#ec4899';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2a2a2a';
+                    e.currentTarget.style.borderColor = order.status === 'pending' ? '#f59e0b' : '#374151';
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
+                      <Calendar size={20} color="#9ca3af" />
+                      <span style={{ color: '#d1d5db' }}>{formatDate(order.timestamp)}</span>
+                      {order.customerName && (
+                        <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+                          • {order.customerName}
+                        </span>
+                      )}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '0.5rem',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '12px',
+                        backgroundColor: `${statusColor}20`,
+                        border: `1px solid ${statusColor}`,
+                      }}>
+                        {statusIcon}
+                        <span style={{ color: statusColor, fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
+                          {order.status || 'pending'}
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ color: '#ec4899', fontSize: '1.5rem', fontWeight: 'bold' }}>
+                        ${order.total.toFixed(2)}
+                      </div>
+                      {orderDisplayCurrency !== 'USD' && (
+                        <div style={{ color: '#9ca3af', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                          {formatPrice(order.total, orderExchangeRate, orderDisplayCurrency)}
+                        </div>
+                      )}
+                      {order.totalProfit && (
+                        <div style={{ color: '#10b981', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                          Profit: ${order.totalProfit.toFixed(2)}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <span style={{ color: '#ec4899', fontSize: '1.5rem', fontWeight: 'bold' }}>
-                      ${order.total.toFixed(2)}
-                    </span>
+                  <div style={{ marginTop: '0.5rem', color: '#9ca3af' }}>
+                    {order.items.length} item(s) • Discount: ${order.discount.toFixed(2)}
+                    {order.tax && order.tax > 0 && ` • Tax: $${order.tax.toFixed(2)}`}
                   </div>
                 </div>
-                <div style={{ marginTop: '0.5rem', color: '#9ca3af' }}>
-                  {order.items.length} item(s) • Discount: ${order.discount.toFixed(2)}
-                  {order.tax && order.tax > 0 && ` • Tax: $${order.tax.toFixed(2)}`}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

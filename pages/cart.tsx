@@ -47,8 +47,57 @@ export default function Cart() {
     return JSON.stringify(cartData, null, 2);
   };
 
-  const executeAction = () => {
+  const createOrder = async () => {
     if (!customerName) return;
+    
+    try {
+      // Get platform from URL parameter
+      const platform = router.query.platform as string || 
+        (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('platform') : null);
+      
+      if (!platform) {
+        console.error('Platform is required to create order');
+        return;
+      }
+
+      const orderData = {
+        customerName,
+        items: cartItems.map(item => ({
+          productId: item.product.id,
+          title: item.product.title,
+          price: item.product.price,
+          quantity: item.quantity,
+        })),
+        subtotal: getTotalPrice(),
+        discount: 0,
+        tax: 0,
+        total: getTotalPrice(),
+        exchangeRate,
+        displayCurrency,
+        currency,
+      };
+
+      const response = await fetch(`/api/orders?platform=${platform}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData),
+      });
+
+      if (!response.ok) {
+        console.error('Failed to create order');
+      }
+    } catch (error) {
+      console.error('Error creating order:', error);
+    }
+  };
+
+  const executeAction = async () => {
+    if (!customerName) return;
+    
+    // Create order in database
+    await createOrder();
     
     switch (pendingAction) {
       case 'clipboard':
