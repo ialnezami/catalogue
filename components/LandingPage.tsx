@@ -209,190 +209,294 @@ export default function LandingPage() {
           },
         }}
       />
-    <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-      {/* Hero Section */}
       <div style={{ 
-        padding: '4rem 2rem',
-        textAlign: 'center',
-        color: '#ffffff',
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+      backgroundSize: '200% 200%',
+      animation: 'gradientShift 15s ease infinite',
+      direction: language === 'ar' ? 'rtl' : 'ltr',
         position: 'relative',
         overflow: 'hidden'
       }}>
+      {/* Animated background elements */}
+      <div style={{
+        position: 'absolute',
+        top: '-50%',
+        left: '-50%',
+        width: '200%',
+        height: '200%',
+        background: 'radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px)',
+        backgroundSize: '50px 50px',
+        animation: 'drift 20s linear infinite',
+        opacity: 0.3
+      }} />
         <div style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.1) 0%, transparent 70%)',
-          animation: 'pulse 3s ease-in-out infinite'
+        background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+        animation: 'pulse 4s ease-in-out infinite'
         }} />
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: '800px', margin: '0 auto' }}>
+      
+      {/* Hero Section */}
           <div style={{ 
-            display: 'inline-block',
-            marginBottom: '1.5rem',
-            animation: 'float 3s ease-in-out infinite'
-          }}>
-            <ShoppingBag size={80} style={{ filter: 'drop-shadow(0 10px 30px rgba(255,255,255,0.3))' }} />
-          </div>
-          <div style={{ position: 'relative', width: '100%' }}>
-            {/* Language Selector */}
-            <div style={{ position: 'absolute', top: 0, right: language === 'ar' ? 0 : 'auto', left: language === 'en' ? 0 : 'auto', zIndex: 10 }} data-language-selector>
-              <div style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setShowLanguageSelector(!showLanguageSelector)}
-                  data-language-selector
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    border: '1px solid rgba(255, 255, 255, 0.3)',
-                    borderRadius: '8px',
-                    padding: '0.5rem 0.75rem',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    color: '#ffffff',
-                    transition: 'all 0.2s ease',
-                    backdropFilter: 'blur(10px)',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                  }}
-                >
-                  <Globe size={18} />
-                  <span>{language === 'ar' ? 'العربية' : 'English'}</span>
-                </button>
-                {showLanguageSelector && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '100%',
-                    right: language === 'ar' ? 0 : 'auto',
-                    left: language === 'en' ? 0 : 'auto',
-                    marginTop: '0.5rem',
-                    backgroundColor: '#ffffff',
-                    borderRadius: '8px',
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                    overflow: 'hidden',
-                    minWidth: '150px',
-                  }}>
-                    <button
-                      onClick={() => { setLanguage('ar'); setShowLanguageSelector(false); }}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        background: language === 'ar' ? '#667eea' : 'transparent',
-                        color: language === 'ar' ? '#ffffff' : '#1a1a1a',
-                        border: 'none',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        display: 'block',
-                        direction: 'rtl',
-                      }}
-                    >
-                      العربية
-                    </button>
-                    <button
-                      onClick={() => { setLanguage('en'); setShowLanguageSelector(false); }}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem 1rem',
-                        background: language === 'en' ? '#667eea' : 'transparent',
-                        color: language === 'en' ? '#ffffff' : '#1a1a1a',
-                        border: 'none',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                        display: 'block',
-                        borderTop: '1px solid #e5e7eb',
-                      }}
-                    >
-                      English
-                    </button>
-                  </div>
-                )}
-              </div>
+        padding: '6rem 2rem 8rem',
+        textAlign: 'center',
+        color: '#ffffff',
+        position: 'relative',
+        overflow: 'hidden',
+        minHeight: '90vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div style={{ position: 'relative', zIndex: 1, maxWidth: '900px', margin: '0 auto', width: '100%' }}>
+          {/* Language Selector */}
+          <div style={{ 
+            position: 'absolute', 
+            top: '2rem', 
+            right: language === 'ar' ? '2rem' : 'auto', 
+            left: language === 'en' ? '2rem' : 'auto', 
+            zIndex: 10 
+          }} data-language-selector>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowLanguageSelector(!showLanguageSelector)}
+                data-language-selector
+                style={{
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '0.625rem 1rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  color: '#ffffff',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  backdropFilter: 'blur(20px)',
+                  fontWeight: '500',
+                  fontSize: '0.9375rem',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 6px 25px rgba(0,0,0,0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+                }}
+              >
+                <Globe size={18} />
+                <span>{language === 'ar' ? 'العربية' : 'English'}</span>
+              </button>
+              {showLanguageSelector && (
+                <div style={{
+                  position: 'absolute',
+                  top: 'calc(100% + 0.75rem)',
+                  right: language === 'ar' ? 0 : 'auto',
+                  left: language === 'en' ? 0 : 'auto',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+                  overflow: 'hidden',
+                  minWidth: '160px',
+                  animation: 'slideDown 0.3s ease-out',
+                  border: '1px solid rgba(0,0,0,0.05)'
+                }}>
+                  <button
+                    onClick={() => { setLanguage('ar'); setShowLanguageSelector(false); }}
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1.25rem',
+                      background: language === 'ar' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+                      color: language === 'ar' ? '#ffffff' : '#1a1a1a',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'block',
+                      direction: 'rtl',
+                      fontWeight: language === 'ar' ? '600' : '400',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (language !== 'ar') {
+                        e.currentTarget.style.background = '#f3f4f6';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (language !== 'ar') {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
+                  >
+                    العربية
+                  </button>
+                  <button
+                    onClick={() => { setLanguage('en'); setShowLanguageSelector(false); }}
+                    style={{
+                      width: '100%',
+                      padding: '0.875rem 1.25rem',
+                      background: language === 'en' ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'transparent',
+                      color: language === 'en' ? '#ffffff' : '#1a1a1a',
+                      border: 'none',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      display: 'block',
+                      borderTop: '1px solid #e5e7eb',
+                      fontWeight: language === 'en' ? '600' : '400',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (language !== 'en') {
+                        e.currentTarget.style.background = '#f3f4f6';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (language !== 'en') {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
+                  >
+                    English
+                  </button>
+                </div>
+              )}
             </div>
           </div>
+          
+          <div style={{ 
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '2rem',
+            animation: 'float 4s ease-in-out infinite',
+            position: 'relative'
+          }}>
+            <div style={{
+              position: 'absolute',
+              width: '120px',
+              height: '120px',
+              background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
+              borderRadius: '50%',
+              animation: 'pulse 2s ease-in-out infinite'
+            }} />
+            <ShoppingBag 
+              size={80} 
+              style={{ 
+                filter: 'drop-shadow(0 10px 40px rgba(255,255,255,0.4))',
+                position: 'relative',
+                zIndex: 1
+              }} 
+            />
+          </div>
           <h1 style={{ 
-            fontSize: '3.5rem', 
-            fontWeight: '800', 
-            marginBottom: '1rem',
-            letterSpacing: '-0.02em',
-            textShadow: '0 4px 20px rgba(0,0,0,0.2)',
-            direction: language === 'ar' ? 'rtl' : 'ltr'
+            fontSize: 'clamp(2.5rem, 8vw, 4.5rem)', 
+            fontWeight: '900', 
+            marginBottom: '1.5rem',
+            letterSpacing: '-0.03em',
+            textShadow: '0 8px 32px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2)',
+            direction: language === 'ar' ? 'rtl' : 'ltr',
+            lineHeight: '1.1',
+            background: 'linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.9) 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            animation: 'fadeInUp 0.8s ease-out'
           }}>
             {t('landing.multiPlatformCatalogue')}
           </h1>
           <p style={{ 
-            fontSize: '1.5rem', 
-            marginBottom: '2rem',
+            fontSize: 'clamp(1.125rem, 3vw, 1.5rem)', 
+            marginBottom: '3rem',
             opacity: 0.95,
-            lineHeight: '1.6',
-            direction: language === 'ar' ? 'rtl' : 'ltr'
+            lineHeight: '1.7',
+            direction: language === 'ar' ? 'rtl' : 'ltr',
+            textShadow: '0 2px 10px rgba(0,0,0,0.2)',
+            maxWidth: '700px',
+            margin: '0 auto 3rem',
+            animation: 'fadeInUp 0.8s ease-out 0.2s both'
           }}>
             {t('landing.tagline')}
           </p>
-          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '1.25rem', 
+            justifyContent: 'center', 
+            flexWrap: 'wrap',
+            animation: 'fadeInUp 0.8s ease-out 0.4s both'
+          }}>
             <button
               onClick={() => { setShowLogin(true); setActiveTab('login'); }}
               style={{
-                padding: '1rem 2rem',
-                backgroundColor: '#ffffff',
+                padding: '1.125rem 2.5rem',
+                background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
                 color: '#667eea',
                 border: 'none',
-                borderRadius: '12px',
+                borderRadius: '16px',
                 fontSize: '1.125rem',
-                fontWeight: '600',
+                fontWeight: '700',
                 cursor: 'pointer',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s ease',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                gap: '0.625rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: '0 10px 40px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.1)',
+                position: 'relative',
+                overflow: 'hidden'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 15px 40px rgba(0,0,0,0.3)';
+                e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,0.3), 0 8px 20px rgba(0,0,0,0.15)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.2), 0 4px 12px rgba(0,0,0,0.1)';
               }}
             >
-              <LogIn size={20} />
+              <LogIn size={22} style={{ strokeWidth: 2.5 }} />
               {t('landing.login')}
             </button>
             <button
               onClick={() => { setShowSignup(true); setActiveTab('signup'); }}
               style={{
-                padding: '1rem 2rem',
-                backgroundColor: 'transparent',
+                padding: '1.125rem 2.5rem',
+                background: 'rgba(255, 255, 255, 0.15)',
                 color: '#ffffff',
-                border: '2px solid #ffffff',
-                borderRadius: '12px',
+                border: '2px solid rgba(255, 255, 255, 0.5)',
+                borderRadius: '16px',
                 fontSize: '1.125rem',
-                fontWeight: '600',
+                fontWeight: '700',
                 cursor: 'pointer',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                transition: 'all 0.3s ease',
+                gap: '0.625rem',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
                 direction: language === 'ar' ? 'rtl' : 'ltr'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#ffffff';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.95)';
                 e.currentTarget.style.color = '#667eea';
-                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 20px 50px rgba(0,0,0,0.25), 0 8px 20px rgba(0,0,0,0.15)';
+                e.currentTarget.style.borderColor = '#ffffff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
                 e.currentTarget.style.color = '#ffffff';
-                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.15)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
               }}
             >
-              <UserPlus size={20} />
+              <UserPlus size={22} style={{ strokeWidth: 2.5 }} />
               {t('landing.requestPlatform')}
             </button>
           </div>
@@ -401,55 +505,114 @@ export default function LandingPage() {
 
       {/* Features Section */}
       <div style={{ 
-        padding: '4rem 2rem',
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(10px)'
+        padding: '6rem 2rem',
+        background: 'linear-gradient(to bottom, rgba(255,255,255,0.98) 0%, #ffffff 100%)',
+        backdropFilter: 'blur(10px)',
+        position: 'relative'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Decorative background elements */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '200px',
+          background: 'linear-gradient(to bottom, rgba(102, 126, 234, 0.05) 0%, transparent 100%)',
+          pointerEvents: 'none'
+        }} />
+        
+        <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
+          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
           <h2 style={{ 
-            textAlign: 'center', 
-            fontSize: '2.5rem', 
-            fontWeight: '700',
-            marginBottom: '3rem',
-            color: '#1a1a1a',
-            direction: language === 'ar' ? 'rtl' : 'ltr'
-          }}>
-            {t('landing.whyChoose')}
+              fontSize: 'clamp(2rem, 5vw, 3rem)', 
+              fontWeight: '800',
+              marginBottom: '1rem',
+              color: '#1a1a1a',
+              direction: language === 'ar' ? 'rtl' : 'ltr',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-0.02em'
+            }}>
+              {t('landing.whyChoose')}
           </h2>
+            <div style={{
+              width: '80px',
+              height: '4px',
+              background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '2px',
+              margin: '0 auto',
+              marginTop: '1rem'
+            }} />
+          </div>
           <div style={{ 
             display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
-            gap: '2rem' 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
+            gap: '2.5rem',
+            position: 'relative',
+            zIndex: 1
           }}>
             {[
-              { icon: Shield, titleKey: 'landing.secureIsolated', descKey: 'landing.secureIsolatedDesc' },
-              { icon: Zap, titleKey: 'landing.fastReliable', descKey: 'landing.fastReliableDesc' },
-              { icon: Store, titleKey: 'landing.easyManagement', descKey: 'landing.easyManagementDesc' },
+              { icon: Shield, titleKey: 'landing.secureIsolated', descKey: 'landing.secureIsolatedDesc', color: '#10b981' },
+              { icon: Zap, titleKey: 'landing.fastReliable', descKey: 'landing.fastReliableDesc', color: '#f59e0b' },
+              { icon: Store, titleKey: 'landing.easyManagement', descKey: 'landing.easyManagementDesc', color: '#667eea' },
             ].map((feature, idx) => (
               <div
                 key={idx}
                 style={{
-                  padding: '2rem',
-                  background: '#ffffff',
-                  borderRadius: '16px',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                  transition: 'all 0.3s ease',
-                  border: '1px solid rgba(102, 126, 234, 0.1)'
+                  padding: '2.5rem',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                  borderRadius: '24px',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  border: '1px solid rgba(102, 126, 234, 0.08)',
+                  position: 'relative',
+                  overflow: 'hidden'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-5px)';
-                  e.currentTarget.style.boxShadow = '0 8px 30px rgba(102, 126, 234, 0.2)';
+                  e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = '0 20px 50px rgba(102, 126, 234, 0.15), 0 8px 24px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.borderColor = feature.color;
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)';
+                  e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.08)';
                 }}
               >
-                <feature.icon size={40} style={{ color: '#667eea', marginBottom: '1rem' }} />
-                <h3 style={{ fontSize: '1.25rem', fontWeight: '600', marginBottom: '0.5rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '16px',
+                  background: `linear-gradient(135deg, ${feature.color}15 0%, ${feature.color}08 100%)`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '1.5rem',
+                  border: `1px solid ${feature.color}20`,
+                  transition: 'all 0.3s ease'
+                }}>
+                  <feature.icon size={32} style={{ color: feature.color }} strokeWidth={2} />
+                </div>
+                <h3 style={{ 
+                  fontSize: '1.5rem', 
+                  fontWeight: '700', 
+                  marginBottom: '0.75rem', 
+                  color: '#1a1a1a', 
+                  direction: language === 'ar' ? 'rtl' : 'ltr',
+                  lineHeight: '1.3'
+                }}>
                   {t(feature.titleKey)}
                 </h3>
-                <p style={{ color: '#6b7280', lineHeight: '1.6', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t(feature.descKey)}</p>
+                <p style={{ 
+                  color: '#6b7280', 
+                  lineHeight: '1.7', 
+                  direction: language === 'ar' ? 'rtl' : 'ltr',
+                  fontSize: '1rem'
+                }}>
+                  {t(feature.descKey)}
+                </p>
               </div>
             ))}
           </div>
@@ -458,20 +621,48 @@ export default function LandingPage() {
 
       {/* Existing Platforms Section */}
       <div style={{ 
-        padding: '4rem 2rem',
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)'
+        padding: '6rem 2rem',
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 50%, #f8f9fa 100%)',
+        position: 'relative',
+        overflow: 'hidden'
       }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        {/* Subtle pattern overlay */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          opacity: 0.03,
+          backgroundImage: 'radial-gradient(circle at 2px 2px, #667eea 1px, transparent 0)',
+          backgroundSize: '40px 40px'
+        }} />
+        
+        <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
           <h2 style={{ 
-            textAlign: 'center', 
-            fontSize: '2.5rem', 
-            fontWeight: '700',
-            marginBottom: '3rem',
-            color: '#1a1a1a',
-            direction: language === 'ar' ? 'rtl' : 'ltr'
-          }}>
-            {t('landing.existingPlatforms')}
+              fontSize: 'clamp(2rem, 5vw, 3rem)', 
+              fontWeight: '800',
+              marginBottom: '1rem',
+              color: '#1a1a1a',
+              direction: language === 'ar' ? 'rtl' : 'ltr',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              letterSpacing: '-0.02em'
+            }}>
+              {t('landing.existingPlatforms')}
           </h2>
+            <div style={{
+              width: '80px',
+              height: '4px',
+              background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '2px',
+              margin: '0 auto',
+              marginTop: '1rem'
+            }} />
+          </div>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>
               <p style={{ color: '#6b7280', direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t('landing.loadingPlatforms')}</p>
@@ -483,8 +674,8 @@ export default function LandingPage() {
           ) : (
             <div style={{ 
               display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', 
-              gap: '1.5rem' 
+              gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', 
+              gap: '2rem' 
             }}>
               {platforms.map((platform, idx) => (
                 <Link 
@@ -494,43 +685,98 @@ export default function LandingPage() {
                 >
                   <div
                     style={{
-                      padding: '2rem',
-                      background: '#ffffff',
-                      borderRadius: '16px',
-                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                      transition: 'all 0.3s ease',
+                      padding: '2.5rem',
+                      background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+                      borderRadius: '24px',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)',
+                      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                       border: '1px solid rgba(102, 126, 234, 0.1)',
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      position: 'relative',
+                      overflow: 'hidden'
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)';
-                      e.currentTarget.style.boxShadow = '0 8px 30px rgba(102, 126, 234, 0.3)';
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 20px 50px rgba(102, 126, 234, 0.2), 0 8px 24px rgba(0,0,0,0.12)';
                       e.currentTarget.style.borderColor = '#667eea';
                     }}
                     onMouseLeave={(e) => {
                       e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                      e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.1)';
+                      e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04)';
                       e.currentTarget.style.borderColor = 'rgba(102, 126, 234, 0.1)';
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                      <Store size={32} style={{ color: '#667eea' }} />
-                      <div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1a1a1a', margin: 0 }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'flex-start', 
+                      gap: '1.25rem', 
+                      marginBottom: '1.25rem' 
+                    }}>
+                      <div style={{
+                        width: '56px',
+                        height: '56px',
+                        borderRadius: '14px',
+                        background: 'linear-gradient(135deg, #667eea15 0%, #764ba208 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid rgba(102, 126, 234, 0.15)',
+                        flexShrink: 0
+                      }}>
+                        <Store size={28} style={{ color: '#667eea' }} strokeWidth={2} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ 
+                          fontSize: '1.375rem', 
+                          fontWeight: '700', 
+                          color: '#1a1a1a', 
+                          margin: '0 0 0.375rem 0',
+                          lineHeight: '1.3'
+                        }}>
                           {platform.name}
                         </h3>
-                        <p style={{ fontSize: '0.875rem', color: '#6b7280', margin: 0 }}>
+                        <p style={{ 
+                          fontSize: '0.875rem', 
+                          color: '#6b7280', 
+                          margin: 0,
+                          fontWeight: '500'
+                        }}>
                           {platform.code}
                         </p>
                       </div>
                     </div>
                     {platform.description && (
-                      <p style={{ color: '#6b7280', fontSize: '0.875rem', lineHeight: '1.6', marginBottom: '1rem' }}>
+                      <p style={{ 
+                        color: '#6b7280', 
+                        fontSize: '0.9375rem', 
+                        lineHeight: '1.7', 
+                        marginBottom: '1.5rem' 
+                      }}>
                         {platform.description}
                       </p>
                     )}
-                    <div style={{ display: 'flex', alignItems: 'center', color: '#667eea', fontSize: '0.875rem', fontWeight: '600', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                      {t('landing.visitPlatform')} <ArrowRight size={16} style={{ marginLeft: language === 'ar' ? 0 : '0.5rem', marginRight: language === 'ar' ? '0.5rem' : 0, transform: language === 'ar' ? 'scaleX(-1)' : 'none' }} />
+                    <div style={{ 
+                      display: 'inline-flex', 
+                      alignItems: 'center', 
+                      color: '#667eea', 
+                      fontSize: '0.9375rem', 
+                      fontWeight: '600',
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      background: 'rgba(102, 126, 234, 0.08)',
+                      transition: 'all 0.2s ease'
+                    }}>
+                      {t('landing.visitPlatform')} 
+                      <ArrowRight 
+                        size={18} 
+                        style={{ 
+                          marginLeft: language === 'ar' ? 0 : '0.5rem', 
+                          marginRight: language === 'ar' ? '0.5rem' : 0, 
+                          transform: language === 'ar' ? 'scaleX(-1)' : 'none',
+                          transition: 'transform 0.2s ease'
+                        }} 
+                      />
                     </div>
                   </div>
                 </Link>
@@ -542,45 +788,75 @@ export default function LandingPage() {
 
       {/* Contact Section */}
       <div style={{ 
-        padding: '4rem 2rem',
-        background: '#ffffff',
-        textAlign: 'center'
+        padding: '6rem 2rem',
+        background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
+        textAlign: 'center',
+        position: 'relative'
       }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <Mail size={48} style={{ color: '#667eea', marginBottom: '1rem' }} />
-          <h2 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', color: '#1a1a1a', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+          <div style={{
+            width: '80px',
+            height: '80px',
+            borderRadius: '20px',
+            background: 'linear-gradient(135deg, #667eea15 0%, #764ba208 100%)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '2rem',
+            border: '1px solid rgba(102, 126, 234, 0.15)'
+          }}>
+            <Mail size={40} style={{ color: '#667eea' }} strokeWidth={2} />
+          </div>
+          <h2 style={{ 
+            fontSize: 'clamp(1.75rem, 4vw, 2.5rem)', 
+            fontWeight: '800', 
+            marginBottom: '1rem', 
+            color: '#1a1a1a', 
+            direction: language === 'ar' ? 'rtl' : 'ltr',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
             {t('landing.needHelp')}
           </h2>
-          <p style={{ color: '#6b7280', marginBottom: '2rem', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+          <p style={{ 
+            color: '#6b7280', 
+            marginBottom: '2.5rem', 
+            direction: language === 'ar' ? 'rtl' : 'ltr',
+            fontSize: '1.125rem',
+            lineHeight: '1.7'
+          }}>
             {t('landing.haveQuestions')}
           </p>
           <button
             onClick={() => setShowContact(true)}
             style={{
-              padding: '1rem 2rem',
-              backgroundColor: '#667eea',
+              padding: '1.125rem 2.5rem',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               color: '#ffffff',
               border: 'none',
-              borderRadius: '12px',
-              fontSize: '1rem',
-              fontWeight: '600',
+              borderRadius: '16px',
+              fontSize: '1.125rem',
+              fontWeight: '700',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'all 0.3s ease',
-              direction: language === 'ar' ? 'rtl' : 'ltr'
+              gap: '0.625rem',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              direction: language === 'ar' ? 'rtl' : 'ltr',
+              boxShadow: '0 10px 40px rgba(102, 126, 234, 0.3), 0 4px 12px rgba(0,0,0,0.1)'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#5568d3';
-              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 20px 50px rgba(102, 126, 234, 0.4), 0 8px 20px rgba(0,0,0,0.15)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#667eea';
-              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.boxShadow = '0 10px 40px rgba(102, 126, 234, 0.3), 0 4px 12px rgba(0,0,0,0.1)';
             }}
           >
-            <Mail size={20} />
+            <Mail size={22} style={{ strokeWidth: 2.5 }} />
             {t('landing.contactUs')}
           </button>
         </div>
@@ -594,8 +870,15 @@ export default function LandingPage() {
               {t('landing.loginToPlatform')}
             </h2>
             <form onSubmit={handleLogin}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.username')}
                 </label>
                 <input
@@ -605,16 +888,35 @@ export default function LandingPage() {
                   required
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.password')}
                 </label>
                 <input
@@ -624,11 +926,23 @@ export default function LandingPage() {
                   required
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
@@ -636,22 +950,25 @@ export default function LandingPage() {
                 type="submit"
                 style={{
                   width: '100%',
-                  padding: '0.875rem',
-                  backgroundColor: '#667eea',
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
+                  borderRadius: '12px',
+                  fontSize: '1.0625rem',
+                  fontWeight: '700',
                   cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  direction: language === 'ar' ? 'rtl' : 'ltr'
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  direction: language === 'ar' ? 'rtl' : 'ltr',
+                  boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#5568d3';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#667eea';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
                 }}
               >
                 {t('landing.login')}
@@ -672,8 +989,15 @@ export default function LandingPage() {
               {t('landing.requestFormDescription')}
             </p>
             <form onSubmit={handlePlatformRequest}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.platformName')} *
                 </label>
                 <input
@@ -681,19 +1005,38 @@ export default function LandingPage() {
                   value={signupData.platformName}
                   onChange={(e) => setSignupData({ ...signupData, platformName: e.target.value })}
                   required
-                    placeholder="e.g., My Store"
-                    style={{
-                      width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      direction: language === 'ar' ? 'rtl' : 'ltr'
-                    }}
-                  />
-                </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  placeholder="e.g., My Store"
+                  style={{
+                    width: '100%',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                />
+              </div>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.platformDescription')}
                 </label>
                 <textarea
@@ -703,18 +1046,38 @@ export default function LandingPage() {
                   rows={3}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
                     resize: 'vertical',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa',
+                    fontFamily: 'inherit'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.625rem', 
+                    color: '#1a1a1a', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr' 
+                  }}>
                     {t('landing.contactName')} *
                   </label>
                   <input
@@ -724,16 +1087,35 @@ export default function LandingPage() {
                     required
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '12px',
                       fontSize: '1rem',
-                      direction: language === 'ar' ? 'rtl' : 'ltr'
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      transition: 'all 0.2s ease',
+                      background: '#fafafa'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.background = '#fafafa';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.625rem', 
+                    color: '#1a1a1a', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr' 
+                  }}>
                     {t('landing.businessType')}
                   </label>
                   <input
@@ -743,18 +1125,37 @@ export default function LandingPage() {
                     placeholder="e.g., Fashion, Electronics"
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '12px',
                       fontSize: '1rem',
-                      direction: language === 'ar' ? 'rtl' : 'ltr'
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      transition: 'all 0.2s ease',
+                      background: '#fafafa'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.background = '#fafafa';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.625rem', 
+                    color: '#1a1a1a', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr' 
+                  }}>
                     {t('landing.email')} *
                   </label>
                   <input
@@ -764,16 +1165,35 @@ export default function LandingPage() {
                     required
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '12px',
                       fontSize: '1rem',
-                      direction: language === 'ar' ? 'rtl' : 'ltr'
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      transition: 'all 0.2s ease',
+                      background: '#fafafa'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.background = '#fafafa';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                  <label style={{ 
+                    display: 'block', 
+                    marginBottom: '0.625rem', 
+                    color: '#1a1a1a', 
+                    fontWeight: '600', 
+                    fontSize: '0.9375rem',
+                    direction: language === 'ar' ? 'rtl' : 'ltr' 
+                  }}>
                     {t('landing.phone')}
                   </label>
                   <input
@@ -782,17 +1202,36 @@ export default function LandingPage() {
                     onChange={(e) => setSignupData({ ...signupData, contactPhone: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '0.75rem',
-                      border: '1px solid #d1d5db',
-                      borderRadius: '8px',
+                      padding: '0.875rem 1rem',
+                      border: '2px solid #e5e7eb',
+                      borderRadius: '12px',
                       fontSize: '1rem',
-                      direction: language === 'ar' ? 'rtl' : 'ltr'
+                      direction: language === 'ar' ? 'rtl' : 'ltr',
+                      transition: 'all 0.2s ease',
+                      background: '#fafafa'
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = '#667eea';
+                      e.currentTarget.style.background = '#ffffff';
+                      e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = '#e5e7eb';
+                      e.currentTarget.style.background = '#fafafa';
+                      e.currentTarget.style.boxShadow = 'none';
                     }}
                   />
                 </div>
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.additionalMessage')}
                 </label>
                 <textarea
@@ -802,12 +1241,25 @@ export default function LandingPage() {
                   rows={4}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
                     resize: 'vertical',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa',
+                    fontFamily: 'inherit'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
@@ -815,29 +1267,32 @@ export default function LandingPage() {
                 type="submit"
                 style={{
                   width: '100%',
-                  padding: '0.875rem',
-                  backgroundColor: '#667eea',
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
+                  borderRadius: '12px',
+                  fontSize: '1.0625rem',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.5rem',
-                  transition: 'all 0.3s ease',
-                  direction: language === 'ar' ? 'rtl' : 'ltr'
+                  gap: '0.625rem',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  direction: language === 'ar' ? 'rtl' : 'ltr',
+                  boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#5568d3';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#667eea';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
                 }}
               >
-                <Send size={20} />
+                <Send size={22} style={{ strokeWidth: 2.5 }} />
                 {t('landing.submitRequest')}
               </button>
             </form>
@@ -853,8 +1308,15 @@ export default function LandingPage() {
               {t('landing.contactUsTitle')}
             </h2>
             <form onSubmit={handleContact}>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.name')} *
                 </label>
                 <input
@@ -864,16 +1326,35 @@ export default function LandingPage() {
                   required
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.email')} *
                 </label>
                 <input
@@ -883,16 +1364,35 @@ export default function LandingPage() {
                   required
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.subject')} *
                 </label>
                 <input
@@ -902,16 +1402,35 @@ export default function LandingPage() {
                   required
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', marginBottom: '0.5rem', color: '#374151', fontWeight: '500', direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+              <div style={{ marginBottom: '2rem' }}>
+                <label style={{ 
+                  display: 'block', 
+                  marginBottom: '0.625rem', 
+                  color: '#1a1a1a', 
+                  fontWeight: '600', 
+                  fontSize: '0.9375rem',
+                  direction: language === 'ar' ? 'rtl' : 'ltr' 
+                }}>
                   {t('landing.message')} *
                 </label>
                 <textarea
@@ -921,12 +1440,25 @@ export default function LandingPage() {
                   rows={5}
                   style={{
                     width: '100%',
-                    padding: '0.75rem',
-                    border: '1px solid #d1d5db',
-                    borderRadius: '8px',
+                    padding: '0.875rem 1rem',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '12px',
                     fontSize: '1rem',
                     resize: 'vertical',
-                    direction: language === 'ar' ? 'rtl' : 'ltr'
+                    direction: language === 'ar' ? 'rtl' : 'ltr',
+                    transition: 'all 0.2s ease',
+                    background: '#fafafa',
+                    fontFamily: 'inherit'
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = '#667eea';
+                    e.currentTarget.style.background = '#ffffff';
+                    e.currentTarget.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = '#e5e7eb';
+                    e.currentTarget.style.background = '#fafafa';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 />
               </div>
@@ -934,29 +1466,32 @@ export default function LandingPage() {
                 type="submit"
                 style={{
                   width: '100%',
-                  padding: '0.875rem',
-                  backgroundColor: '#667eea',
+                  padding: '1rem',
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                   color: '#ffffff',
                   border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '1rem',
-                  fontWeight: '600',
+                  borderRadius: '12px',
+                  fontSize: '1.0625rem',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '0.5rem',
-                  transition: 'all 0.3s ease',
-                  direction: language === 'ar' ? 'rtl' : 'ltr'
+                  gap: '0.625rem',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  direction: language === 'ar' ? 'rtl' : 'ltr',
+                  boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#5568d3';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = '#667eea';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.3)';
                 }}
               >
-                <Send size={20} />
+                <Send size={22} style={{ strokeWidth: 2.5 }} />
                 {t('landing.sendMessage')}
               </button>
             </form>
@@ -966,12 +1501,41 @@ export default function LandingPage() {
 
       <style jsx>{`
         @keyframes float {
-          0%, 100% { transform: translateY(0px); }
-          50% { transform: translateY(-20px); }
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(2deg); }
         }
         @keyframes pulse {
-          0%, 100% { opacity: 0.5; }
-          50% { opacity: 0.8; }
+          0%, 100% { opacity: 0.5; transform: scale(1); }
+          50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        @keyframes gradientShift {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        @keyframes drift {
+          0% { transform: translate(0, 0); }
+          100% { transform: translate(50px, 50px); }
+        }
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}</style>
     </div>
@@ -993,24 +1557,29 @@ function Modal({ children, onClose }: ModalProps) {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.75)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         zIndex: 1000,
         padding: '2rem',
-        backdropFilter: 'blur(4px)'
+        backdropFilter: 'blur(8px)',
+        animation: 'fadeIn 0.2s ease-out'
       }}
       onClick={onClose}
     >
       <div
         style={{
           backgroundColor: '#ffffff',
-          borderRadius: '16px',
-          padding: '2rem',
-          boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          borderRadius: '24px',
+          padding: '2.5rem',
+          boxShadow: '0 25px 80px rgba(0,0,0,0.4), 0 10px 30px rgba(0,0,0,0.2)',
           maxWidth: '100%',
-          animation: 'slideUp 0.3s ease-out'
+          maxHeight: '90vh',
+          overflowY: 'auto',
+          position: 'relative',
+          animation: 'slideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: '1px solid rgba(0,0,0,0.05)'
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1018,41 +1587,53 @@ function Modal({ children, onClose }: ModalProps) {
           onClick={onClose}
           style={{
             position: 'absolute',
-            top: '1rem',
-            right: '1rem',
-            background: 'transparent',
+            top: '1.25rem',
+            right: '1.25rem',
+            background: 'rgba(0, 0, 0, 0.04)',
             border: 'none',
             color: '#6b7280',
             cursor: 'pointer',
-            padding: '0.5rem',
-            borderRadius: '50%',
+            padding: '0.625rem',
+            borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            width: '40px',
+            height: '40px'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = '#f3f4f6';
             e.currentTarget.style.color = '#1a1a1a';
+            e.currentTarget.style.transform = 'rotate(90deg)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.04)';
             e.currentTarget.style.color = '#6b7280';
+            e.currentTarget.style.transform = 'rotate(0deg)';
           }}
         >
-          <X size={24} />
+          <X size={20} />
         </button>
         {children}
       </div>
       <style jsx>{`
-        @keyframes slideUp {
+        @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateY(20px);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+          }
+        }
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
           }
         }
       `}</style>
