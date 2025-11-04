@@ -4,6 +4,7 @@ import { Save, DollarSign, Settings, Key, X } from 'lucide-react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function AdminSettings() {
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,7 @@ export default function AdminSettings() {
   const [changingPassword, setChangingPassword] = useState(false);
 
   const router = useRouter();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     // Get platform from admin session
@@ -103,7 +105,7 @@ export default function AdminSettings() {
       });
 
       if (response.ok) {
-        toast.success('Settings saved successfully!', {
+        toast.success(t('admin.settingsSaved'), {
           duration: 3000,
           position: 'top-right',
           style: {
@@ -119,7 +121,7 @@ export default function AdminSettings() {
           },
         });
       } else {
-        toast.error('Error saving settings!', {
+        toast.error(t('admin.settingsError'), {
           duration: 3000,
           position: 'top-right',
           style: {
@@ -133,7 +135,7 @@ export default function AdminSettings() {
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast.error('Error saving settings!', {
+      toast.error(t('admin.settingsError'), {
         duration: 3000,
         position: 'top-right',
         style: {
@@ -151,22 +153,22 @@ export default function AdminSettings() {
 
   const handlePasswordChange = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast.error('All fields are required');
+      toast.error(t('admin.allFieldsRequired'));
       return;
     }
 
     if (newPassword.length < 6) {
-      toast.error('New password must be at least 6 characters long');
+      toast.error(t('admin.passwordMinLength'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error('New passwords do not match');
+      toast.error(t('admin.passwordsDoNotMatch'));
       return;
     }
 
     if (!adminUsername) {
-      toast.error('Admin username not found');
+      toast.error(t('admin.adminUsernameNotFound'));
       return;
     }
 
@@ -185,17 +187,17 @@ export default function AdminSettings() {
       const data = await response.json();
 
       if (response.ok) {
-        toast.success('Password changed successfully!');
+        toast.success(t('admin.passwordChangedSuccess'));
         setShowPasswordModal(false);
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
       } else {
-        toast.error(data.message || 'Failed to change password');
+        toast.error(data.message || t('admin.passwordChangeError'));
       }
     } catch (error) {
       console.error('Error changing password:', error);
-      toast.error('An error occurred while changing password');
+      toast.error(t('admin.errorChangingPassword'));
     } finally {
       setChangingPassword(false);
     }
@@ -205,7 +207,7 @@ export default function AdminSettings() {
     return (
       <Layout>
         <div style={{ textAlign: 'center', padding: '4rem' }}>
-          <p style={{ color: '#9ca3af' }}>Loading settings...</p>
+          <p style={{ color: '#9ca3af' }}>{t('admin.loadingSettings')}</p>
         </div>
       </Layout>
     );
@@ -213,14 +215,14 @@ export default function AdminSettings() {
 
   return (
     <Layout>
-      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div style={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
           alignItems: 'center', 
           marginBottom: '2rem' 
         }}>
-          <h1 style={{ fontSize: '2.5rem', color: '#ec4899' }}>Settings</h1>
+          <h1 style={{ fontSize: '2.5rem', color: '#ec4899' }}>{t('admin.settings')}</h1>
           <div style={{ display: 'flex', gap: '1rem' }}>
             <button
               onClick={() => setShowPasswordModal(true)}
@@ -238,7 +240,7 @@ export default function AdminSettings() {
               }}
             >
               <Key size={18} />
-              Change Password
+              {t('admin.changePassword')}
             </button>
             <button
               onClick={() => router.push('/admin/products')}
@@ -252,7 +254,7 @@ export default function AdminSettings() {
                 fontSize: '1rem',
               }}
             >
-              Back to Products
+              {t('admin.backToProducts')}
             </button>
           </div>
         </div>
@@ -266,7 +268,7 @@ export default function AdminSettings() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
             <Settings size={24} color="#ec4899" />
             <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#000000' }}>
-              Currency Configuration
+              {t('admin.currencyConfiguration')}
             </h2>
           </div>
 
@@ -279,7 +281,7 @@ export default function AdminSettings() {
                 fontSize: '0.875rem', 
                 fontWeight: '600' 
               }}>
-                Base Currency (for storage)
+                {t('admin.baseCurrency')}
               </label>
               <input
                 className="input"
@@ -290,7 +292,7 @@ export default function AdminSettings() {
                 style={{ backgroundColor: '#f5f5f5', cursor: 'not-allowed' }}
               />
               <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                Products are stored in USD
+                {t('admin.productsStoredInUSD')}
               </p>
             </div>
 
@@ -302,7 +304,7 @@ export default function AdminSettings() {
                 fontSize: '0.875rem', 
                 fontWeight: '600' 
               }}>
-                Exchange Rate (1 USD = ? SP)
+                {t('admin.exchangeRate')}
               </label>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <span style={{ fontSize: '1rem', color: '#666666' }}>1 USD =</span>
@@ -319,7 +321,7 @@ export default function AdminSettings() {
                 <span style={{ fontSize: '1rem', color: '#666666', fontWeight: '600' }}>SP</span>
               </div>
               <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                Update this rate to match current market exchange rate
+                {t('admin.updateExchangeRate')}
               </p>
             </div>
 
@@ -331,18 +333,18 @@ export default function AdminSettings() {
                 fontSize: '0.875rem', 
                 fontWeight: '600' 
               }}>
-                Display Currency (shown to customers)
+                {t('admin.displayCurrency')}
               </label>
               <select
                 className="input"
                 value={settings.displayCurrency}
                 onChange={(e) => setSettings({ ...settings, displayCurrency: e.target.value })}
               >
-                <option value="SP">Syrian Pound (SP)</option>
-                <option value="USD">US Dollar (USD)</option>
+                <option value="SP">{t('admin.syrianPound')}</option>
+                <option value="USD">{t('admin.usDollar')}</option>
               </select>
               <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                Prices shown to customers will be converted to this currency
+                {t('admin.pricesShownToCustomers')}
               </p>
             </div>
 
@@ -354,18 +356,18 @@ export default function AdminSettings() {
                 fontSize: '0.875rem', 
                 fontWeight: '600' 
               }}>
-                Platform Language
+                {t('admin.platformLanguage')}
               </label>
               <select
                 className="input"
                 value={settings.language}
                 onChange={(e) => setSettings({ ...settings, language: e.target.value })}
               >
-                <option value="ar">العربية (Arabic)</option>
-                <option value="en">English</option>
+                <option value="ar">{t('admin.arabic')} (Arabic)</option>
+                <option value="en">{t('admin.english')}</option>
               </select>
               <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                This will set the language for the product creation modal and other admin interfaces
+                {t('admin.setLanguageForModal')}
               </p>
             </div>
 
@@ -379,7 +381,7 @@ export default function AdminSettings() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
                 <Settings size={24} color="#ec4899" />
                 <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#000000' }}>
-                  Homepage Hero Text
+                  {t('admin.homepageHeroText')}
                 </h2>
               </div>
               
@@ -391,7 +393,7 @@ export default function AdminSettings() {
                   fontSize: '0.875rem', 
                   fontWeight: '600' 
                 }}>
-                  Hero Title (Arabic)
+                  {t('admin.heroTitleAr')}
                 </label>
                 <input
                   className="input"
@@ -402,7 +404,7 @@ export default function AdminSettings() {
                   style={{ direction: 'rtl' }}
                 />
                 <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                  Main heading displayed on homepage for Arabic language
+                  {t('admin.mainHeadingArabic')}
                 </p>
               </div>
 
@@ -414,7 +416,7 @@ export default function AdminSettings() {
                   fontSize: '0.875rem', 
                   fontWeight: '600' 
                 }}>
-                  Hero Subtitle (Arabic)
+                  {t('admin.heroSubtitleAr')}
                 </label>
                 <input
                   className="input"
@@ -425,7 +427,7 @@ export default function AdminSettings() {
                   style={{ direction: 'rtl' }}
                 />
                 <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                  Subtitle displayed below the main heading for Arabic language
+                  {t('admin.subtitleBelowHeadingArabic')}
                 </p>
               </div>
 
@@ -437,7 +439,7 @@ export default function AdminSettings() {
                   fontSize: '0.875rem', 
                   fontWeight: '600' 
                 }}>
-                  Hero Title (English)
+                  {t('admin.heroTitleEn')}
                 </label>
                 <input
                   className="input"
@@ -447,7 +449,7 @@ export default function AdminSettings() {
                   placeholder="Discover Our Collection"
                 />
                 <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                  Main heading displayed on homepage for English language
+                  {t('admin.mainHeadingEnglish')}
                 </p>
               </div>
 
@@ -459,7 +461,7 @@ export default function AdminSettings() {
                   fontSize: '0.875rem', 
                   fontWeight: '600' 
                 }}>
-                  Hero Subtitle (English)
+                  {t('admin.heroSubtitleEn')}
                 </label>
                 <input
                   className="input"
@@ -469,7 +471,7 @@ export default function AdminSettings() {
                   placeholder="Elegant pieces for the modern woman"
                 />
                 <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
-                  Subtitle displayed below the main heading for English language
+                  {t('admin.subtitleBelowHeadingEnglish')}
                 </p>
               </div>
             </div>
@@ -484,7 +486,7 @@ export default function AdminSettings() {
               borderRadius: '12px',
             }}>
               <div>
-                <p style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '0.25rem' }}>Example:</p>
+                <p style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '0.25rem' }}>{t('admin.example')}</p>
                 <p style={{ fontSize: '1.25rem', fontWeight: '600', color: '#000000' }}>
                   $100 USD
                 </p>
@@ -493,7 +495,7 @@ export default function AdminSettings() {
                 →
               </div>
               <div>
-                <p style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '0.25rem' }}>Shows to customer:</p>
+                <p style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '0.25rem' }}>{t('admin.showsToCustomer')}</p>
                 <p style={{ fontSize: '1.25rem', fontWeight: '600', color: '#ec4899' }}>
                   {(100 * settings.exchangeRate).toLocaleString()} SP
                 </p>
@@ -517,7 +519,7 @@ export default function AdminSettings() {
                   letterSpacing: '0.05em',
                 }}
               >
-                Cancel
+                {t('admin.cancel')}
               </button>
               <button
                 type="submit"
@@ -528,8 +530,8 @@ export default function AdminSettings() {
                   opacity: saving ? 0.5 : 1,
                 }}
               >
-                <Save size={18} style={{ marginLeft: '0.5rem' }} />
-                {saving ? 'Saving...' : 'Save Settings'}
+                <Save size={18} style={{ marginLeft: language === 'ar' ? 0 : '0.5rem', marginRight: language === 'ar' ? '0.5rem' : 0 }} />
+                {saving ? t('admin.saving') : t('admin.saveSettings')}
               </button>
             </div>
           </form>
@@ -563,8 +565,8 @@ export default function AdminSettings() {
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.5rem', color: '#000000', margin: 0 }}>Change Password</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <h2 style={{ fontSize: '1.5rem', color: '#000000', margin: 0 }}>{t('admin.changePassword')}</h2>
                 <button
                   onClick={() => setShowPasswordModal(false)}
                   style={{
@@ -580,40 +582,40 @@ export default function AdminSettings() {
                 </button>
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>Current Password *</label>
+              <div style={{ marginBottom: '1.5rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>{t('admin.currentPassword')} *</label>
                 <input
                   type="password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="Enter current password"
+                  placeholder={t('admin.enterCurrentPassword')}
                   className="input"
                 />
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>New Password *</label>
+              <div style={{ marginBottom: '1.5rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>{t('admin.newPassword')} *</label>
                 <input
                   type="password"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
-                  placeholder="Enter new password (min 6 characters)"
+                  placeholder={t('admin.enterNewPassword')}
                   className="input"
                 />
               </div>
 
-              <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>Confirm New Password *</label>
+              <div style={{ marginBottom: '1.5rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                <label style={{ display: 'block', color: '#333333', marginBottom: '0.5rem', fontWeight: '600' }}>{t('admin.confirmNewPassword')} *</label>
                 <input
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
+                  placeholder={t('admin.confirmPassword')}
                   className="input"
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '1rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
                 <button
                   onClick={() => {
                     setShowPasswordModal(false);
@@ -635,7 +637,7 @@ export default function AdminSettings() {
                     letterSpacing: '0.05em',
                   }}
                 >
-                  Cancel
+                  {t('admin.cancel')}
                 </button>
                 <button
                   onClick={handlePasswordChange}
@@ -648,7 +650,7 @@ export default function AdminSettings() {
                     cursor: changingPassword ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {changingPassword ? 'Changing...' : 'Change Password'}
+                  {changingPassword ? t('admin.saving') : t('admin.changePassword')}
                 </button>
               </div>
             </div>

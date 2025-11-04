@@ -3,6 +3,7 @@ import Layout from '@/components/Layout';
 import { FileText, Calendar, DollarSign, ShoppingBag, LogOut, Home, X, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { getCurrencySettings, formatPrice, CURRENCY_SYMBOLS } from '@/lib/currency';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface OrderItem {
   productId: string;
@@ -42,6 +43,7 @@ export default function AdminOrders() {
   const [currency, setCurrency] = useState('USD');
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const router = useRouter();
+  const { t, language } = useLanguage();
 
   useEffect(() => {
     // Get platform from admin session
@@ -154,7 +156,7 @@ export default function AdminOrders() {
     return (
       <Layout>
         <div style={{ textAlign: 'center', padding: '4rem' }}>
-          <p style={{ color: '#9ca3af' }}>Loading orders...</p>
+          <p style={{ color: '#9ca3af' }}>{t('admin.loadingOrders') || 'Loading orders...'}</p>
         </div>
       </Layout>
     );
@@ -162,8 +164,8 @@ export default function AdminOrders() {
 
   return (
     <Layout>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2.5rem', color: '#ec4899' }}>Orders History</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <h1 style={{ fontSize: '2.5rem', color: '#ec4899' }}>{t('admin.ordersHistory')}</h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button
             onClick={() => router.push('/pos')}
@@ -181,7 +183,7 @@ export default function AdminOrders() {
             }}
           >
             <ShoppingBag size={20} />
-            POS
+            {t('admin.pos')}
           </button>
           <button
             onClick={() => router.push('/admin/products')}
@@ -199,7 +201,7 @@ export default function AdminOrders() {
             }}
           >
             <Home size={20} />
-            Products
+            {t('admin.productsManagement')}
           </button>
           <button
             onClick={handleLogout}
@@ -217,16 +219,16 @@ export default function AdminOrders() {
             }}
           >
             <LogOut size={20} />
-            Logout
+            {t('admin.logout')}
           </button>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <FileText size={32} color="#3b82f6" />
-            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Total Orders</h3>
+            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>{t('admin.totalOrders')}</h3>
           </div>
           <p style={{ color: '#ec4899', fontSize: '2rem', fontWeight: 'bold' }}>{getTotalOrders()}</p>
         </div>
@@ -234,7 +236,7 @@ export default function AdminOrders() {
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <Clock size={32} color="#f59e0b" />
-            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Pending</h3>
+            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>{t('admin.pendingOrders')}</h3>
           </div>
           <p style={{ color: '#f59e0b', fontSize: '2rem', fontWeight: 'bold' }}>{getPendingOrders()}</p>
         </div>
@@ -242,7 +244,7 @@ export default function AdminOrders() {
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <DollarSign size={32} color="#10b981" />
-            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Total Revenue</h3>
+            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>{t('admin.totalRevenue')}</h3>
           </div>
           <p style={{ color: '#ec4899', fontSize: '2rem', fontWeight: 'bold' }}>
             ${getTotalRevenue().toFixed(2)}
@@ -257,7 +259,7 @@ export default function AdminOrders() {
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <DollarSign size={32} color="#10b981" />
-            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Total Profit</h3>
+            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>{t('admin.totalProfit')}</h3>
           </div>
           <p style={{ color: '#10b981', fontSize: '2rem', fontWeight: 'bold' }}>
             ${getTotalProfit().toFixed(2)}
@@ -272,15 +274,15 @@ export default function AdminOrders() {
         <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
             <ShoppingBag size={32} color="#ec4899" />
-            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>Items Sold</h3>
+            <h3 style={{ color: '#ffffff', fontSize: '1.25rem' }}>{t('admin.itemsSold')}</h3>
           </div>
           <p style={{ color: '#ec4899', fontSize: '2rem', fontWeight: 'bold' }}>{getTotalItems()}</p>
         </div>
       </div>
 
-      <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
+      <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-          <h2 style={{ fontSize: '1.5rem', color: '#ffffff', margin: 0 }}>Recent Orders</h2>
+          <h2 style={{ fontSize: '1.5rem', color: '#ffffff', margin: 0 }}>{t('admin.recentOrders')}</h2>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={() => {
@@ -297,7 +299,7 @@ export default function AdminOrders() {
                 fontSize: '0.875rem',
               }}
             >
-              Pending Only
+              {t('admin.pendingOnly')}
             </button>
             <button
               onClick={() => loadOrders()}
@@ -311,14 +313,14 @@ export default function AdminOrders() {
                 fontSize: '0.875rem',
               }}
             >
-              All Orders
+              {t('admin.allOrders')}
             </button>
           </div>
         </div>
         
         {orders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <p style={{ color: '#9ca3af', fontSize: '1.125rem' }}>No orders yet</p>
+            <p style={{ color: '#9ca3af', fontSize: '1.125rem' }}>{t('admin.noOrdersYet')}</p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -361,7 +363,7 @@ export default function AdminOrders() {
                       <span style={{ color: '#d1d5db' }}>{formatDate(order.timestamp)}</span>
                       {order.customerName && (
                         <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
-                          • {order.customerName}
+                          • {t('admin.customer')}: {order.customerName}
                         </span>
                       )}
                       <div style={{ 
@@ -375,7 +377,10 @@ export default function AdminOrders() {
                       }}>
                         {statusIcon}
                         <span style={{ color: statusColor, fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase' }}>
-                          {order.status || 'pending'}
+                          {order.status === 'pending' ? t('admin.pending') : 
+                           order.status === 'accepted' ? t('admin.accepted') : 
+                           order.status === 'rejected' ? t('admin.rejected') : 
+                           t('admin.pending')}
                         </span>
                       </div>
                     </div>
@@ -390,14 +395,14 @@ export default function AdminOrders() {
                       )}
                       {order.totalProfit && (
                         <div style={{ color: '#10b981', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-                          Profit: ${order.totalProfit.toFixed(2)}
+                          {t('admin.profit')}: ${order.totalProfit.toFixed(2)}
                         </div>
                       )}
                     </div>
                   </div>
                   <div style={{ marginTop: '0.5rem', color: '#9ca3af' }}>
-                    {order.items.length} item(s) • Discount: ${order.discount.toFixed(2)}
-                    {order.tax && order.tax > 0 && ` • Tax: $${order.tax.toFixed(2)}`}
+                    {order.items.length} {t('admin.items')} • {t('admin.discount')}: ${order.discount.toFixed(2)}
+                    {order.tax && order.tax > 0 && ` • ${t('admin.tax')}: $${order.tax.toFixed(2)}`}
                   </div>
                 </div>
               );
@@ -435,8 +440,8 @@ export default function AdminOrders() {
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.5rem', color: '#ffffff' }}>Order Details</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+              <h2 style={{ fontSize: '1.5rem', color: '#ffffff' }}>{t('admin.orderDetails')}</h2>
               <button
                 onClick={() => setSelectedOrder(null)}
                 style={{
@@ -451,13 +456,19 @@ export default function AdminOrders() {
               </button>
             </div>
 
-            <div style={{ color: '#9ca3af', marginBottom: '1.5rem' }}>
-              <p><strong>Date:</strong> {formatDate(selectedOrder.timestamp)}</p>
+            <div style={{ color: '#9ca3af', marginBottom: '1.5rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+              <p><strong>{t('admin.date')}:</strong> {formatDate(selectedOrder.timestamp)}</p>
+              {selectedOrder.customerName && (
+                <p><strong>{t('admin.customer')}:</strong> {selectedOrder.customerName}</p>
+              )}
             </div>
 
-            <h3 style={{ fontSize: '1.125rem', color: '#ffffff', marginBottom: '1rem' }}>Items:</h3>
+            <h3 style={{ fontSize: '1.125rem', color: '#ffffff', marginBottom: '1rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>{t('admin.items')}:</h3>
             <div style={{ marginBottom: '1.5rem' }}>
-              {selectedOrder.items.map((item, index) => (
+              {selectedOrder.items.map((item, index) => {
+                const orderExchangeRate = selectedOrder.exchangeRate || exchangeRate;
+                const orderDisplayCurrency = selectedOrder.displayCurrency || displayCurrency;
+                return (
                 <div
                   key={index}
                   style={{
@@ -469,45 +480,151 @@ export default function AdminOrders() {
                     justifyContent: 'space-between',
                   }}
                 >
-                  <div>
+                  <div dir={language === 'ar' ? 'rtl' : 'ltr'}>
                     <p style={{ color: '#ffffff' }}>{item.title}</p>
                     <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
                       {item.quantity}x ${item.price.toFixed(2)}
-                      {item.discount > 0 && ` - $${item.discount.toFixed(2)} discount`}
+                      {item.buyPrice && item.buyPrice > 0 && (
+                        <span style={{ color: '#10b981', marginLeft: '0.5rem' }}>
+                          ({t('admin.profit')}: ${((item.price - item.buyPrice) * item.quantity).toFixed(2)})
+                        </span>
+                      )}
                     </p>
+                    {orderDisplayCurrency !== 'USD' && (
+                      <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                        {formatPrice(item.price, orderExchangeRate, orderDisplayCurrency)} × {item.quantity} = {formatPrice(item.subtotal, orderExchangeRate, orderDisplayCurrency)}
+                      </p>
+                    )}
                   </div>
-                  <p style={{ color: '#ec4899', fontWeight: 'bold' }}>${item.subtotal.toFixed(2)}</p>
+                  <div style={{ textAlign: 'right' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                    <p style={{ color: '#ec4899', fontWeight: 'bold' }}>${item.subtotal.toFixed(2)}</p>
+                    {orderDisplayCurrency !== 'USD' && (
+                      <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>
+                        {formatPrice(item.subtotal, orderExchangeRate, orderDisplayCurrency)}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
 
-            <div style={{ borderTop: '1px solid #374151', paddingTop: '1rem' }}>
+            <div style={{ borderTop: '1px solid #374151', paddingTop: '1rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+              {(() => {
+                const orderExchangeRate = selectedOrder.exchangeRate || exchangeRate;
+                const orderDisplayCurrency = selectedOrder.displayCurrency || displayCurrency;
+                return (
+                  <>
+                    {selectedOrder.totalProfit && selectedOrder.totalProfit > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid #374151' }}>
+                        <span style={{ color: '#10b981', fontWeight: '600' }}>{t('admin.totalProfit')}:</span>
+                        <span style={{ color: '#10b981', fontWeight: 'bold' }}>
+                          ${selectedOrder.totalProfit.toFixed(2)}
+                          {orderDisplayCurrency !== 'USD' && (
+                            <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#9ca3af' }}>
+                              ({formatPrice(selectedOrder.totalProfit, orderExchangeRate, orderDisplayCurrency)})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ color: '#d1d5db' }}>{t('admin.subtotal')}:</span>
+                      <span style={{ color: '#ffffff' }}>
+                        ${selectedOrder.subtotal.toFixed(2)}
+                        {orderDisplayCurrency !== 'USD' && (
+                          <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#9ca3af' }}>
+                            ({formatPrice(selectedOrder.subtotal, orderExchangeRate, orderDisplayCurrency)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ color: '#d1d5db' }}>{t('admin.discount')}:</span>
+                      <span style={{ color: '#10b981' }}>
+                        -${selectedOrder.discount.toFixed(2)}
+                        {orderDisplayCurrency !== 'USD' && (
+                          <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#9ca3af' }}>
+                            ({formatPrice(selectedOrder.discount, orderExchangeRate, orderDisplayCurrency)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    {selectedOrder.tax && selectedOrder.tax > 0 && (
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: '#d1d5db' }}>{t('admin.tax')}:</span>
+                        <span style={{ color: '#ffffff' }}>
+                          ${selectedOrder.tax.toFixed(2)}
+                          {orderDisplayCurrency !== 'USD' && (
+                            <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#9ca3af' }}>
+                              ({formatPrice(selectedOrder.tax, orderExchangeRate, orderDisplayCurrency)})
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                      <span style={{ color: '#d1d5db' }}>{t('admin.total')}:</span>
+                      <span style={{ color: '#ec4899', fontWeight: 'bold', fontSize: '1.25rem' }}>
+                        ${selectedOrder.total.toFixed(2)}
+                        {orderDisplayCurrency !== 'USD' && (
+                          <span style={{ fontSize: '0.875rem', marginLeft: '0.5rem', color: '#9ca3af' }}>
+                            ({formatPrice(selectedOrder.total, orderExchangeRate, orderDisplayCurrency)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()}
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>Subtotal:</span>
-                <span style={{ color: '#ffffff' }}>${selectedOrder.subtotal.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>Discount:</span>
-                <span style={{ color: '#10b981' }}>-${selectedOrder.discount.toFixed(2)}</span>
-              </div>
-              {selectedOrder.tax && selectedOrder.tax > 0 && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                  <span style={{ color: '#d1d5db' }}>Tax:</span>
-                  <span style={{ color: '#ffffff' }}>${selectedOrder.tax.toFixed(2)}</span>
-                </div>
-              )}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>Total:</span>
-                <span style={{ color: '#ec4899', fontWeight: 'bold', fontSize: '1.25rem' }}>${selectedOrder.total.toFixed(2)}</span>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <span style={{ color: '#d1d5db' }}>Payment:</span>
+                <span style={{ color: '#d1d5db' }}>{t('admin.payment')}:</span>
                 <span style={{ color: '#ffffff' }}>${selectedOrder.paymentAmount.toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: '#d1d5db' }}>Change:</span>
+                <span style={{ color: '#d1d5db' }}>{t('admin.change')}:</span>
                 <span style={{ color: '#10b981', fontWeight: 'bold' }}>${selectedOrder.change.toFixed(2)}</span>
               </div>
+              {selectedOrder.status === 'pending' && (
+                <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #374151' }}>
+                  <button
+                    onClick={() => updateOrderStatus(selectedOrder._id, 'accepted')}
+                    disabled={updatingStatus === selectedOrder._id}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: '#10b981',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      opacity: updatingStatus === selectedOrder._id ? 0.5 : 1,
+                    }}
+                  >
+                    {updatingStatus === selectedOrder._id ? '...' : t('admin.acceptOrder')}
+                  </button>
+                  <button
+                    onClick={() => updateOrderStatus(selectedOrder._id, 'rejected')}
+                    disabled={updatingStatus === selectedOrder._id}
+                    style={{
+                      flex: 1,
+                      padding: '0.75rem',
+                      backgroundColor: '#ef4444',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      fontWeight: '600',
+                      opacity: updatingStatus === selectedOrder._id ? 0.5 : 1,
+                    }}
+                  >
+                    {updatingStatus === selectedOrder._id ? '...' : t('admin.rejectOrder')}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
