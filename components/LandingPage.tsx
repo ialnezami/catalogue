@@ -41,6 +41,7 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   const [showLanguageSelector, setShowLanguageSelector] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -165,17 +166,26 @@ export default function LandingPage() {
 
       const data = await response.json();
       if (response.ok) {
+        // Show center modal
+        setShowSuccessModal(true);
+        
+        // Show corner toast
         toast.success('Login successful!', {
-          duration: 2000,
+          duration: 1500,
+          position: 'top-right',
         });
-        // Small delay to show the success message before redirect
+        
+        // Clear all toasts and redirect after showing both messages
         setTimeout(() => {
+          toast.dismiss(); // Remove all message boxes
+          setShowSuccessModal(false);
+          setShowLogin(false); // Close login modal
         if (data.role === 'super_admin') {
           router.push('/super-admin');
         } else {
           router.push('/admin/products');
         }
-        }, 500);
+        }, 1500);
       } else {
         toast.error(data.message || 'Login failed', {
           duration: 3000,
@@ -1445,6 +1455,44 @@ export default function LandingPage() {
             </form>
           </div>
         </Modal>
+      )}
+
+      {/* Login Success Modal (Center) */}
+      {showSuccessModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#ffffff',
+              padding: '3rem',
+              borderRadius: '16px',
+              border: '2px solid #10b981',
+              boxShadow: '0 20px 60px rgba(16, 185, 129, 0.3)',
+              textAlign: 'center',
+              maxWidth: '400px',
+              animation: 'slideUp 0.3s ease',
+            }}
+          >
+            <CheckCircle size={64} color="#10b981" style={{ margin: '0 auto 1.5rem' }} />
+            <h2 style={{ fontSize: '1.5rem', color: '#1a1a1a', marginBottom: '0.5rem', fontWeight: '700' }}>
+              Login successful!
+            </h2>
+            <p style={{ color: '#6b7280' }}>Redirecting...</p>
+          </div>
+        </div>
       )}
 
       {/* Signup/Platform Request Modal */}

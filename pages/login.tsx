@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { LogIn } from 'lucide-react';
-import toast from 'react-hot-toast';
+import { LogIn, CheckCircle } from 'lucide-react';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,19 +43,29 @@ export default function Login() {
       if (response.ok) {
         const data = await response.json();
         
+        // Clear error message
+        setError('');
+        
+        // Show center modal
+        setShowSuccessModal(true);
+        
+        // Show corner toast
         toast.success('Login successful!', {
-          duration: 2000,
+          duration: 1500,
+          position: 'top-right',
         });
         
-        // Small delay to show the success message before redirect
+        // Clear all toasts and redirect after showing both messages
         setTimeout(() => {
+          toast.dismiss(); // Remove all message boxes
+          setShowSuccessModal(false);
           // Redirect based on role
           if (data.role === 'super_admin') {
             router.push('/super-admin');
           } else {
             router.push('/admin/products');
           }
-        }, 500);
+        }, 1500);
       } else {
         setError('Invalid credentials');
         toast.error('Invalid credentials', {
@@ -169,6 +180,46 @@ export default function Login() {
           </button>
         </form>
       </div>
+
+      {/* Success Modal (Center) */}
+      {showSuccessModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            animation: 'fadeIn 0.2s ease',
+          }}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '3rem',
+              borderRadius: '16px',
+              border: '2px solid #10b981',
+              boxShadow: '0 20px 60px rgba(16, 185, 129, 0.3)',
+              textAlign: 'center',
+              maxWidth: '400px',
+              animation: 'slideUp 0.3s ease',
+            }}
+          >
+            <CheckCircle size={64} color="#10b981" style={{ margin: '0 auto 1.5rem' }} />
+            <h2 style={{ fontSize: '1.5rem', color: '#ffffff', marginBottom: '0.5rem' }}>
+              Login successful!
+            </h2>
+            <p style={{ color: '#9ca3af' }}>Redirecting...</p>
+          </div>
+        </div>
+      )}
+
+      <Toaster position="top-right" />
     </div>
   );
 }
