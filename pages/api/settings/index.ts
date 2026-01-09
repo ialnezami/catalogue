@@ -29,6 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           heroSubtitle: 'قطع أنيقة للمرأة العصرية', // Arabic default
           heroTitleEn: 'Discover Our Collection', // English default
           heroSubtitleEn: 'Elegant pieces for the modern woman', // English default
+          shopLogo: '',
         });
       }
       // Ensure language is included even if not in settings
@@ -70,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (req.method === 'POST') {
-      const { exchangeRate, displayCurrency, currency, language, heroTitle, heroSubtitle, heroTitleEn, heroSubtitleEn } = req.body;
+      const { exchangeRate, displayCurrency, currency, language, heroTitle, heroSubtitle, heroTitleEn, heroSubtitleEn, shopLogo } = req.body;
       
       const settings = withPlatform(platform, {
         type: 'app_settings',
@@ -82,6 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         heroSubtitle: heroSubtitle || 'قطع أنيقة للمرأة العصرية',
         heroTitleEn: heroTitleEn || 'Discover Our Collection',
         heroSubtitleEn: heroSubtitleEn || 'Elegant pieces for the modern woman',
+        shopLogo: shopLogo || '',
         updatedAt: new Date(),
       });
 

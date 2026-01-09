@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Layout from '@/components/Layout';
-import { Save, DollarSign, Settings, Key, X } from 'lucide-react';
+import { Save, DollarSign, Settings, Key, X, Upload, Store } from 'lucide-react';
 import { useRouter } from 'next/router';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -19,7 +19,13 @@ export default function AdminSettings() {
     heroSubtitle: 'قطع أنيقة للمرأة العصرية',
     heroTitleEn: 'Discover Our Collection',
     heroSubtitleEn: 'Elegant pieces for the modern woman',
+    shopLogo: '',
   });
+
+  // Shop logo upload states
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
 
   // Password change states
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -85,6 +91,9 @@ export default function AdminSettings() {
       const response = await fetch(`/api/settings${platformParam}`);
       const data = await response.json();
       setSettings(data);
+      if (data.shopLogo) {
+        setLogoPreview(data.shopLogo);
+      }
     } catch (error) {
       console.error('Error loading settings:', error);
     } finally {
@@ -101,7 +110,10 @@ export default function AdminSettings() {
       const response = await fetch(`/api/settings${platformParam}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings),
+        body: JSON.stringify({
+          ...settings,
+          shopLogo: settings.shopLogo || '',
+        }),
       });
 
       if (response.ok) {
@@ -148,6 +160,57 @@ export default function AdminSettings() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error(t('admin.invalidImageFile') || 'Please select a valid image file');
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(t('admin.imageSizeTooLarge') || 'Image size must be less than 10MB');
+      return;
+    }
+
+    setIsUploadingLogo(true);
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Upload to Cloudinary via API (shop-logos folder)
+      const response = await fetch('/api/upload?folder=shop-logos', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Upload failed');
+      }
+
+      // Set the Cloudinary URL in the settings
+      setSettings((prev) => ({ ...prev, shopLogo: data.url }));
+      setLogoPreview(data.url);
+      toast.success(t('admin.logoUploadedSuccess') || 'Logo uploaded successfully!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error(error instanceof Error ? error.message : (t('admin.uploadFailed') || 'Failed to upload logo'));
+    } finally {
+      setIsUploadingLogo(false);
+      // Reset file input
+      if (logoFileInputRef.current) {
+        logoFileInputRef.current.value = '';
+      }
     }
   };
 
@@ -256,6 +319,142 @@ export default function AdminSettings() {
             >
               {t('admin.backToProducts')}
             </button>
+          </div>
+        </div>
+
+        {/* Shop Information Section */}
+        <div style={{ 
+          backgroundColor: '#ffffff',
+          padding: '2rem',
+          borderRadius: '16px',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
+          marginBottom: '2rem',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+            <Store size={24} color="#ec4899" />
+            <h2 style={{ fontSize: '1.5rem', fontWeight: '600', color: '#000000' }}>
+              {t('admin.shopInformation') || 'Shop Information'}
+            </h2>
+          </div>
+          <p style={{ fontSize: '0.875rem', color: '#666666', marginBottom: '1.5rem' }}>
+            {t('admin.updateShopDetails') || 'Update your shop details and branding'}
+          </p>
+
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label style={{ 
+              display: 'block', 
+              color: '#333333', 
+              marginBottom: '0.5rem', 
+              fontSize: '0.875rem', 
+              fontWeight: '600' 
+            }}>
+              {t('admin.shopLogo') || 'Shop Logo'}
+            </label>
+            
+            {/* Logo Preview */}
+            {(logoPreview || settings.shopLogo) && (
+              <div style={{ marginBottom: '1rem' }}>
+                <img
+                  src={logoPreview || settings.shopLogo}
+                  alt="Shop Logo Preview"
+                  style={{
+                    width: '100%',
+                    maxWidth: '200px',
+                    height: '200px',
+                    objectFit: 'contain',
+                    borderRadius: '8px',
+                    border: '1px solid #e5e7eb',
+                    backgroundColor: '#f9fafb',
+                    padding: '0.5rem',
+                  }}
+                />
+              </div>
+            )}
+
+            {/* File Upload Input (Hidden) */}
+            <input
+              ref={logoFileInputRef}
+              type="file"
+              accept="image/*"
+              style={{ display: 'none' }}
+              onChange={handleLogoUpload}
+              disabled={isUploadingLogo}
+            />
+
+            {/* Upload Button */}
+            <button
+              type="button"
+              onClick={() => logoFileInputRef.current?.click()}
+              disabled={isUploadingLogo}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: isUploadingLogo ? '#9ca3af' : '#3b82f6',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isUploadingLogo ? 'not-allowed' : 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '0.75rem',
+                opacity: isUploadingLogo ? 0.6 : 1,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!isUploadingLogo) {
+                  e.currentTarget.style.backgroundColor = '#2563eb';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isUploadingLogo) {
+                  e.currentTarget.style.backgroundColor = '#3b82f6';
+                }
+              }}
+            >
+              {isUploadingLogo ? (
+                <>
+                  <div style={{ 
+                    width: '16px', 
+                    height: '16px', 
+                    border: '2px solid #ffffff',
+                    borderTop: '2px solid transparent',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite'
+                  }} />
+                  {t('admin.uploading') || 'Uploading...'}
+                </>
+              ) : (
+                <>
+                  <Upload size={16} />
+                  {t('admin.uploadLogo') || 'Upload Logo'}
+                </>
+              )}
+            </button>
+
+            {/* Or Divider */}
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0.75rem' }}>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
+              <span style={{ padding: '0 1rem', color: '#9ca3af', fontSize: '0.875rem' }}>OR</span>
+              <div style={{ flex: 1, height: '1px', backgroundColor: '#e5e7eb' }}></div>
+            </div>
+
+            {/* Manual URL Input */}
+            <input
+              type="text"
+              value={settings.shopLogo}
+              onChange={(e) => {
+                setSettings({ ...settings, shopLogo: e.target.value });
+                setLogoPreview(e.target.value || null);
+              }}
+              placeholder={t('admin.enterLogoUrl') || 'Enter logo URL (e.g., https://example.com/logo.png)'}
+              className="input"
+              style={{ marginBottom: '0.5rem' }}
+            />
+            <p style={{ fontSize: '0.75rem', color: '#666666', marginTop: '0.25rem' }}>
+              {t('admin.uploadLogoOrUrl') || '💡 Upload a logo or paste a URL. Cloudinary upload automatically optimizes your images.'}
+            </p>
           </div>
         </div>
 
