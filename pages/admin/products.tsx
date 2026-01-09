@@ -306,7 +306,9 @@ export default function AdminProducts() {
     total: products.length,
     inStock: products.filter((p) => (p.qty || 0) > 0).length,
     outOfStock: products.filter((p) => (p.qty || 0) === 0).length,
-    totalValue: products.reduce((sum, p) => sum + (p.price * (p.qty || 0)), 0),
+    totalValue: products.reduce((sum, p) => sum + (p.price * (p.qty || 0)), 0), // Total inventory value at selling price
+    totalCost: products.reduce((sum, p) => sum + ((p.buyPrice || 0) * (p.qty || 0)), 0), // Total inventory value at cost
+    totalProfit: products.reduce((sum, p) => sum + ((p.price - (p.buyPrice || 0)) * (p.qty || 0)), 0), // Potential profit
     avgPrice: products.length > 0 ? products.reduce((sum, p) => sum + p.price, 0) / products.length : 0,
   };
 
@@ -989,9 +991,21 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               <div style={{ color: '#6b7280', fontSize: '0.875rem', fontWeight: '600' }}>{t('admin.totalValue')}</div>
               <DollarSign size={20} color="#f59e0b" />
             </div>
-            <div style={{ fontSize: '2rem', fontWeight: '800', color: '#f59e0b' }}>
+            <div style={{ fontSize: '2rem', fontWeight: '800', color: '#f59e0b', marginBottom: '0.5rem' }}>
               ${stats.totalValue.toFixed(2)}
             </div>
+            {stats.totalCost > 0 && (
+              <div style={{ fontSize: '0.875rem', color: '#9ca3af', marginTop: '0.5rem', paddingTop: '0.5rem', borderTop: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                  <span>Cost Value:</span>
+                  <span>${stats.totalCost.toFixed(2)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', color: stats.totalProfit > 0 ? '#10b981' : '#ef4444' }}>
+                  <span>Potential Profit:</span>
+                  <span>${stats.totalProfit.toFixed(2)}</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
