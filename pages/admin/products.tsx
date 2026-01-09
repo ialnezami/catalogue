@@ -154,23 +154,37 @@ export default function AdminProducts() {
     const barcode = 'PRD' + Date.now().toString().slice(-10);
     setGeneratedBarcode(barcode);
     setFormData({ ...formData, barcode });
-    
-    // Generate barcode canvas
-    if (barcodeCanvasRef.current) {
-      setTimeout(() => {
-        try {
-          JsBarcode(barcodeCanvasRef.current!, barcode, {
-            format: 'CODE128',
-            width: 2,
-            height: 60,
-            displayValue: true
-          });
-        } catch (error) {
-          console.error('Error generating barcode:', error);
-        }
-      }, 100);
-    }
   };
+
+  // Generate barcode on canvas when generatedBarcode or formData.barcode changes and canvas is available
+  useEffect(() => {
+    const barcodeToDisplay = generatedBarcode || formData.barcode;
+    if (barcodeToDisplay && barcodeCanvasRef.current) {
+      // Use requestAnimationFrame to ensure canvas is rendered
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          if (barcodeCanvasRef.current && barcodeToDisplay) {
+            try {
+              // Clear previous barcode
+              const ctx = barcodeCanvasRef.current.getContext('2d');
+              if (ctx) {
+                ctx.clearRect(0, 0, barcodeCanvasRef.current.width, barcodeCanvasRef.current.height);
+              }
+              // Generate new barcode
+              JsBarcode(barcodeCanvasRef.current, barcodeToDisplay, {
+                format: 'CODE128',
+                width: 2,
+                height: 60,
+                displayValue: true
+              });
+            } catch (error) {
+              console.error('Error generating barcode:', error);
+            }
+          }
+        }, 50);
+      });
+    }
+  }, [generatedBarcode, formData.barcode]);
 
   const printBarcode = () => {
     if (!barcodeCanvasRef.current || !generatedBarcode) return;
@@ -344,20 +358,6 @@ export default function AdminProducts() {
     // If product has barcode, generate barcode display
     if (product.barcode) {
       setGeneratedBarcode(product.barcode);
-      setTimeout(() => {
-        if (barcodeCanvasRef.current && product.barcode) {
-          try {
-            JsBarcode(barcodeCanvasRef.current, product.barcode, {
-              format: 'CODE128',
-              width: 2,
-              height: 60,
-              displayValue: true
-            });
-          } catch (error) {
-            console.error('Error generating barcode:', error);
-          }
-        }
-      }, 100);
     } else {
       setGeneratedBarcode('');
     }
@@ -393,7 +393,7 @@ export default function AdminProducts() {
             secondary: '#10b981',
           },
         });
-        loadProducts();
+      loadProducts();
         setShowDeleteModal(false);
         setProductToDelete(null);
       } else {
