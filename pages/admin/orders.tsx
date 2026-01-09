@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import Layout from '@/components/Layout';
-import { FileText, Calendar, DollarSign, ShoppingBag, LogOut, Home, X, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { FileText, Calendar, DollarSign, ShoppingBag, LogOut, Home, X, CheckCircle, XCircle, Clock, BarChart3, TrendingUp, Download, Filter } from 'lucide-react';
 import { useRouter } from 'next/router';
 import { getCurrencySettings, formatPrice, CURRENCY_SYMBOLS } from '@/lib/currency';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 interface OrderItem {
   productId: string;
@@ -43,6 +44,10 @@ export default function AdminOrders() {
   const [displayCurrency, setDisplayCurrency] = useState('SP');
   const [currency, setCurrency] = useState('USD');
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'year' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState<string>('');
+  const [customEndDate, setCustomEndDate] = useState<string>('');
+  const [showReportModal, setShowReportModal] = useState(false);
   const router = useRouter();
   const { t, language } = useLanguage();
 
@@ -139,19 +144,164 @@ export default function AdminOrders() {
     }
   };
 
-  const getTotalOrders = () => orders.length;
+  const getTotalOrders = () => filteredOrders.length;
   
-  const getPendingOrders = () => orders.filter(o => o.status === 'pending').length;
+  const getPendingOrders = () => filteredOrders.filter(o => o.status === 'pending').length;
   
-  const getTotalRevenue = () => orders
+  const getTotalRevenue = () => filteredOrders
     .filter(o => o.status === 'accepted')
     .reduce((sum, order) => sum + order.total, 0);
   
-  const getTotalProfit = () => orders
+  const getTotalProfit = () => filteredOrders
     .filter(o => o.status === 'accepted')
     .reduce((sum, order) => sum + (order.totalProfit || 0), 0);
   
-  const getTotalItems = () => orders.reduce((sum, order) => sum + order.items.reduce((s, item) => s + item.quantity, 0), 0);
+  const getTotalItems = () => filteredOrders.reduce((sum, order) => sum + order.items.reduce((s, item) => s + item.quantity, 0), 0);
+
+  // Date filtering functions
+  const filterOrdersByDate = (ordersList: Order[]) => {
+    if (dateFilter === 'all') return ordersList;
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    return ordersList.filter(order => {
+      const orderDate = new Date(order.timestamp);
+      
+      switch (dateFilter) {
+        case 'today':
+          return orderDate >= today;
+        case 'week':
+          const weekAgo = new Date(today);
+          weekAgo.setDate(weekAgo.getDate() - 7);
+          return orderDate >= weekAgo;
+        case 'month':
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(monthAgo.getMonth() - 1);
+          return orderDate >= monthAgo;
+        case 'year':
+          const yearAgo = new Date(today);
+          yearAgo.setFullYear(yearAgo.getFullYear() - 1);
+          return orderDate >= yearAgo;
+        case 'custom':
+          if (!customStartDate || !customEndDate) return true;
+          const start = new Date(customStartDate);
+          const end = new Date(customEndDate);
+          end.setHours(23, 59, 59, 999);
+          return orderDate >= start && orderDate <= end;
+        default:
+          return true;
+      }
+    });
+  };
+
+  const filteredOrders = filterOrdersByDate(orders);
+
+  // Chart data preparation
+  const getDailyRevenueData = () => {
+    const dailyData: { [key: string]: { date: string; revenue: number; orders: number; profit: number } } = {};
+    
+    filteredOrders
+      .filter(o => o.status === 'accepted')
+      .forEach(order => {
+        const date = new Date(order.timestamp).toLocaleDateString();
+        if (!dailyData[date]) {
+          dailyData[date] = { date, revenue: 0, orders: 0, profit: 0 };
+        }
+        dailyData[date].revenue += order.total;
+        dailyData[date].orders += 1;
+        dailyData[date].profit += order.totalProfit || 0;
+      });
+    
+    return Object.values(dailyData).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  };
+
+  const getMonthlyRevenueData = () => {
+    const monthlyData: { [key: string]: { month: string; revenue: number; orders: number; profit: number } } = {};
+    
+    filteredOrders
+      .filter(o => o.status === 'accepted')
+      .forEach(order => {
+        const date = new Date(order.timestamp);
+        const month = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+        const monthLabel = date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+        
+        if (!monthlyData[month]) {
+          monthlyData[month] = { month: monthLabel, revenue: 0, orders: 0, profit: 0 };
+        }
+        monthlyData[month].revenue += order.total;
+        monthlyData[month].orders += 1;
+        monthlyData[month].profit += order.totalProfit || 0;
+      });
+    
+    return Object.values(monthlyData).sort((a, b) => {
+      const dateA = Object.keys(monthlyData).find(k => monthlyData[k].month === a.month);
+      const dateB = Object.keys(monthlyData).find(k => monthlyData[k].month === b.month);
+      return (dateA || '').localeCompare(dateB || '');
+    });
+  };
+
+  const getStatusDistribution = () => {
+    const statusCounts = {
+      accepted: filteredOrders.filter(o => o.status === 'accepted').length,
+      pending: filteredOrders.filter(o => o.status === 'pending').length,
+      rejected: filteredOrders.filter(o => o.status === 'rejected').length,
+    };
+    
+    return [
+      { name: 'Accepted', value: statusCounts.accepted, color: '#10b981' },
+      { name: 'Pending', value: statusCounts.pending, color: '#f59e0b' },
+      { name: 'Rejected', value: statusCounts.rejected, color: '#ef4444' },
+    ].filter(item => item.value > 0);
+  };
+
+  const getSourceDistribution = () => {
+    const sourceCounts = {
+      pos: filteredOrders.filter(o => o.source === 'pos').length,
+      cart: filteredOrders.filter(o => o.source === 'cart').length,
+    };
+    
+    return [
+      { name: 'POS', value: sourceCounts.pos, color: '#3b82f6' },
+      { name: 'Cart', value: sourceCounts.cart, color: '#8b5cf6' },
+    ].filter(item => item.value > 0);
+  };
+
+  const exportReport = () => {
+    const reportData = {
+      period: dateFilter === 'custom' ? `${customStartDate} to ${customEndDate}` : dateFilter,
+      generatedAt: new Date().toISOString(),
+      statistics: {
+        totalOrders: filteredOrders.length,
+        acceptedOrders: filteredOrders.filter(o => o.status === 'accepted').length,
+        pendingOrders: filteredOrders.filter(o => o.status === 'pending').length,
+        rejectedOrders: filteredOrders.filter(o => o.status === 'rejected').length,
+        totalRevenue: filteredOrders.filter(o => o.status === 'accepted').reduce((sum, o) => sum + o.total, 0),
+        totalProfit: filteredOrders.filter(o => o.status === 'accepted').reduce((sum, o) => sum + (o.totalProfit || 0), 0),
+        totalItems: filteredOrders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0),
+      },
+      orders: filteredOrders.map(o => ({
+        id: o._id,
+        date: new Date(o.timestamp).toISOString(),
+        customer: o.customerName || 'N/A',
+        status: o.status,
+        source: o.source,
+        total: o.total,
+        profit: o.totalProfit || 0,
+        items: o.items.length,
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(reportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `orders-report-${dateFilter}-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   if (loading) {
     return (
@@ -281,14 +431,120 @@ export default function AdminOrders() {
         </div>
       </div>
 
+      {/* Date Filter and Report Section */}
+      <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151', marginBottom: '2rem' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <h2 style={{ fontSize: '1.5rem', color: '#ffffff', margin: 0 }}>Reports & Analytics</h2>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <button
+              onClick={() => setShowReportModal(true)}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#3b82f6',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <BarChart3 size={18} />
+              View Reports
+            </button>
+            <button
+              onClick={exportReport}
+              style={{
+                padding: '0.75rem 1.5rem',
+                backgroundColor: '#10b981',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+              }}
+            >
+              <Download size={18} />
+              Export Report
+            </button>
+          </div>
+        </div>
+        
+        {/* Date Filter */}
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          <Filter size={18} color="#9ca3af" />
+          <span style={{ color: '#9ca3af', fontSize: '0.875rem' }}>Filter by:</span>
+          {['all', 'today', 'week', 'month', 'year', 'custom'].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setDateFilter(filter as any)}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: dateFilter === filter ? '#3b82f6' : '#374151',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+                textTransform: 'capitalize',
+              }}
+            >
+              {filter === 'all' ? 'All Time' : filter}
+            </button>
+          ))}
+        </div>
+        
+        {dateFilter === 'custom' && (
+          <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <div>
+              <label style={{ color: '#9ca3af', fontSize: '0.875rem', marginRight: '0.5rem' }}>Start Date:</label>
+              <input
+                type="date"
+                value={customStartDate}
+                onChange={(e) => setCustomStartDate(e.target.value)}
+                style={{
+                  padding: '0.5rem',
+                  backgroundColor: '#2a2a2a',
+                  border: '1px solid #374151',
+                  borderRadius: '6px',
+                  color: '#ffffff',
+                }}
+              />
+            </div>
+            <div>
+              <label style={{ color: '#9ca3af', fontSize: '0.875rem', marginRight: '0.5rem' }}>End Date:</label>
+              <input
+                type="date"
+                value={customEndDate}
+                onChange={(e) => setCustomEndDate(e.target.value)}
+                style={{
+                  padding: '0.5rem',
+                  backgroundColor: '#2a2a2a',
+                  border: '1px solid #374151',
+                  borderRadius: '6px',
+                  color: '#ffffff',
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       <div style={{ backgroundColor: '#1a1a1a', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }} dir={language === 'ar' ? 'rtl' : 'ltr'}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
           <h2 style={{ fontSize: '1.5rem', color: '#ffffff', margin: 0 }}>{t('admin.recentOrders')}</h2>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <button
               onClick={() => {
-                const filtered = orders.filter(o => o.status === 'pending');
-                setOrders(filtered.length > 0 ? filtered : orders);
+                // Filter is now handled by dateFilter state
+                // This button can be used for additional filtering if needed
               }}
               style={{
                 padding: '0.5rem 1rem',
@@ -319,13 +575,15 @@ export default function AdminOrders() {
           </div>
         </div>
         
-        {orders.length === 0 ? (
+        {filteredOrders.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem' }}>
-            <p style={{ color: '#9ca3af', fontSize: '1.125rem' }}>{t('admin.noOrdersYet')}</p>
+            <p style={{ color: '#9ca3af', fontSize: '1.125rem' }}>
+              {orders.length === 0 ? t('admin.noOrdersYet') : 'No orders found for the selected period'}
+            </p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {orders.map((order) => {
+            {filteredOrders.map((order) => {
               const orderExchangeRate = order.exchangeRate || exchangeRate;
               const orderDisplayCurrency = order.displayCurrency || displayCurrency;
               const statusColor = 
@@ -626,6 +884,216 @@ export default function AdminOrders() {
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal with Charts */}
+      {showReportModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 2000,
+            padding: '2rem',
+            overflow: 'auto',
+          }}
+          onClick={() => setShowReportModal(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#1a1a1a',
+              padding: '2rem',
+              borderRadius: '16px',
+              border: '1px solid #374151',
+              maxWidth: '1200px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflow: 'auto',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+              <h2 style={{ fontSize: '2rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <BarChart3 size={32} />
+                Sales Reports & Analytics
+              </h2>
+              <button
+                onClick={() => setShowReportModal(false)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: '#9ca3af',
+                  cursor: 'pointer',
+                  padding: '0.5rem',
+                }}
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            {/* Report Statistics */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ backgroundColor: '#2a2a2a', padding: '1rem', borderRadius: '8px' }}>
+                <div style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total Orders</div>
+                <div style={{ color: '#ffffff', fontSize: '1.5rem', fontWeight: 'bold' }}>{filteredOrders.length}</div>
+              </div>
+              <div style={{ backgroundColor: '#2a2a2a', padding: '1rem', borderRadius: '8px' }}>
+                <div style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total Revenue</div>
+                <div style={{ color: '#10b981', fontSize: '1.5rem', fontWeight: 'bold' }}>${getTotalRevenue().toFixed(2)}</div>
+              </div>
+              <div style={{ backgroundColor: '#2a2a2a', padding: '1rem', borderRadius: '8px' }}>
+                <div style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Total Profit</div>
+                <div style={{ color: '#3b82f6', fontSize: '1.5rem', fontWeight: 'bold' }}>${getTotalProfit().toFixed(2)}</div>
+              </div>
+              <div style={{ backgroundColor: '#2a2a2a', padding: '1rem', borderRadius: '8px' }}>
+                <div style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>Items Sold</div>
+                <div style={{ color: '#ec4899', fontSize: '1.5rem', fontWeight: 'bold' }}>{getTotalItems()}</div>
+              </div>
+            </div>
+
+            {/* Charts Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))', gap: '2rem', marginBottom: '2rem' }}>
+              {/* Daily Revenue Chart */}
+              {getDailyRevenueData().length > 0 && (
+                <div style={{ backgroundColor: '#2a2a2a', padding: '1.5rem', borderRadius: '12px' }}>
+                  <h3 style={{ color: '#ffffff', fontSize: '1.25rem', marginBottom: '1rem' }}>Daily Revenue Trend</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={getDailyRevenueData()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="date" stroke="#9ca3af" />
+                      <YAxis stroke="#9ca3af" />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #374151', color: '#ffffff' }}
+                      />
+                      <Legend />
+                      <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} name="Revenue ($)" />
+                      <Line type="monotone" dataKey="profit" stroke="#10b981" strokeWidth={2} name="Profit ($)" />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Monthly Revenue Chart */}
+              {getMonthlyRevenueData().length > 0 && (
+                <div style={{ backgroundColor: '#2a2a2a', padding: '1.5rem', borderRadius: '12px' }}>
+                  <h3 style={{ color: '#ffffff', fontSize: '1.25rem', marginBottom: '1rem' }}>Monthly Revenue</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={getMonthlyRevenueData()}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                      <XAxis dataKey="month" stroke="#9ca3af" />
+                      <YAxis stroke="#9ca3af" />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #374151', color: '#ffffff' }}
+                      />
+                      <Legend />
+                      <Bar dataKey="revenue" fill="#3b82f6" name="Revenue ($)" />
+                      <Bar dataKey="profit" fill="#10b981" name="Profit ($)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Order Status Distribution */}
+              {getStatusDistribution().length > 0 && (
+                <div style={{ backgroundColor: '#2a2a2a', padding: '1.5rem', borderRadius: '12px' }}>
+                  <h3 style={{ color: '#ffffff', fontSize: '1.25rem', marginBottom: '1rem' }}>Order Status Distribution</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={getStatusDistribution()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {getStatusDistribution().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #374151', color: '#ffffff' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+
+              {/* Order Source Distribution */}
+              {getSourceDistribution().length > 0 && (
+                <div style={{ backgroundColor: '#2a2a2a', padding: '1.5rem', borderRadius: '12px' }}>
+                  <h3 style={{ color: '#ffffff', fontSize: '1.25rem', marginBottom: '1rem' }}>Order Source Distribution</h3>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={getSourceDistribution()}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {getSourceDistribution().map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#1a1a1a', border: '1px solid #374151', color: '#ffffff' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+              <button
+                onClick={exportReport}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#10b981',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <Download size={18} />
+                Export Report
+              </button>
+              <button
+                onClick={() => setShowReportModal(false)}
+                style={{
+                  padding: '0.75rem 1.5rem',
+                  backgroundColor: '#374151',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                }}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
