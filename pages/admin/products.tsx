@@ -187,7 +187,8 @@ export default function AdminProducts() {
   }, [generatedBarcode, formData.barcode]);
 
   const printBarcode = () => {
-    if (!barcodeCanvasRef.current || !generatedBarcode) return;
+    const barcodeToPrint = generatedBarcode || formData.barcode;
+    if (!barcodeCanvasRef.current || !barcodeToPrint) return;
     
     const printWindow = window.open('', '_blank');
     if (printWindow) {
@@ -224,7 +225,7 @@ export default function AdminProducts() {
               <img src="${barcodeCanvasRef.current.toDataURL()}" alt="Barcode" />
             </div>
             <div class="product-info">
-              SKU: ${generatedBarcode}
+              SKU: ${barcodeToPrint}
             </div>
             <script>
               window.onload = () => setTimeout(() => window.print(), 500);
