@@ -47,23 +47,30 @@ export default function POSNew() {
 
   const cartSectionRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadProducts();
-    loadCurrencySettings();
-    if (barcodeInputRef.current) {
-      barcodeInputRef.current.focus();
-    }
-  }, []);
-
   const loadCurrencySettings = async () => {
-    // Get platform from URL parameter
-    const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    const platform = urlParams?.get('platform') || undefined;
-    
-    const settings = await getCurrencySettings(platform);
-    setExchangeRate(settings.exchangeRate);
-    setDisplayCurrency(settings.displayCurrency);
+    try {
+      // Get platform from URL parameter
+      const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+      const platform = urlParams?.get('platform') || undefined;
+      
+      const settings = await getCurrencySettings(platform);
+      setExchangeRate(settings.exchangeRate);
+      setDisplayCurrency(settings.displayCurrency);
+    } catch (error) {
+      console.error('Error loading currency settings:', error);
+    }
   };
+
+  useEffect(() => {
+    const initialize = async () => {
+      await loadProducts();
+      await loadCurrencySettings();
+      if (barcodeInputRef.current) {
+        barcodeInputRef.current.focus();
+      }
+    };
+    initialize();
+  }, []);
 
   useEffect(() => {
     if (searchTerm) {
@@ -75,14 +82,6 @@ export default function POSNew() {
       setProducts(filtered);
     }
   }, [searchTerm, products]);
-
-  useEffect(() => {
-    loadProducts();
-    loadCurrencySettings();
-    if (barcodeInputRef.current) {
-      barcodeInputRef.current.focus();
-    }
-  }, []);
 
   const loadProducts = async () => {
     try {
@@ -449,7 +448,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                POS System
              </h1>
              <p style={{ fontSize: '1rem', opacity: 0.9 }}>
-               {items.length} items in cart • Total: {Math.round(getTotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
+               {items.length} items in cart • Total: {formatPrice(getTotal(), exchangeRate, displayCurrency)}
              </p>
            </div>
            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }} className="pos-header-actions">
@@ -592,7 +591,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                      {product.category}
                    </p>
                    <p style={{ color: '#ec4899', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                     ${product.price}
+                     {formatPrice(product.price, exchangeRate, displayCurrency)}
                    </p>
                  </button>
               ))}
@@ -697,7 +696,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                             </button>
                           </div>
                           <p style={{ color: '#ec4899', fontWeight: 'bold', fontSize: '1rem' }}>
-                            ${item.subtotal.toFixed(2)}
+                            {formatPrice(item.subtotal, exchangeRate, displayCurrency)}
                           </p>
                         </div>
                       </div>
@@ -709,16 +708,25 @@ Date: ${new Date().toLocaleString('ar-EG')}
                           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                               <span style={{ color: '#9ca3af' }}>Subtotal:</span>
                               <span style={{ color: '#ffffff' }}>
-                                {Math.round(getSubtotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
-                                <span style={{ fontSize: '0.75em', opacity: 0.7, marginLeft: '0.5rem' }}>
-                                  (${getSubtotal().toFixed(2)})
-                                </span>
+                                {formatPrice(getSubtotal(), exchangeRate, displayCurrency)}
+                                {displayCurrency !== 'USD' && (
+                                  <span style={{ fontSize: '0.75em', opacity: 0.7, marginLeft: '0.5rem' }}>
+                                    (${getSubtotal().toFixed(2)})
+                                  </span>
+                                )}
                               </span>
                             </div>
                     {discount > 0 && (
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10b981' }}>
                         <span>Discount:</span>
-                        <span>-${discount.toFixed(2)}</span>
+                        <span>
+                          -{formatPrice(discount, exchangeRate, displayCurrency)}
+                          {displayCurrency !== 'USD' && (
+                            <span style={{ fontSize: '0.75em', opacity: 0.7, marginLeft: '0.5rem' }}>
+                              (-${discount.toFixed(2)})
+                            </span>
+                          )}
+                        </span>
                       </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
@@ -742,10 +750,12 @@ Date: ${new Date().toLocaleString('ar-EG')}
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #3b82f6', paddingTop: '1rem', marginTop: '1rem' }}>
                       <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>Total:</span>
                       <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
-                        {Math.round(getTotal() * exchangeRate).toLocaleString('ar-EG')} ل.س
-                        <span style={{ fontSize: '0.7em', fontWeight: 'normal', opacity: 0.8, marginLeft: '0.5rem' }}>
-                          (${getTotal().toFixed(2)})
-                        </span>
+                        {formatPrice(getTotal(), exchangeRate, displayCurrency)}
+                        {displayCurrency !== 'USD' && (
+                          <span style={{ fontSize: '0.7em', fontWeight: 'normal', opacity: 0.8, marginLeft: '0.5rem' }}>
+                            (${getTotal().toFixed(2)})
+                          </span>
+                        )}
                       </span>
                     </div>
                   </div>
