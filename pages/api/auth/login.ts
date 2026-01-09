@@ -33,9 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         : superAdmin.password === password;
       
       if (passwordMatch) {
+        // Set cookies to expire in 30 days
+        const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
         res.setHeader('Set-Cookie', [
-          'admin=true; Path=/; HttpOnly; SameSite=Strict',
-          'super_admin=true; Path=/; HttpOnly; SameSite=Strict'
+          `admin=true; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`,
+          `super_admin=true; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`
         ]);
         return res.status(200).json({ success: true, role: 'super_admin' });
       }
@@ -47,9 +49,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   // Fallback to hardcoded super admin (for backward compatibility)
   if (username === SUPER_ADMIN_USERNAME && password === SUPER_ADMIN_PASSWORD) {
+    // Set cookies to expire in 30 days
+    const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
     res.setHeader('Set-Cookie', [
-      'admin=true; Path=/; HttpOnly; SameSite=Strict',
-      'super_admin=true; Path=/; HttpOnly; SameSite=Strict'
+      `admin=true; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`,
+      `super_admin=true; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`
     ]);
     return res.status(200).json({ success: true, role: 'super_admin' });
   }
@@ -76,9 +80,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Get platform from admin record
       const platform = admin.platform;
       
+      // Set cookies to expire in 30 days
+      const maxAge = 30 * 24 * 60 * 60; // 30 days in seconds
       res.setHeader('Set-Cookie', [
-        'admin=true; Path=/; HttpOnly; SameSite=Strict',
-        `admin_platform=${platform}; Path=/; HttpOnly; SameSite=Strict`
+        `admin=true; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`,
+        `admin_platform=${platform}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}`
       ]);
         return res.status(200).json({ success: true, role: 'admin', platform });
       }
