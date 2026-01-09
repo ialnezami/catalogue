@@ -1791,7 +1791,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   <Barcode size={16} style={{ display: 'inline', marginRight: language === 'ar' ? '0' : '0.5rem', marginLeft: language === 'ar' ? '0.5rem' : '0' }} />
                   {t('admin.generate')}
                 </button>
-                {generatedBarcode && formData.barcode && (
+                {(generatedBarcode || formData.barcode) && (
                   <button
                     type="button"
                     onClick={printBarcode}
@@ -1821,7 +1821,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   </button>
                 )}
               </div>
-              {generatedBarcode && (
+              {(generatedBarcode || formData.barcode) && (
                 <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: '#f5f5f5', borderRadius: '8px', textAlign: 'center' }}>
                   <canvas ref={barcodeCanvasRef} style={{ maxWidth: '100%', height: 'auto' }} />
                 </div>
