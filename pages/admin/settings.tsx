@@ -423,7 +423,7 @@ export default function AdminSettings() {
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite'
                   }} />
-                  {t('admin.uploading') || 'Uploading...'}
+                  {t('admin.uploadingLogo') || 'Uploading...'}
                 </>
               ) : (
                 <>

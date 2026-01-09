@@ -194,7 +194,7 @@ const resources = {
                updateShopDetails: 'قم بتحديث تفاصيل متجرك والعلامة التجارية',
                shopLogo: 'شعار المتجر',
                uploadLogo: 'رفع الشعار',
-               uploading: 'جاري الرفع...',
+               uploadingLogo: 'جاري الرفع...',
                enterLogoUrl: 'أدخل رابط الشعار (مثال: https://example.com/logo.png)',
                uploadLogoOrUrl: '💡 قم برفع شعار أو الصق رابط. رفع Cloudinary يحسن الصور تلقائياً.',
                logoUploadedSuccess: 'تم رفع الشعار بنجاح!',
@@ -463,7 +463,7 @@ const resources = {
                updateShopDetails: 'Update your shop details and branding',
                shopLogo: 'Shop Logo',
                uploadLogo: 'Upload Logo',
-               uploading: 'Uploading...',
+               uploadingLogo: 'Uploading...',
                enterLogoUrl: 'Enter logo URL (e.g., https://example.com/logo.png)',
                uploadLogoOrUrl: '💡 Upload a logo or paste a URL. Cloudinary upload automatically optimizes your images.',
                logoUploadedSuccess: 'Logo uploaded successfully!',
