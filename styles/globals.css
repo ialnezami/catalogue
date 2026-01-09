@@ -153,6 +153,11 @@ input, select {
   100% { transform: rotate(360deg); }
 }
 
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 .fade-in-up {
   animation: fadeInUp 0.3s ease-out;
 }

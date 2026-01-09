@@ -759,7 +759,7 @@ export default function SuperAdmin() {
                 boxShadow: '0 4px 12px rgba(236, 72, 153, 0.3)',
               }}>
                 <Shield size={24} color="#ffffff" />
-              </div>
+          </div>
               <div>
                 <h1 style={{ 
                   fontSize: '2rem', 
@@ -808,18 +808,18 @@ export default function SuperAdmin() {
               <Key size={18} />
               Change Password
             </button>
-            <button
-              onClick={handleLogout}
-              style={{
+          <button
+            onClick={handleLogout}
+            style={{
                 padding: '0.75rem 1.25rem',
                 background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                color: '#ffffff',
-                border: 'none',
+              color: '#ffffff',
+              border: 'none',
                 borderRadius: '10px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.5rem',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
                 fontSize: '0.875rem',
                 fontWeight: '600',
                 transition: 'all 0.2s ease',
@@ -832,11 +832,11 @@ export default function SuperAdmin() {
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'translateY(0)';
                 e.currentTarget.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
-              }}
-            >
+            }}
+          >
               <LogOut size={18} />
-              Logout
-            </button>
+            Logout
+          </button>
           </div>
         </div>
 
@@ -1349,12 +1349,12 @@ export default function SuperAdmin() {
             </div>
           </div>
           <div style={{ display: 'grid', gap: '1.25rem' }}>
-            {platforms.map((platform) => {
-              const platformAdmin = admins.find(a => a.platform === platform.code);
-              return (
-                <div
-                  key={platform._id || platform.code}
-                  style={{
+          {platforms.map((platform) => {
+            const platformAdmin = admins.find(a => a.platform === platform.code);
+            return (
+              <div
+                key={platform._id || platform.code}
+                style={{
                     background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
                     padding: '1.75rem',
                     borderRadius: '16px',
@@ -1371,8 +1371,8 @@ export default function SuperAdmin() {
                     e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
                     e.currentTarget.style.transform = 'translateY(0)';
                     e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
-                  }}
-                >
+                }}
+              >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
@@ -1403,7 +1403,7 @@ export default function SuperAdmin() {
                           Active
                         </span>
                       )}
-                    </div>
+                  </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem', flexWrap: 'wrap' }}>
                       <p style={{ color: '#9ca3af', fontSize: '0.875rem', margin: 0 }}>
                         <span style={{ color: '#6b7280' }}>Code:</span> <span style={{ color: '#ffffff', fontWeight: '500' }}>{platform.code}</span>
@@ -1651,10 +1651,10 @@ export default function SuperAdmin() {
           })}
           </div>
         </div>
-      </div>
+        </div>
 
-      {/* Show Credentials Modal */}
-      {showCredentialsModal && selectedPlatform && (
+        {/* Show Credentials Modal */}
+        {showCredentialsModal && selectedPlatform && (
           <div
             style={{
               position: 'fixed',
@@ -2299,7 +2299,7 @@ export default function SuperAdmin() {
                 >
                   <X size={24} />
                 </button>
-              </div>
+      </div>
 
               <div style={{ marginBottom: '1.5rem' }}>
                 <label style={{ display: 'block', color: '#d1d5db', marginBottom: '0.5rem' }}>Current Password *</label>

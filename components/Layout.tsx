@@ -52,16 +52,16 @@ export default function Layout({ children }: LayoutProps) {
         
         // Fallback to session cookie (for authenticated admins) only if no URL param and no stored platform
         if (!platformCode) {
-          try {
-            const authResponse = await fetch('/api/auth/check');
-            const authData = await authResponse.json();
-            
-            if (authData.adminPlatform) {
+        try {
+          const authResponse = await fetch('/api/auth/check');
+          const authData = await authResponse.json();
+          
+          if (authData.adminPlatform) {
               platformCode = authData.adminPlatform;
-            }
-          } catch (error) {
-            console.error('Error fetching auth check:', error);
           }
+        } catch (error) {
+          console.error('Error fetching auth check:', error);
+        }
         }
 
         setPlatform(platformCode);
@@ -177,22 +177,22 @@ export default function Layout({ children }: LayoutProps) {
             }}
           >
             {(platformInfo?.logo || '/images/logo.PNG') && (
-              <img 
+            <img 
                 src={platformInfo?.logo || '/images/logo.PNG'} 
                 alt={platformInfo?.name || 'Logo'} 
-                width={40}
-                height={40}
-                style={{ 
-                  objectFit: 'contain',
-                  display: 'block'
-                }}
+              width={40}
+              height={40}
+              style={{ 
+                objectFit: 'contain',
+                display: 'block'
+              }}
                 onError={(e) => {
                   // Fallback to default logo if platform logo fails to load
                   if (e.currentTarget.src !== '/images/logo.PNG') {
                     e.currentTarget.src = '/images/logo.PNG';
                   }
                 }}
-              />
+            />
             )}
             <span style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
               {platformInfo?.name || 'stylish'}

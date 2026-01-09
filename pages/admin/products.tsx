@@ -39,6 +39,8 @@ export default function AdminProducts() {
   const [generatedBarcode, setGeneratedBarcode] = useState('');
   const [importUrl, setImportUrl] = useState('');
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+  const [importStep, setImportStep] = useState<'download' | 'upload' | 'processing' | 'complete'>('download');
+  const [uploadedFileName, setUploadedFileName] = useState<string>('');
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -162,7 +164,7 @@ export default function AdminProducts() {
     if (barcodeToDisplay && barcodeCanvasRef.current) {
       // Use requestAnimationFrame to ensure canvas is rendered
       requestAnimationFrame(() => {
-        setTimeout(() => {
+      setTimeout(() => {
           if (barcodeCanvasRef.current && barcodeToDisplay) {
             try {
               // Clear previous barcode
@@ -172,15 +174,15 @@ export default function AdminProducts() {
               }
               // Generate new barcode
               JsBarcode(barcodeCanvasRef.current, barcodeToDisplay, {
-                format: 'CODE128',
-                width: 2,
-                height: 60,
-                displayValue: true
-              });
-            } catch (error) {
-              console.error('Error generating barcode:', error);
-            }
-          }
+            format: 'CODE128',
+            width: 2,
+            height: 60,
+            displayValue: true
+          });
+        } catch (error) {
+          console.error('Error generating barcode:', error);
+        }
+    }
         }, 50);
       });
     }
@@ -481,6 +483,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
     }
 
     setIsLoadingUrl(true);
+    setImportStep('processing');
     try {
       // Fetch CSV from URL
       const response = await fetch(importUrl);
@@ -495,6 +498,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       if (lines.length < 2) {
         toast.error('CSV must have header and at least one product');
         setIsLoadingUrl(false);
+        setImportStep('upload');
         return;
       }
 
@@ -520,6 +524,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       if (products.length === 0) {
         toast.error('No valid products found in CSV');
         setIsLoadingUrl(false);
+        setImportStep('upload');
         return;
       }
 
@@ -527,6 +532,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       setParsedProducts(products);
       setSelectedProducts(new Set(products.map((_, index) => index)));
       setIsLoadingUrl(false);
+      setImportStep('complete');
       setShowImportModal(false);
       setShowPreviewModal(true);
       setImportUrl('');
@@ -535,6 +541,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       console.error('Error fetching CSV:', error);
       toast.error('Error loading CSV from URL: ' + (error as Error).message);
       setIsLoadingUrl(false);
+      setImportStep('upload');
     }
   };
 
@@ -556,6 +563,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
     console.log('File validated:', file.name);
     
+    setUploadedFileName(file.name);
+    setImportStep('processing');
     setIsUploading(false);
     setIsParsing(true);
     setUploadProgress(0);
@@ -601,6 +610,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
         setIsUploading(false);
         setIsParsing(false);
         setUploadProgress(0);
+        setImportStep('upload');
         return;
       }
 
@@ -610,6 +620,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       setSelectedProducts(new Set(products.map((_, index) => index)));
       setIsUploading(false);
       setIsParsing(false);
+      setImportStep('complete');
       setShowImportModal(false);
       setShowPreviewModal(true);
       
@@ -621,6 +632,7 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       setIsUploading(false);
       setIsParsing(false);
       setUploadProgress(0);
+      setImportStep('upload');
       event.target.value = '';
     }
   };
@@ -635,11 +647,15 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
     setIsUploading(true);
     setUploadProgress(0);
+    setImportStep('processing');
 
     try {
+      // Get platform for API call
+      const platformParam = platform ? `?platform=${platform}` : '';
+      
       // Import selected products one by one with progress
       for (let i = 0; i < productsToImport.length; i++) {
-        await fetch('/api/products', {
+        await fetch(`/api/products${platformParam}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(productsToImport[i]),
@@ -654,12 +670,15 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
       setUploadProgress(0);
       setIsUploading(false);
       setSelectedProducts(new Set());
+      setImportStep('download');
+      setUploadedFileName('');
       loadProducts();
     } catch (error) {
       console.error('Error importing products:', error);
       toast.error('Error importing products: ' + (error as Error).message);
       setIsUploading(false);
       setUploadProgress(0);
+      setImportStep('upload');
     }
   };
 
@@ -1119,7 +1138,11 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                 <Download size={16} />
           </button>
           <button
-            onClick={() => setShowImportModal(true)}
+            onClick={() => {
+              setShowImportModal(true);
+              setImportStep('download');
+              setUploadedFileName('');
+            }}
             style={{
                   padding: '0.875rem 1rem',
                   backgroundColor: '#f9fafb',
@@ -1903,8 +1926,8 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
 
       {/* Import CSV Modal */}
       {showImportModal && (
-        <div
-          style={{
+      <div 
+        style={{ 
             position: 'fixed',
             top: 0,
             left: 0,
@@ -1915,8 +1938,13 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
+            cursor: (isParsing || isUploading) ? 'wait' : 'default',
           }}
-          onClick={() => setShowImportModal(false)}
+          onClick={() => {
+            if (!isParsing && !isUploading) {
+              setShowImportModal(false);
+            }
+          }}
         >
           <div
             style={{
@@ -1924,38 +1952,160 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               padding: '2rem',
               borderRadius: '12px',
               border: '1px solid #374151',
-              maxWidth: '500px',
+              maxWidth: '600px',
               width: '90%',
+              cursor: (isParsing || isUploading) ? 'wait' : 'default',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
               <h2 style={{ fontSize: '1.5rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Upload size={24} />
-                Import Products
+                Import Products from CSV
               </h2>
               <button
-                onClick={() => setShowImportModal(false)}
-                style={{
+                onClick={() => {
+                  if (!isParsing && !isUploading) {
+                    setShowImportModal(false);
+                    setImportStep('download');
+                    setUploadedFileName('');
+                  }
+                }}
+                disabled={isParsing || isUploading}
+                style={{ 
                   backgroundColor: 'transparent',
                   border: 'none',
                   color: '#9ca3af',
-                  cursor: 'pointer',
+                  cursor: (isParsing || isUploading) ? 'not-allowed' : 'pointer',
                   padding: '0.5rem',
+                  opacity: (isParsing || isUploading) ? 0.5 : 1,
                 }}
               >
                 <X size={24} />
               </button>
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-              <p style={{ color: '#d1d5db', marginBottom: '1rem' }}>
-                Upload a CSV file with products. Make sure the CSV has the following columns:
-              </p>
-              <div style={{ background: '#2a2a2a', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem', color: '#9ca3af' }}>
-                <code>title, description, price, category, image, barcode, buyPrice, qty, note</code>
+            {/* Step Indicator */}
+            <div style={{ marginBottom: '2rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                {/* Step 1: Download Template */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+            <div style={{ 
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: importStep === 'download' ? '#3b82f6' : '#374151',
+                    color: '#ffffff',
+              display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.875rem',
+                    border: '2px solid',
+                    borderColor: importStep === 'download' ? '#3b82f6' : '#374151',
+                  }}>
+                    1
               </div>
-            </div>
+                  <span style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'center' }}>Download Template</span>
+              </div>
+              
+                <div style={{ flex: 1, height: '2px', backgroundColor: importStep !== 'download' ? '#3b82f6' : '#374151', margin: '0 0.5rem', marginTop: '-20px' }}></div>
+                
+                {/* Step 2: Upload CSV */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+              <div style={{ 
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: importStep === 'upload' ? '#3b82f6' : (importStep === 'processing' || importStep === 'complete') ? '#10b981' : '#374151',
+                    color: '#ffffff',
+                display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.875rem',
+                    border: '2px solid',
+                    borderColor: importStep === 'upload' ? '#3b82f6' : (importStep === 'processing' || importStep === 'complete') ? '#10b981' : '#374151',
+                  }}>
+                    {importStep === 'processing' || importStep === 'complete' ? '✓' : '2'}
+                  </div>
+                  <span style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'center' }}>Upload CSV</span>
+                  </div>
+                
+                <div style={{ flex: 1, height: '2px', backgroundColor: (importStep === 'processing' || importStep === 'complete') ? '#10b981' : '#374151', margin: '0 0.5rem', marginTop: '-20px' }}></div>
+                
+                {/* Step 3: Processing */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                  <div style={{ 
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    backgroundColor: importStep === 'processing' ? '#3b82f6' : importStep === 'complete' ? '#10b981' : '#374151',
+                    color: '#ffffff',
+                    display: 'flex', 
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 'bold',
+                    fontSize: '0.875rem',
+                    border: '2px solid',
+                    borderColor: importStep === 'processing' ? '#3b82f6' : importStep === 'complete' ? '#10b981' : '#374151',
+                  }}>
+                    {importStep === 'complete' ? '✓' : '3'}
+                  </div>
+                  <span style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '0.5rem', textAlign: 'center' }}>Processing</span>
+                  </div>
+              </div>
+              </div>
+              
+            {/* Step 1 Content: Download Template */}
+            {importStep === 'download' && (
+              <div style={{ marginBottom: '1.5rem' }}>
+                <p style={{ color: '#d1d5db', marginBottom: '1rem', fontSize: '0.9375rem' }}>
+                  Start by downloading the CSV template to ensure your file has the correct format:
+                </p>
+                <div style={{ background: '#2a2a2a', padding: '1rem', borderRadius: '8px', fontSize: '0.875rem', color: '#9ca3af', marginBottom: '1rem' }}>
+                  <code style={{ color: '#60a5fa' }}>title, description, price, category, image, barcode, buyPrice, qty, note</code>
+                </div>
+                <button
+                  onClick={downloadTemplate}
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    backgroundColor: '#3b82f6',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                  }}
+                >
+                  <Download size={20} />
+                  Download CSV Template
+                </button>
+                <p style={{ color: '#9ca3af', fontSize: '0.75rem', marginTop: '1rem', textAlign: 'center' }}>
+                  After downloading, fill in your product data and come back to upload
+                </p>
+              </div>
+            )}
+
+            {/* Step 2 Content: Upload CSV */}
+            {importStep === 'upload' && (
+            <div style={{ marginBottom: '1.5rem' }}>
+                <p style={{ color: '#d1d5db', marginBottom: '1rem', fontSize: '0.9375rem' }}>
+                  Upload your CSV file with product data:
+              </p>
 
             {/* URL Import Section */}
             <div style={{ marginBottom: '1.5rem', padding: '1rem', background: '#2a2a2a', borderRadius: '8px', border: '1px solid #374151' }}>
@@ -2008,41 +2158,41 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
               <div style={{ flex: 1, height: '1px', backgroundColor: '#374151' }}></div>
             </div>
 
-            {!isUploading ? (
               <label
                 htmlFor="csv-upload-input"
                 onClick={() => {
-                  console.log('Upload area clicked');
+                    if (!isParsing && !isUploading) {
                   csvFileInputRef.current?.click();
+                    }
                 }}
                 style={{
                   display: 'block',
                   width: '100%',
-                  padding: '1.5rem',
+                    padding: '2rem',
                   border: '2px dashed #3b82f6',
                   borderRadius: '12px',
                   backgroundColor: '#2a2a2a',
-                  cursor: isUploading ? 'not-allowed' : 'pointer',
+                    cursor: (isParsing || isUploading) ? 'wait' : 'pointer',
                   textAlign: 'center',
                   transition: 'all 0.2s ease',
-                  opacity: isUploading ? 0.5 : 1,
+                    opacity: (isParsing || isUploading) ? 0.5 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (!isUploading) {
+                    if (!isParsing && !isUploading) {
                     e.currentTarget.style.borderColor = '#8b5cf6';
                     e.currentTarget.style.backgroundColor = '#374151';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (!isUploading) {
+                    if (!isParsing && !isUploading) {
                     e.currentTarget.style.borderColor = '#3b82f6';
                     e.currentTarget.style.backgroundColor = '#2a2a2a';
                   }
                 }}
               >
                 <Upload size={48} style={{ margin: '0 auto 1rem', opacity: 0.5 }} />
-                <p style={{ color: '#ffffff', marginBottom: '0.5rem' }}>Click to select CSV file</p>
-                <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop</p>
+                  <p style={{ color: '#ffffff', marginBottom: '0.5rem', fontSize: '1rem', fontWeight: '600' }}>Click to select CSV file</p>
+                  <p style={{ color: '#9ca3af', fontSize: '0.875rem' }}>or drag and drop your file here</p>
                 <input
                   ref={csvFileInputRef}
                   id="csv-upload-input"
@@ -2050,91 +2200,197 @@ Gold Bracelet,Delicate chain bracelet,249.99,Bracelets,bracelet-1.jpg,123456792,
                   accept=".csv"
                   onChange={handleFileUpload}
                   style={{ display: 'none' }}
-                  disabled={isUploading}
+                    disabled={isParsing || isUploading}
                 />
               </label>
-            ) : (
+              </div>
+            )}
+
+            {/* Step 3 Content: Processing */}
+            {(importStep === 'processing' && (isParsing || isUploading)) && (
               <div style={{ marginBottom: '1.5rem' }}>
+                {uploadedFileName && (
+                  <div style={{ 
+                    padding: '0.75rem', 
+                    backgroundColor: '#2a2a2a', 
+                    borderRadius: '8px', 
+                    marginBottom: '1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
+                  }}>
+                    <FileText size={20} color="#3b82f6" />
+                    <span style={{ color: '#ffffff', fontSize: '0.875rem' }}>{uploadedFileName}</span>
+                  </div>
+                )}
                 <div style={{ 
                   display: 'flex', 
                   justifyContent: 'space-between', 
-                  marginBottom: '0.5rem',
+                  marginBottom: '0.75rem',
                   color: '#ffffff'
                 }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>Uploading products...</span>
-                  <span style={{ fontSize: '0.875rem', fontWeight: '600' }}>{uploadProgress}%</span>
+                  <span style={{ fontSize: '0.9375rem', fontWeight: '600' }}>
+                    {isParsing ? 'Parsing CSV file...' : 'Uploading products...'}
+                  </span>
+                  <span style={{ fontSize: '0.9375rem', fontWeight: '600' }}>{uploadProgress}%</span>
                 </div>
                 <div style={{
                   width: '100%',
-                  height: '12px',
+                  height: '16px',
                   backgroundColor: '#2a2a2a',
-                  borderRadius: '6px',
+                  borderRadius: '8px',
                   overflow: 'hidden',
+                  position: 'relative',
                 }}>
                   <div style={{
                     height: '100%',
                     width: `${uploadProgress}%`,
                     background: 'linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%)',
-                    borderRadius: '6px',
+                    borderRadius: '8px',
                     transition: 'width 0.3s ease',
-                    boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)',
-                  }} />
+                    boxShadow: '0 0 20px rgba(59, 130, 246, 0.6)',
+                    position: 'relative',
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+                      animation: 'shimmer 1.5s infinite',
+                    }} />
+                  </div>
                 </div>
                 <p style={{ 
                   color: '#9ca3af', 
-                  fontSize: '0.75rem', 
+                  fontSize: '0.875rem', 
                   textAlign: 'center', 
-                  marginTop: '0.5rem' 
+                  marginTop: '1rem' 
                 }}>
-                  Please wait while products are being created...
+                  {isParsing ? 'Reading and validating your CSV file...' : 'Creating products in the database...'}
                 </p>
               </div>
             )}
 
-            <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+            {/* Action Buttons */}
+            <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
+              {importStep === 'download' && (
+                <button
+                  onClick={() => setImportStep('upload')}
+                  style={{
+                    flex: 1,
+                    padding: '0.875rem',
+                    backgroundColor: '#3b82f6',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    fontSize: '1rem',
+                    fontWeight: '600',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = '#2563eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = '#3b82f6';
+                  }}
+                >
+                  Next: Upload CSV
+                  <Upload size={18} />
+                </button>
+              )}
+              {importStep === 'upload' && (
+                <>
+                  <button
+                    onClick={() => {
+                      setImportStep('download');
+                      setUploadedFileName('');
+                    }}
+                    disabled={isParsing || isUploading}
+                    style={{
+                      flex: 1,
+                      padding: '0.875rem',
+                      backgroundColor: '#374151',
+                      border: 'none',
+                      borderRadius: '8px',
+                      color: '#ffffff',
+                      cursor: (isParsing || isUploading) ? 'not-allowed' : 'pointer',
+                      fontSize: '1rem',
+                      opacity: (isParsing || isUploading) ? 0.5 : 1,
+                    }}
+                  >
+                    Back
+                  </button>
               <button
                 onClick={downloadTemplate}
-                disabled={isUploading}
+                    disabled={isParsing || isUploading}
                 style={{
                   flex: 1,
-                  padding: '0.75rem',
-                  backgroundColor: isUploading ? '#374151' : '#3b82f6',
+                      padding: '0.875rem',
+                      backgroundColor: '#3b82f6',
                   border: 'none',
                   borderRadius: '8px',
                   color: '#ffffff',
-                  cursor: isUploading ? 'not-allowed' : 'pointer',
+                      cursor: (isParsing || isUploading) ? 'not-allowed' : 'pointer',
                   fontSize: '1rem',
+                      fontWeight: '600',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
-                  opacity: isUploading ? 0.5 : 1,
+                      opacity: (isParsing || isUploading) ? 0.5 : 1,
                 }}
               >
                 <Download size={18} />
                 Download Template
               </button>
+                </>
+              )}
+              {(importStep === 'processing' && (isParsing || isUploading)) && (
+                <button
+                  disabled
+                  style={{
+                    width: '100%',
+                    padding: '0.875rem',
+                    backgroundColor: '#374151',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: '#9ca3af',
+                    cursor: 'wait',
+                    fontSize: '1rem',
+                    opacity: 0.5,
+                  }}
+                >
+                  Processing... Please wait
+                </button>
+              )}
+              {!isParsing && !isUploading && importStep !== 'processing' && (
               <button
                 onClick={() => {
-                  if (!isUploading) {
                     setShowImportModal(false);
-                  }
+                    setImportStep('download');
+                    setUploadedFileName('');
                 }}
-                disabled={isUploading}
                 style={{
                   flex: 1,
-                  padding: '0.75rem',
+                    padding: '0.875rem',
                   backgroundColor: '#374151',
                   border: 'none',
                   borderRadius: '8px',
                   color: '#ffffff',
-                  cursor: isUploading ? 'not-allowed' : 'pointer',
+                    cursor: 'pointer',
                   fontSize: '1rem',
-                  opacity: isUploading ? 0.5 : 1,
                 }}
               >
-                {isUploading ? 'Processing...' : 'Cancel'}
+                  Cancel
               </button>
+              )}
             </div>
           </div>
         </div>
