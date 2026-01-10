@@ -64,6 +64,19 @@ export default function POSNew() {
 
   useEffect(() => {
     const initialize = async () => {
+      if (typeof window === 'undefined') return;
+      
+      // Get platform and initialize cart
+      const urlParams = new URLSearchParams(window.location.search);
+      const platform = urlParams.get('platform') || 'default';
+      
+      // Store platform in sessionStorage for cart store access
+      sessionStorage.setItem('currentPlatform', platform);
+      
+      // Initialize cart for this platform
+      const { setPlatform } = useCartStore.getState();
+      setPlatform(platform);
+      
       await loadProducts();
       await loadCurrencySettings();
       if (barcodeInputRef.current) {
@@ -72,6 +85,21 @@ export default function POSNew() {
     };
     initialize();
   }, []);
+
+  // Update cart when platform changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const platform = urlParams.get('platform') || 'default';
+    sessionStorage.setItem('currentPlatform', platform);
+    
+    const { setPlatform, platform: currentPlatform } = useCartStore.getState();
+    
+    if (currentPlatform !== platform) {
+      setPlatform(platform);
+    }
+  }, [typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('platform') : null]);
 
   useEffect(() => {
     if (searchTerm.trim()) {

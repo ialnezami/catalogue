@@ -25,6 +25,7 @@ export default function ProductDetail() {
           
           if (authData.adminPlatform) {
             setPlatform(authData.adminPlatform);
+            sessionStorage.setItem('currentPlatform', authData.adminPlatform);
             return;
           }
         } catch (error) {
@@ -35,6 +36,11 @@ export default function ProductDetail() {
         const platformParam = urlParams.get('platform');
         if (platformParam) {
           setPlatform(platformParam);
+          sessionStorage.setItem('currentPlatform', platformParam);
+        } else {
+          // Fallback to default if no platform in URL
+          const defaultPlatform = 'default';
+          sessionStorage.setItem('currentPlatform', defaultPlatform);
         }
       }
     };

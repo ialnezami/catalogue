@@ -28,6 +28,11 @@ export default function Cart() {
       const platform = (router.query.platform as string) || 
         (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('platform') : null);
       
+      // Store platform in sessionStorage for cart context
+      if (platform && typeof window !== 'undefined') {
+        sessionStorage.setItem('currentPlatform', platform);
+      }
+      
       const settings = await getCurrencySettings(platform || undefined);
       setExchangeRate(settings.exchangeRate);
       setDisplayCurrency(settings.displayCurrency);
@@ -445,8 +450,8 @@ export default function Cart() {
                     flex: 1,
                     paddingRight: isMobile ? '0.5rem' : '0'
                   }}>
-                    {item.product.title}
-                  </h3>
+                  {item.product.title}
+                </h3>
                   {!isMobile && (
                     <button
                       onClick={() => removeFromCart(item.product.id)}
@@ -528,22 +533,22 @@ export default function Cart() {
                     marginTop: isMobile ? '0.5rem' : '0' 
                   }}>
                     <span style={{ fontSize: isMobile ? '1.125rem' : '1.25rem', fontWeight: 'bold', color: '#ec4899' }}>
-                      {formatPrice(item.product.price * item.quantity, exchangeRate, displayCurrency)}
-                    </span>
+                    {formatPrice(item.product.price * item.quantity, exchangeRate, displayCurrency)}
+                  </span>
                     {isMobile && (
-                      <button
-                        onClick={() => removeFromCart(item.product.id)}
-                        style={{
-                          backgroundColor: 'transparent',
-                          border: '1px solid #374151',
-                          color: '#ef4444',
-                          padding: '0.5rem',
-                          borderRadius: '8px',
-                          cursor: 'pointer',
-                        }}
-                      >
+              <button
+                onClick={() => removeFromCart(item.product.id)}
+                style={{
+                  backgroundColor: 'transparent',
+                  border: '1px solid #374151',
+                  color: '#ef4444',
+                  padding: '0.5rem',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                }}
+              >
                         <Trash2 size={18} />
-                      </button>
+              </button>
                     )}
                   </div>
                 </div>
