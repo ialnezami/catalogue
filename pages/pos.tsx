@@ -11,9 +11,11 @@ import { useCartStore } from '@/stores/cartStore';
 import { productsAPI } from '@/lib/api';
 import { Product } from '@/types';
 import { getCurrencySettings, formatPrice } from '@/lib/currency';
+import { useLanguage } from '@/contexts/LanguageContext';
 import toast from 'react-hot-toast';
 
 export default function POSNew() {
+  const { t, language } = useLanguage();
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -137,7 +139,7 @@ export default function POSNew() {
     );
     if (product) {
       addItem(product);
-      toast.success(`Added ${product.title || product.name}`, { duration: 1500 });
+      toast.success(`${t('admin.added')} ${product.title || product.name}`, { duration: 1500 });
       
       // Scroll to cart section on mobile after adding item
       if (cartSectionRef.current && window.innerWidth <= 768) {
@@ -230,7 +232,7 @@ export default function POSNew() {
 
   const handleCheckout = async () => {
     if (items.length === 0) {
-      toast.error('Cart is empty!');
+      toast.error(t('admin.cartEmptyError'));
       return;
     }
 
@@ -272,18 +274,18 @@ export default function POSNew() {
         console.log('Order saved successfully:', orderData);
         // Generate and print receipt
         generateReceipt();
-        toast.success('Order completed and saved successfully!');
+        toast.success(t('admin.orderCompleted'));
         clearCart();
         setDiscount(0);
         setTax(0);
       } else {
         const errorData = await response.json();
         console.error('Error saving order:', errorData);
-        toast.error('Error saving order!');
+        toast.error(t('admin.errorSavingOrder'));
       }
     } catch (error) {
       console.error('Error saving order:', error);
-      toast.error('Error saving order!');
+      toast.error(t('admin.errorSavingOrder'));
     }
   };
 
@@ -471,11 +473,11 @@ Date: ${new Date().toLocaleString('ar-EG')}
         {/* Simplified Header */}
         <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Point of Sale</h1>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{t('admin.pointOfSale')}</h1>
             <div className="flex items-center gap-4 text-sm text-gray-400">
               <span className="flex items-center gap-2">
                 <ShoppingBag size={18} />
-                {items.length} {items.length === 1 ? 'item' : 'items'}
+                {items.length} {items.length === 1 ? t('admin.posItem') : t('admin.posItems')}
               </span>
               <span className="flex items-center gap-2">
                 <DollarSign size={18} />
@@ -493,14 +495,14 @@ Date: ${new Date().toLocaleString('ar-EG')}
               }`}
             >
               <Zap size={18} />
-              {scannerActive ? 'Scanner ON' : 'Scanner OFF'}
+              {scannerActive ? t('admin.scannerOn') : t('admin.scannerOff')}
             </button>
             <a
               href="/admin/products"
               className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-semibold text-sm flex items-center gap-2 transition-all"
             >
               <Home size={18} />
-              Products
+              {t('admin.posProducts')}
             </a>
           </div>
         </div>
@@ -520,8 +522,9 @@ Date: ${new Date().toLocaleString('ar-EG')}
                     ref={barcodeInputRef}
                     type="text"
                     onChange={(e) => handleBarcodeScan(e.target.value)}
-                    placeholder="Scan barcode or type to search..."
+                    placeholder={t('admin.scanBarcode')}
                     className="w-full pl-12 pr-4 py-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors text-base"
+                    style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
                   />
                 </div>
                 <button
@@ -529,7 +532,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                   className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/20"
                 >
                   <Camera size={20} />
-                  <span className="hidden sm:inline">Scan</span>
+                  <span className="hidden sm:inline">{t('admin.scan')}</span>
                 </button>
               </div>
               
@@ -538,8 +541,9 @@ Date: ${new Date().toLocaleString('ar-EG')}
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Filter by name or category..."
+                placeholder={t('admin.filterByName')}
                 className="w-full mt-3 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
+                style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}
               />
             </div>
 
@@ -547,9 +551,9 @@ Date: ${new Date().toLocaleString('ar-EG')}
             {products.length === 0 ? (
               <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
                 <Package size={64} className="mx-auto mb-4 text-gray-600" />
-                <p className="text-gray-400 text-lg font-medium">No products found</p>
+                <p className="text-gray-400 text-lg font-medium">{t('admin.posNoProductsFound')}</p>
                 <p className="text-gray-500 text-sm mt-2">
-                  {searchTerm ? 'Try adjusting your search' : 'Loading products...'}
+                  {searchTerm ? t('admin.tryAdjustingSearch') : t('admin.posLoadingProducts')}
                 </p>
               </div>
             ) : (
@@ -559,7 +563,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                     key={product._id || product.id}
                     onClick={() => {
                       addItem(product);
-                      toast.success(`Added ${product.title || product.name}`, { duration: 1500 });
+                      toast.success(`${t('admin.added')} ${product.title || product.name}`, { duration: 1500 });
                     }}
                     className="group bg-gray-900 border-2 border-gray-800 rounded-xl p-4 text-left transition-all hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20 hover:-translate-y-1 active:scale-95"
                   >
@@ -594,7 +598,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <ShoppingBag size={24} />
-                  Cart
+                  {t('cart.shoppingCart')}
                 </h2>
                 {items.length > 0 && (
                   <span className="bg-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
@@ -606,8 +610,8 @@ Date: ${new Date().toLocaleString('ar-EG')}
               {items.length === 0 ? (
                 <div className="text-center py-12">
                   <ShoppingBag size={64} className="mx-auto mb-4 text-gray-700" />
-                  <p className="text-gray-400 text-lg font-medium">Cart is empty</p>
-                  <p className="text-gray-500 text-sm mt-2">Add products to get started</p>
+                  <p className="text-gray-400 text-lg font-medium">{t('admin.cartEmpty')}</p>
+                  <p className="text-gray-500 text-sm mt-2">{t('admin.addProductsToStart')}</p>
                 </div>
               ) : (
                 <>
@@ -621,15 +625,15 @@ Date: ${new Date().toLocaleString('ar-EG')}
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-white font-semibold text-sm mb-1 truncate">{item.name}</h3>
-                            <p className="text-gray-400 text-xs">{formatPrice(item.price, exchangeRate, displayCurrency)} each</p>
+                            <p className="text-gray-400 text-xs">{formatPrice(item.price, exchangeRate, displayCurrency)} {t('admin.each')}</p>
                           </div>
                           <button
                             onClick={() => {
                               removeItem(item._id);
-                              toast.success('Item removed', { duration: 1000 });
+                              toast.success(t('admin.itemRemoved'), { duration: 1000 });
                             }}
                             className="text-red-400 hover:text-red-300 p-1 transition-colors flex-shrink-0"
-                            title="Remove item"
+                            title={t('admin.removeItem')}
                           >
                             <Trash2 size={18} />
                           </button>
@@ -661,11 +665,11 @@ Date: ${new Date().toLocaleString('ar-EG')}
                   {/* Order Summary */}
                   <div className="border-t border-gray-700 pt-4 mb-6 space-y-3">
                     <div className="flex justify-between text-gray-300 text-sm">
-                      <span>Subtotal</span>
+                      <span>{t('cart.subtotal')}</span>
                       <span className="text-white font-medium">
                         {formatPrice(getSubtotal(), exchangeRate, displayCurrency)}
                         {displayCurrency !== 'USD' && (
-                          <span className="text-gray-500 text-xs ml-2">
+                          <span className="text-gray-500 text-xs ml-2" style={{ marginLeft: language === 'ar' ? '0' : '0.5rem', marginRight: language === 'ar' ? '0.5rem' : '0' }}>
                             (${getSubtotal().toFixed(2)})
                           </span>
                         )}
@@ -674,11 +678,11 @@ Date: ${new Date().toLocaleString('ar-EG')}
                     
                     {discount > 0 && (
                       <div className="flex justify-between text-green-400 text-sm">
-                        <span>Discount</span>
+                        <span>{t('cart.discount')}</span>
                         <span className="font-medium">
                           -{formatPrice(discount, exchangeRate, displayCurrency)}
                           {displayCurrency !== 'USD' && (
-                            <span className="text-gray-500 text-xs ml-2">
+                            <span className="text-gray-500 text-xs ml-2" style={{ marginLeft: language === 'ar' ? '0' : '0.5rem', marginRight: language === 'ar' ? '0.5rem' : '0' }}>
                               (-${discount.toFixed(2)})
                             </span>
                           )}
@@ -687,7 +691,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                     )}
                     
                     <div className="flex justify-between items-center text-gray-300 text-sm">
-                      <span>Tax</span>
+                      <span>{t('cart.tax')}</span>
                       <input
                         type="number"
                         value={tax}
@@ -696,12 +700,13 @@ Date: ${new Date().toLocaleString('ar-EG')}
                         placeholder="0.00"
                         step="0.01"
                         min="0"
+                        style={{ direction: 'ltr' }}
                       />
                     </div>
                     
                     <div className="flex justify-between items-center pt-4 border-t-2 border-blue-500">
-                      <span className="text-lg font-bold text-white">Total</span>
-                      <div className="text-right">
+                      <span className="text-lg font-bold text-white">{t('cart.total')}</span>
+                      <div className="text-right" style={{ direction: 'ltr', textAlign: language === 'ar' ? 'left' : 'right' }}>
                         <span className="text-2xl font-bold text-pink-500 block">
                           {formatPrice(getTotal(), exchangeRate, displayCurrency)}
                         </span>
@@ -721,7 +726,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                       className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all active:scale-98"
                     >
                       <Percent size={18} />
-                      Discount
+                      {t('admin.applyDiscount')}
                     </button>
                     
                     <button
@@ -729,7 +734,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                       className="w-full py-4 px-4 bg-green-500 hover:bg-green-600 text-white font-bold text-lg rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/20 active:scale-98"
                     >
                       <CheckCircle size={22} />
-                      Complete Sale
+                      {t('admin.completeSale')}
                     </button>
                     
                     <div className="grid grid-cols-2 gap-2">
@@ -738,13 +743,13 @@ Date: ${new Date().toLocaleString('ar-EG')}
                         className="py-2.5 px-4 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all text-sm active:scale-98"
                       >
                         <Share2 size={16} />
-                        Share
+                        {t('admin.posShare')}
                       </button>
                       <button
                         onClick={clearCart}
                         className="py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all text-sm active:scale-98"
                       >
-                        Clear
+                        {t('admin.posClear')}
                       </button>
                     </div>
                   </div>
@@ -767,7 +772,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Percent size={24} />
-                  Apply Discount
+                  {t('admin.applyDiscount')}
                 </h2>
                 <button
                   onClick={() => setShowDiscountModal(false)}
@@ -779,7 +784,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-gray-300 text-sm font-medium mb-2">Discount Type</label>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">{t('admin.discountType')}</label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setDiscountType('fixed')}
@@ -789,7 +794,7 @@ Date: ${new Date().toLocaleString('ar-EG')}
                           : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                       }`}
                     >
-                      Fixed Amount
+                      {t('admin.fixedAmount')}
                     </button>
                     <button
                       onClick={() => setDiscountType('percent')}
@@ -799,31 +804,32 @@ Date: ${new Date().toLocaleString('ar-EG')}
                           : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                       }`}
                     >
-                      Percentage
+                      {t('admin.percentage')}
                     </button>
                   </div>
                 </div>
                 
                 <div>
                   <label className="block text-gray-300 text-sm font-medium mb-2">
-                    {discountType === 'percent' ? 'Discount (%)' : 'Discount Amount'}
+                    {discountType === 'percent' ? t('admin.discountPercent') : t('admin.discountAmount')}
                   </label>
                   <input
                     type="number"
                     value={discountValue}
                     onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
-                    placeholder={discountType === 'percent' ? 'Enter percentage' : 'Enter amount'}
+                    placeholder={discountType === 'percent' ? t('admin.enterPercentage') : t('admin.enterAmount')}
                     className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
                     step={discountType === 'percent' ? '1' : '0.01'}
                     min="0"
                     max={discountType === 'percent' ? '100' : undefined}
+                    style={{ direction: 'ltr' }}
                   />
                 </div>
                 
                 {discountType === 'percent' && discountValue > 0 && (
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
                     <p className="text-blue-400 text-sm">
-                      Discount: {formatPrice((getSubtotal() * discountValue) / 100, exchangeRate, displayCurrency)}
+                      {t('cart.discount')}: {formatPrice((getSubtotal() * discountValue) / 100, exchangeRate, displayCurrency)}
                     </p>
                   </div>
                 )}
@@ -836,13 +842,13 @@ Date: ${new Date().toLocaleString('ar-EG')}
                     }}
                     className="flex-1 py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
                   >
-                    Cancel
+                    {t('cart.cancel')}
                   </button>
                   <button
                     onClick={applyDiscount}
                     className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
                   >
-                    Apply
+                    {t('admin.applyDiscount')}
                   </button>
                 </div>
               </div>
