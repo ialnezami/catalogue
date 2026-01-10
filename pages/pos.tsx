@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Layout from '@/components/Layout';
 import {
   Scan, Search, Plus, Minus, Trash2, Percent, Printer,
-  Camera, DollarSign, ShoppingBag, Zap, CheckCircle, LogOut, Share2
+  Camera, DollarSign, ShoppingBag, Zap, CheckCircle, LogOut, Share2, Home, Package, X
 } from 'lucide-react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useCartStore } from '@/stores/cartStore';
@@ -14,6 +14,7 @@ import { getCurrencySettings, formatPrice } from '@/lib/currency';
 import toast from 'react-hot-toast';
 
 export default function POSNew() {
+  const [allProducts, setAllProducts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [scannerVisible, setScannerVisible] = useState(false);
@@ -73,15 +74,17 @@ export default function POSNew() {
   }, []);
 
   useEffect(() => {
-    if (searchTerm) {
-      const filtered = products.filter((product) =>
+    if (searchTerm.trim()) {
+      const filtered = allProducts.filter((product) =>
         (product.title || product.name).toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.barcode || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (product.category || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
       setProducts(filtered);
+    } else {
+      setProducts(allProducts);
     }
-  }, [searchTerm, products]);
+  }, [searchTerm, allProducts]);
 
   const loadProducts = async () => {
     try {
@@ -91,6 +94,7 @@ export default function POSNew() {
       
       const response = await fetch(`/api/products?platform=${platform}`);
       const data = await response.json();
+      setAllProducts(data);
       setProducts(data);
     } catch (error) {
       console.error('Error loading products:', error);
@@ -98,11 +102,14 @@ export default function POSNew() {
   };
 
   const handleBarcodeScan = (barcode: string) => {
-    const product = products.find((p) => 
+    if (barcode.length < 3) return; // Wait for more characters
+    
+    const product = allProducts.find((p) => 
       (p.barcode || '').toLowerCase() === barcode.toLowerCase()
     );
     if (product) {
       addItem(product);
+      toast.success(`Added ${product.title || product.name}`, { duration: 1500 });
       
       // Scroll to cart section on mobile after adding item
       if (cartSectionRef.current && window.innerWidth <= 768) {
@@ -432,270 +439,190 @@ Date: ${new Date().toLocaleString('ar-EG')}
 
   return (
     <Layout>
-      <div style={{ padding: '2rem', backgroundColor: '#0a0a0a', minHeight: '100vh' }} className="pos-container">
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          marginBottom: '2rem',
-          padding: '1.5rem',
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          borderRadius: '16px',
-          color: '#ffffff'
-        }} className="pos-header">
-          <div style={{ flex: 1 }}>
-            <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-               POS System
-             </h1>
-             <p style={{ fontSize: '1rem', opacity: 0.9 }}>
-               {items.length} items in cart • Total: {formatPrice(getTotal(), exchangeRate, displayCurrency)}
-             </p>
-           </div>
-           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }} className="pos-header-actions">
-             <button
-               onClick={() => setScannerActive(!scannerActive)}
-               style={{
-                 padding: '1rem 1.5rem',
-                 background: scannerActive ? '#10b981' : '#6b7280',
-                 border: 'none',
-                 borderRadius: '12px',
-                 color: '#ffffff',
-                 fontWeight: 'bold',
-                 cursor: 'pointer',
-                 display: 'flex',
-                 alignItems: 'center',
-                 gap: '0.5rem',
-                 transition: 'all 0.3s',
-               }}
-             >
-               <Zap size={24} />
-               {scannerActive ? 'Scanner ON' : 'Scanner OFF'}
-             </button>
-             <a
-               href="/admin/products"
-               style={{
-                 padding: '1rem 1.5rem',
-                 background: 'rgba(255, 255, 255, 0.2)',
-                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                 borderRadius: '12px',
-                 color: '#ffffff',
-                 fontWeight: 'bold',
-                 cursor: 'pointer',
-                 textDecoration: 'none',
-                 display: 'flex',
-                 alignItems: 'center',
-                 gap: '0.5rem',
-               }}
-             >
-               Admin Panel
-             </a>
-           </div>
-         </div>
+      <div className="min-h-screen bg-gray-950 p-4 md:p-6 lg:p-8">
+        {/* Simplified Header */}
+        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Point of Sale</h1>
+            <div className="flex items-center gap-4 text-sm text-gray-400">
+              <span className="flex items-center gap-2">
+                <ShoppingBag size={18} />
+                {items.length} {items.length === 1 ? 'item' : 'items'}
+              </span>
+              <span className="flex items-center gap-2">
+                <DollarSign size={18} />
+                {formatPrice(getTotal(), exchangeRate, displayCurrency)}
+              </span>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setScannerActive(!scannerActive)}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm flex items-center gap-2 transition-all ${
+                scannerActive 
+                  ? 'bg-green-500 hover:bg-green-600 text-white' 
+                  : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+              }`}
+            >
+              <Zap size={18} />
+              {scannerActive ? 'Scanner ON' : 'Scanner OFF'}
+            </button>
+            <a
+              href="/admin/products"
+              className="px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-white font-semibold text-sm flex items-center gap-2 transition-all"
+            >
+              <Home size={18} />
+              Products
+            </a>
+          </div>
+        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }} className="pos-main-grid">
-          {/* Products Section */}
-          <div className="pos-products-section">
-            <div style={{ 
-              backgroundColor: '#1a1a1a',
-              padding: '1.5rem',
-              borderRadius: '16px',
-              marginBottom: '1.5rem',
-              border: '1px solid #333'
-            }}>
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                <div style={{ flex: 1, position: 'relative' }}>
-                  <Search size={20} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
+          {/* Products Section - Takes 2 columns on large screens */}
+          <div className="lg:col-span-2 order-2 lg:order-1">
+            {/* Unified Search Bar */}
+            <div className="bg-gray-900 rounded-xl p-4 mb-6 border border-gray-800">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <Search 
+                    size={20} 
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" 
+                  />
                   <input
                     ref={barcodeInputRef}
                     type="text"
                     onChange={(e) => handleBarcodeScan(e.target.value)}
-                    placeholder="Scan barcode or search products..."
-                    style={{
-                      width: '100%',
-                      padding: '1rem 1rem 1rem 3rem',
-                      backgroundColor: '#2a2a2a',
-                      border: '2px solid #3b82f6',
-                      borderRadius: '12px',
-                      color: '#ffffff',
-                      fontSize: '1rem',
-                    }}
+                    placeholder="Scan barcode or type to search..."
+                    className="w-full pl-12 pr-4 py-3 bg-gray-800 border-2 border-blue-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors text-base"
                   />
                 </div>
                 <button
                   onClick={startScanner}
-                  style={{
-                    padding: '1rem 1.5rem',
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    border: 'none',
-                    borderRadius: '12px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    color: '#ffffff',
-                    fontWeight: 'bold',
-                  }}
+                  className="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/20"
                 >
-                  <Camera size={24} />
-                  Camera
+                  <Camera size={20} />
+                  <span className="hidden sm:inline">Scan</span>
                 </button>
               </div>
               
+              {/* Search Filter */}
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name or category..."
-                style={{
-                  width: '100%',
-                  padding: '1rem',
-                  backgroundColor: '#2a2a2a',
-                  border: '1px solid #333',
-                  borderRadius: '12px',
-                  color: '#ffffff',
-                }}
+                placeholder="Filter by name or category..."
+                className="w-full mt-3 px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-gray-600 transition-colors"
               />
             </div>
 
-             {/* Products Grid */}
-             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }} className="products-grid">
-               {products.map((product) => (
-                 <button
-                   key={product._id || product.id}
-                   onClick={() => addItem(product)}
-                   className="product-card"
-                   style={{
-                     padding: '1.5rem',
-                     background: 'linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%)',
-                     border: '2px solid #333',
-                     borderRadius: '16px',
-                     cursor: 'pointer',
-                     transition: 'all 0.3s',
-                     textAlign: 'left',
-                   }}
-                   onMouseEnter={(e) => {
-                     e.currentTarget.style.borderColor = '#ec4899';
-                     e.currentTarget.style.transform = 'translateY(-4px)';
-                     e.currentTarget.style.boxShadow = '0 8px 24px rgba(236, 72, 153, 0.3)';
-                   }}
-                   onMouseLeave={(e) => {
-                     e.currentTarget.style.borderColor = '#333';
-                     e.currentTarget.style.transform = 'translateY(0)';
-                     e.currentTarget.style.boxShadow = 'none';
-                   }}
-                 >
-                   <h3 style={{ color: '#ffffff', marginBottom: '0.5rem', fontSize: '1rem' }}>
-                     {product.title || product.name}
-                   </h3>
-                   <p style={{ color: '#9ca3af', fontSize: '0.875rem', marginBottom: '0.5rem' }}>
-                     {product.category}
-                   </p>
-                   <p style={{ color: '#ec4899', fontSize: '1.25rem', fontWeight: 'bold' }}>
-                     {formatPrice(product.price, exchangeRate, displayCurrency)}
-                   </p>
-                 </button>
-              ))}
-            </div>
+            {/* Products Grid */}
+            {products.length === 0 ? (
+              <div className="text-center py-16 bg-gray-900 rounded-xl border border-gray-800">
+                <Package size={64} className="mx-auto mb-4 text-gray-600" />
+                <p className="text-gray-400 text-lg font-medium">No products found</p>
+                <p className="text-gray-500 text-sm mt-2">
+                  {searchTerm ? 'Try adjusting your search' : 'Loading products...'}
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                {products.map((product) => (
+                  <button
+                    key={product._id || product.id}
+                    onClick={() => {
+                      addItem(product);
+                      toast.success(`Added ${product.title || product.name}`, { duration: 1500 });
+                    }}
+                    className="group bg-gray-900 border-2 border-gray-800 rounded-xl p-4 text-left transition-all hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20 hover:-translate-y-1 active:scale-95"
+                  >
+                    {product.image && (
+                      <div className="w-full h-32 mb-3 rounded-lg overflow-hidden bg-gray-800">
+                        <img 
+                          src={product.image} 
+                          alt={product.title || product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                    )}
+                    <h3 className="text-white font-semibold text-sm mb-1 line-clamp-2 group-hover:text-pink-400 transition-colors">
+                      {product.title || product.name}
+                    </h3>
+                    <p className="text-gray-400 text-xs mb-2">{product.category}</p>
+                    <p className="text-pink-500 font-bold text-lg">
+                      {formatPrice(product.price, exchangeRate, displayCurrency)}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
-           {/* Cart Section */}
-           <div 
-             ref={cartSectionRef}
-             style={{ 
-               position: 'sticky', 
-               top: '120px',
-               alignSelf: 'start'
-             }} 
-             className="pos-cart-section"
-           >
-            <div style={{
-              backgroundColor: '#1a1a1a',
-              padding: '2rem',
-              borderRadius: '16px',
-              border: '1px solid #333',
-              maxHeight: '80vh',
-              overflowY: 'auto'
-            }}>
-               <h2 
-                 id="cart-header"
-                 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ffffff', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
-               >
-                 <ShoppingBag size={24} />
-                 Cart ({items.length})
-               </h2>
+          {/* Cart Section - Sticky on large screens */}
+          <div 
+            ref={cartSectionRef}
+            className="lg:sticky lg:top-6 lg:self-start order-1 lg:order-2"
+          >
+            <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 max-h-[calc(100vh-8rem)] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <ShoppingBag size={24} />
+                  Cart
+                </h2>
+                {items.length > 0 && (
+                  <span className="bg-pink-500 text-white text-xs font-bold px-2.5 py-1 rounded-full">
+                    {items.length}
+                  </span>
+                )}
+              </div>
 
               {items.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#9ca3af' }}>
-                  <ShoppingBag size={64} style={{ margin: '0 auto 1rem', opacity: 0.3 }} />
-                  <p>Cart is empty</p>
+                <div className="text-center py-12">
+                  <ShoppingBag size={64} className="mx-auto mb-4 text-gray-700" />
+                  <p className="text-gray-400 text-lg font-medium">Cart is empty</p>
+                  <p className="text-gray-500 text-sm mt-2">Add products to get started</p>
                 </div>
               ) : (
                 <>
-                  <div style={{ marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {/* Cart Items */}
+                  <div className="space-y-3 mb-6">
                     {items.map((item) => (
                       <div
                         key={item._id}
-                        style={{
-                          backgroundColor: '#2a2a2a',
-                          padding: '1rem',
-                          borderRadius: '12px',
-                          border: '1px solid #333'
-                        }}
+                        className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors"
                       >
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                          <h3 style={{ color: '#ffffff', fontSize: '0.875rem' }}>{item.name}</h3>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-white font-semibold text-sm mb-1 truncate">{item.name}</h3>
+                            <p className="text-gray-400 text-xs">{formatPrice(item.price, exchangeRate, displayCurrency)} each</p>
+                          </div>
                           <button
-                            onClick={() => removeItem(item._id)}
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: '#ef4444',
-                              cursor: 'pointer',
-                              padding: '0.25rem'
+                            onClick={() => {
+                              removeItem(item._id);
+                              toast.success('Item removed', { duration: 1000 });
                             }}
+                            className="text-red-400 hover:text-red-300 p-1 transition-colors flex-shrink-0"
+                            title="Remove item"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={18} />
                           </button>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3 bg-gray-900 rounded-lg p-1">
                             <button
                               onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                              style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '8px',
-                                border: '1px solid #333',
-                                background: '#1a1a1a',
-                                color: '#ffffff',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
+                              className="w-8 h-8 rounded-md bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center transition-colors active:scale-95"
                             >
                               <Minus size={16} />
                             </button>
-                            <span style={{ color: '#ffffff', minWidth: '32px', textAlign: 'center' }}>{item.quantity}</span>
+                            <span className="text-white font-semibold min-w-[2rem] text-center">{item.quantity}</span>
                             <button
                               onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                              style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '8px',
-                                border: '1px solid #333',
-                                background: '#1a1a1a',
-                                color: '#ffffff',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center'
-                              }}
+                              className="w-8 h-8 rounded-md bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center transition-colors active:scale-95"
                             >
                               <Plus size={16} />
                             </button>
                           </div>
-                          <p style={{ color: '#ec4899', fontWeight: 'bold', fontSize: '1rem' }}>
+                          <p className="text-pink-500 font-bold text-base">
                             {formatPrice(item.subtotal, exchangeRate, displayCurrency)}
                           </p>
                         </div>
@@ -703,141 +630,95 @@ Date: ${new Date().toLocaleString('ar-EG')}
                     ))}
                   </div>
 
-                  {/* Totals */}
-                  <div style={{ borderTop: '1px solid #333', paddingTop: '1rem', marginBottom: '1.5rem' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                              <span style={{ color: '#9ca3af' }}>Subtotal:</span>
-                              <span style={{ color: '#ffffff' }}>
-                                {formatPrice(getSubtotal(), exchangeRate, displayCurrency)}
-                                {displayCurrency !== 'USD' && (
-                                  <span style={{ fontSize: '0.75em', opacity: 0.7, marginLeft: '0.5rem' }}>
-                                    (${getSubtotal().toFixed(2)})
-                                  </span>
-                                )}
-                              </span>
-                            </div>
+                  {/* Order Summary */}
+                  <div className="border-t border-gray-700 pt-4 mb-6 space-y-3">
+                    <div className="flex justify-between text-gray-300 text-sm">
+                      <span>Subtotal</span>
+                      <span className="text-white font-medium">
+                        {formatPrice(getSubtotal(), exchangeRate, displayCurrency)}
+                        {displayCurrency !== 'USD' && (
+                          <span className="text-gray-500 text-xs ml-2">
+                            (${getSubtotal().toFixed(2)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    
                     {discount > 0 && (
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem', color: '#10b981' }}>
-                        <span>Discount:</span>
-                        <span>
+                      <div className="flex justify-between text-green-400 text-sm">
+                        <span>Discount</span>
+                        <span className="font-medium">
                           -{formatPrice(discount, exchangeRate, displayCurrency)}
                           {displayCurrency !== 'USD' && (
-                            <span style={{ fontSize: '0.75em', opacity: 0.7, marginLeft: '0.5rem' }}>
+                            <span className="text-gray-500 text-xs ml-2">
                               (-${discount.toFixed(2)})
                             </span>
                           )}
                         </span>
                       </div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                      <span style={{ color: '#9ca3af' }}>Tax:</span>
+                    
+                    <div className="flex justify-between items-center text-gray-300 text-sm">
+                      <span>Tax</span>
                       <input
                         type="number"
                         value={tax}
                         onChange={(e) => setTax(parseFloat(e.target.value) || 0)}
-                        style={{
-                          width: '100px',
-                          padding: '0.5rem',
-                          background: '#2a2a2a',
-                          border: '1px solid #333',
-                          borderRadius: '8px',
-                          color: '#ffffff',
-                          textAlign: 'right'
-                        }}
+                        className="w-24 px-2 py-1.5 bg-gray-800 border border-gray-700 rounded text-white text-right text-sm focus:outline-none focus:border-blue-500 transition-colors"
                         placeholder="0.00"
+                        step="0.01"
+                        min="0"
                       />
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #3b82f6', paddingTop: '1rem', marginTop: '1rem' }}>
-                      <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#ffffff' }}>Total:</span>
-                      <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#ec4899' }}>
-                        {formatPrice(getTotal(), exchangeRate, displayCurrency)}
+                    
+                    <div className="flex justify-between items-center pt-4 border-t-2 border-blue-500">
+                      <span className="text-lg font-bold text-white">Total</span>
+                      <div className="text-right">
+                        <span className="text-2xl font-bold text-pink-500 block">
+                          {formatPrice(getTotal(), exchangeRate, displayCurrency)}
+                        </span>
                         {displayCurrency !== 'USD' && (
-                          <span style={{ fontSize: '0.7em', fontWeight: 'normal', opacity: 0.8, marginLeft: '0.5rem' }}>
-                            (${getTotal().toFixed(2)})
+                          <span className="text-gray-400 text-xs">
+                            ${getTotal().toFixed(2)} USD
                           </span>
                         )}
-                      </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {/* Action Buttons */}
+                  <div className="space-y-2">
                     <button
                       onClick={() => setShowDiscountModal(true)}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-                        border: 'none',
-                        borderRadius: '12px',
-                        color: '#ffffff',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                      }}
+                      className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all active:scale-98"
                     >
-                      <Percent size={20} />
-                      Apply Discount
+                      <Percent size={18} />
+                      Discount
                     </button>
+                    
                     <button
                       onClick={handleCheckout}
-                      style={{
-                        width: '100%',
-                        padding: '1.25rem',
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        border: 'none',
-                        borderRadius: '12px',
-                        color: '#ffffff',
-                        fontSize: '1.125rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                      }}
+                      className="w-full py-4 px-4 bg-green-500 hover:bg-green-600 text-white font-bold text-lg rounded-lg flex items-center justify-center gap-2 transition-all shadow-lg shadow-green-500/20 active:scale-98"
                     >
-                      <Printer size={24} />
+                      <CheckCircle size={22} />
                       Complete Sale
                     </button>
-                    <button
-                      onClick={shareOnWhatsApp}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: '#25D366',
-                        border: 'none',
-                        borderRadius: '12px',
-                        color: '#ffffff',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem'
-                      }}
-                    >
-                      <Share2 size={20} />
-                      Share WhatsApp
-                    </button>
-                    <button
-                      onClick={clearCart}
-                      style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        background: '#ef4444',
-                        border: 'none',
-                        borderRadius: '12px',
-                        color: '#ffffff',
-                        fontWeight: 'bold',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Clear Cart
-                    </button>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={shareOnWhatsApp}
+                        className="py-2.5 px-4 bg-[#25D366] hover:bg-[#20BA5A] text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all text-sm active:scale-98"
+                      >
+                        <Share2 size={16} />
+                        Share
+                      </button>
+                      <button
+                        onClick={clearCart}
+                        className="py-2.5 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all text-sm active:scale-98"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 </>
               )}
@@ -845,48 +726,120 @@ Date: ${new Date().toLocaleString('ar-EG')}
           </div>
         </div>
 
+        {/* Discount Modal */}
+        {showDiscountModal && (
+          <div 
+            className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowDiscountModal(false)}
+          >
+            <div 
+              className="bg-gray-900 rounded-xl p-6 max-w-md w-full border border-gray-800"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                  <Percent size={24} />
+                  Apply Discount
+                </h2>
+                <button
+                  onClick={() => setShowDiscountModal(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">Discount Type</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setDiscountType('fixed')}
+                      className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
+                        discountType === 'fixed'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                      }`}
+                    >
+                      Fixed Amount
+                    </button>
+                    <button
+                      onClick={() => setDiscountType('percent')}
+                      className={`flex-1 py-2.5 px-4 rounded-lg font-semibold transition-all ${
+                        discountType === 'percent'
+                          ? 'bg-blue-600 text-white'
+                          : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                      }`}
+                    >
+                      Percentage
+                    </button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-300 text-sm font-medium mb-2">
+                    {discountType === 'percent' ? 'Discount (%)' : 'Discount Amount'}
+                  </label>
+                  <input
+                    type="number"
+                    value={discountValue}
+                    onChange={(e) => setDiscountValue(parseFloat(e.target.value) || 0)}
+                    placeholder={discountType === 'percent' ? 'Enter percentage' : 'Enter amount'}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    step={discountType === 'percent' ? '1' : '0.01'}
+                    min="0"
+                    max={discountType === 'percent' ? '100' : undefined}
+                  />
+                </div>
+                
+                {discountType === 'percent' && discountValue > 0 && (
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                    <p className="text-blue-400 text-sm">
+                      Discount: {formatPrice((getSubtotal() * discountValue) / 100, exchangeRate, displayCurrency)}
+                    </p>
+                  </div>
+                )}
+                
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => {
+                      setShowDiscountModal(false);
+                      setDiscountValue(0);
+                    }}
+                    className="flex-1 py-2.5 px-4 bg-gray-800 hover:bg-gray-700 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyDiscount}
+                    className="flex-1 py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                  >
+                    Apply
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Scanner Modal */}
         {scannerVisible && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.9)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 2000
-          }}>
-            <div style={{
-              background: '#1a1a1a',
-              padding: '2rem',
-              borderRadius: '16px',
-              maxWidth: '500px',
-              width: '90%'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-                <h2 style={{ fontSize: '1.5rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-900 rounded-xl p-6 max-w-lg w-full border border-gray-800">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-white flex items-center gap-2">
                   <Camera size={24} />
                   Barcode Scanner
                 </h2>
                 <button
                   onClick={stopScanner}
-                  style={{
-                    background: '#ef4444',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '0.5rem 1rem',
-                    color: '#ffffff',
-                    cursor: 'pointer'
-                  }}
+                  className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
                 >
                   Close
                 </button>
               </div>
-              <div id="barcode-scanner" style={{ marginBottom: '1rem', borderRadius: '12px', overflow: 'hidden' }} />
-              <p style={{ color: '#9ca3af', textAlign: 'center', fontSize: '0.875rem' }}>
+              <div id="barcode-scanner" className="mb-4 rounded-lg overflow-hidden bg-gray-800" />
+              <p className="text-gray-400 text-center text-sm">
                 Position barcode within the camera view
               </p>
             </div>
